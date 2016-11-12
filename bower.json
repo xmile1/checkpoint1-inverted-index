@@ -1,0 +1,29 @@
+{
+  "name": "checkpoint1-inverted-index",
+  "description": "A search app like elasticsearch",
+  "main": "index.js",
+  "authors": [
+    "Uyiosa Enabulele"
+  ],
+  "license": "ISC",
+  "keywords": [
+    "search",
+    "index",
+    "compare",
+    "files",
+    "elasticsearch",
+    "andela",
+    "checkpoint1",
+    "inverted",
+    "inverted-index"
+  ],
+  "homepage": "https://github.com/xmile1/checkpoint1-inverted-index",
+  "moduleType": [],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
