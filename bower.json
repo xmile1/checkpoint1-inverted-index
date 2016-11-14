@@ -17,12 +17,17 @@
     "inverted",
     "inverted-index"
   ],
+  "dependencies": {
+    "bootstrap": "~3.2.0",
+    "jquery": "1.9.1 - 3",
+    "bootstrap-fileinput": "~4.3.5"
+  },
   "homepage": "https://github.com/xmile1/checkpoint1-inverted-index",
   "moduleType": [],
   "ignore": [
     "**/.*",
     "node_modules",
-    "bower_components",
+    "public/lib",
     "test",
     "tests"
   ]
