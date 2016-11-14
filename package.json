@@ -28,9 +28,12 @@
   },
   "homepage": "https://github.com/xmile1/checkpoint1-inverted-index#readme",
   "dependencies": {
-    "browser-sync": "^2.17.5",
     "express": "^4.14.0",
-    "gulp": "^3.9.1",
     "lodash": "^4.16.6"
+  },
+  "devDependencies": {
+    "browser-sync": "^2.16.0",
+    "gulp": "^3.9.1",
+    "run-sequence": "^1.2.2"
   }
 }
