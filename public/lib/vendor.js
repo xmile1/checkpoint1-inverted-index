@@ -53816,6 +53816,2404 @@ holdReady:function(a){a?r.readyWait++:r.ready(!0)},ready:function(a){(a===!0?--r
 }(jQuery);
 
 /*!
+ * Bootstrap v3.3.7 (http://getbootstrap.com)
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under the MIT license
+ */
+
+if (typeof jQuery === 'undefined') {
+  throw new Error('Bootstrap\'s JavaScript requires jQuery')
+}
+
++function ($) {
+  'use strict';
+  var version = $.fn.jquery.split(' ')[0].split('.')
+  if ((version[0] < 2 && version[1] < 9) || (version[0] == 1 && version[1] == 9 && version[2] < 1) || (version[0] > 3)) {
+    throw new Error('Bootstrap\'s JavaScript requires jQuery version 1.9.1 or higher, but lower than version 4')
+  }
+}(jQuery);
+
+/* ========================================================================
+ * Bootstrap: transition.js v3.3.7
+ * http://getbootstrap.com/javascript/#transitions
+ * ========================================================================
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * ======================================================================== */
+
+
++function ($) {
+  'use strict';
+
+  // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+  // ============================================================
+
+  function transitionEnd() {
+    var el = document.createElement('bootstrap')
+
+    var transEndEventNames = {
+      WebkitTransition : 'webkitTransitionEnd',
+      MozTransition    : 'transitionend',
+      OTransition      : 'oTransitionEnd otransitionend',
+      transition       : 'transitionend'
+    }
+
+    for (var name in transEndEventNames) {
+      if (el.style[name] !== undefined) {
+        return { end: transEndEventNames[name] }
+      }
+    }
+
+    return false // explicit for ie8 (  ._.)
+  }
+
+  // http://blog.alexmaccaw.com/css-transitions
+  $.fn.emulateTransitionEnd = function (duration) {
+    var called = false
+    var $el = this
+    $(this).one('bsTransitionEnd', function () { called = true })
+    var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+    setTimeout(callback, duration)
+    return this
+  }
+
+  $(function () {
+    $.support.transition = transitionEnd()
+
+    if (!$.support.transition) return
+
+    $.event.special.bsTransitionEnd = {
+      bindType: $.support.transition.end,
+      delegateType: $.support.transition.end,
+      handle: function (e) {
+        if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+      }
+    }
+  })
+
+}(jQuery);
+
+/* ========================================================================
+ * Bootstrap: alert.js v3.3.7
+ * http://getbootstrap.com/javascript/#alerts
+ * ========================================================================
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * ======================================================================== */
+
+
++function ($) {
+  'use strict';
+
+  // ALERT CLASS DEFINITION
+  // ======================
+
+  var dismiss = '[data-dismiss="alert"]'
+  var Alert   = function (el) {
+    $(el).on('click', dismiss, this.close)
+  }
+
+  Alert.VERSION = '3.3.7'
+
+  Alert.TRANSITION_DURATION = 150
+
+  Alert.prototype.close = function (e) {
+    var $this    = $(this)
+    var selector = $this.attr('data-target')
+
+    if (!selector) {
+      selector = $this.attr('href')
+      selector = selector && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+    }
+
+    var $parent = $(selector === '#' ? [] : selector)
+
+    if (e) e.preventDefault()
+
+    if (!$parent.length) {
+      $parent = $this.closest('.alert')
+    }
+
+    $parent.trigger(e = $.Event('close.bs.alert'))
+
+    if (e.isDefaultPrevented()) return
+
+    $parent.removeClass('in')
+
+    function removeElement() {
+      // detach from parent, fire event then clean up data
+      $parent.detach().trigger('closed.bs.alert').remove()
+    }
+
+    $.support.transition && $parent.hasClass('fade') ?
+      $parent
+        .one('bsTransitionEnd', removeElement)
+        .emulateTransitionEnd(Alert.TRANSITION_DURATION) :
+      removeElement()
+  }
+
+
+  // ALERT PLUGIN DEFINITION
+  // =======================
+
+  function Plugin(option) {
+    return this.each(function () {
+      var $this = $(this)
+      var data  = $this.data('bs.alert')
+
+      if (!data) $this.data('bs.alert', (data = new Alert(this)))
+      if (typeof option == 'string') data[option].call($this)
+    })
+  }
+
+  var old = $.fn.alert
+
+  $.fn.alert             = Plugin
+  $.fn.alert.Constructor = Alert
+
+
+  // ALERT NO CONFLICT
+  // =================
+
+  $.fn.alert.noConflict = function () {
+    $.fn.alert = old
+    return this
+  }
+
+
+  // ALERT DATA-API
+  // ==============
+
+  $(document).on('click.bs.alert.data-api', dismiss, Alert.prototype.close)
+
+}(jQuery);
+
+/* ========================================================================
+ * Bootstrap: button.js v3.3.7
+ * http://getbootstrap.com/javascript/#buttons
+ * ========================================================================
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * ======================================================================== */
+
+
++function ($) {
+  'use strict';
+
+  // BUTTON PUBLIC CLASS DEFINITION
+  // ==============================
+
+  var Button = function (element, options) {
+    this.$element  = $(element)
+    this.options   = $.extend({}, Button.DEFAULTS, options)
+    this.isLoading = false
+  }
+
+  Button.VERSION  = '3.3.7'
+
+  Button.DEFAULTS = {
+    loadingText: 'loading...'
+  }
+
+  Button.prototype.setState = function (state) {
+    var d    = 'disabled'
+    var $el  = this.$element
+    var val  = $el.is('input') ? 'val' : 'html'
+    var data = $el.data()
+
+    state += 'Text'
+
+    if (data.resetText == null) $el.data('resetText', $el[val]())
+
+    // push to event loop to allow forms to submit
+    setTimeout($.proxy(function () {
+      $el[val](data[state] == null ? this.options[state] : data[state])
+
+      if (state == 'loadingText') {
+        this.isLoading = true
+        $el.addClass(d).attr(d, d).prop(d, true)
+      } else if (this.isLoading) {
+        this.isLoading = false
+        $el.removeClass(d).removeAttr(d).prop(d, false)
+      }
+    }, this), 0)
+  }
+
+  Button.prototype.toggle = function () {
+    var changed = true
+    var $parent = this.$element.closest('[data-toggle="buttons"]')
+
+    if ($parent.length) {
+      var $input = this.$element.find('input')
+      if ($input.prop('type') == 'radio') {
+        if ($input.prop('checked')) changed = false
+        $parent.find('.active').removeClass('active')
+        this.$element.addClass('active')
+      } else if ($input.prop('type') == 'checkbox') {
+        if (($input.prop('checked')) !== this.$element.hasClass('active')) changed = false
+        this.$element.toggleClass('active')
+      }
+      $input.prop('checked', this.$element.hasClass('active'))
+      if (changed) $input.trigger('change')
+    } else {
+      this.$element.attr('aria-pressed', !this.$element.hasClass('active'))
+      this.$element.toggleClass('active')
+    }
+  }
+
+
+  // BUTTON PLUGIN DEFINITION
+  // ========================
+
+  function Plugin(option) {
+    return this.each(function () {
+      var $this   = $(this)
+      var data    = $this.data('bs.button')
+      var options = typeof option == 'object' && option
+
+      if (!data) $this.data('bs.button', (data = new Button(this, options)))
+
+      if (option == 'toggle') data.toggle()
+      else if (option) data.setState(option)
+    })
+  }
+
+  var old = $.fn.button
+
+  $.fn.button             = Plugin
+  $.fn.button.Constructor = Button
+
+
+  // BUTTON NO CONFLICT
+  // ==================
+
+  $.fn.button.noConflict = function () {
+    $.fn.button = old
+    return this
+  }
+
+
+  // BUTTON DATA-API
+  // ===============
+
+  $(document)
+    .on('click.bs.button.data-api', '[data-toggle^="button"]', function (e) {
+      var $btn = $(e.target).closest('.btn')
+      Plugin.call($btn, 'toggle')
+      if (!($(e.target).is('input[type="radio"], input[type="checkbox"]'))) {
+        // Prevent double click on radios, and the double selections (so cancellation) on checkboxes
+        e.preventDefault()
+        // The target component still receive the focus
+        if ($btn.is('input,button')) $btn.trigger('focus')
+        else $btn.find('input:visible,button:visible').first().trigger('focus')
+      }
+    })
+    .on('focus.bs.button.data-api blur.bs.button.data-api', '[data-toggle^="button"]', function (e) {
+      $(e.target).closest('.btn').toggleClass('focus', /^focus(in)?$/.test(e.type))
+    })
+
+}(jQuery);
+
+/* ========================================================================
+ * Bootstrap: carousel.js v3.3.7
+ * http://getbootstrap.com/javascript/#carousel
+ * ========================================================================
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * ======================================================================== */
+
+
++function ($) {
+  'use strict';
+
+  // CAROUSEL CLASS DEFINITION
+  // =========================
+
+  var Carousel = function (element, options) {
+    this.$element    = $(element)
+    this.$indicators = this.$element.find('.carousel-indicators')
+    this.options     = options
+    this.paused      = null
+    this.sliding     = null
+    this.interval    = null
+    this.$active     = null
+    this.$items      = null
+
+    this.options.keyboard && this.$element.on('keydown.bs.carousel', $.proxy(this.keydown, this))
+
+    this.options.pause == 'hover' && !('ontouchstart' in document.documentElement) && this.$element
+      .on('mouseenter.bs.carousel', $.proxy(this.pause, this))
+      .on('mouseleave.bs.carousel', $.proxy(this.cycle, this))
+  }
+
+  Carousel.VERSION  = '3.3.7'
+
+  Carousel.TRANSITION_DURATION = 600
+
+  Carousel.DEFAULTS = {
+    interval: 5000,
+    pause: 'hover',
+    wrap: true,
+    keyboard: true
+  }
+
+  Carousel.prototype.keydown = function (e) {
+    if (/input|textarea/i.test(e.target.tagName)) return
+    switch (e.which) {
+      case 37: this.prev(); break
+      case 39: this.next(); break
+      default: return
+    }
+
+    e.preventDefault()
+  }
+
+  Carousel.prototype.cycle = function (e) {
+    e || (this.paused = false)
+
+    this.interval && clearInterval(this.interval)
+
+    this.options.interval
+      && !this.paused
+      && (this.interval = setInterval($.proxy(this.next, this), this.options.interval))
+
+    return this
+  }
+
+  Carousel.prototype.getItemIndex = function (item) {
+    this.$items = item.parent().children('.item')
+    return this.$items.index(item || this.$active)
+  }
+
+  Carousel.prototype.getItemForDirection = function (direction, active) {
+    var activeIndex = this.getItemIndex(active)
+    var willWrap = (direction == 'prev' && activeIndex === 0)
+                || (direction == 'next' && activeIndex == (this.$items.length - 1))
+    if (willWrap && !this.options.wrap) return active
+    var delta = direction == 'prev' ? -1 : 1
+    var itemIndex = (activeIndex + delta) % this.$items.length
+    return this.$items.eq(itemIndex)
+  }
+
+  Carousel.prototype.to = function (pos) {
+    var that        = this
+    var activeIndex = this.getItemIndex(this.$active = this.$element.find('.item.active'))
+
+    if (pos > (this.$items.length - 1) || pos < 0) return
+
+    if (this.sliding)       return this.$element.one('slid.bs.carousel', function () { that.to(pos) }) // yes, "slid"
+    if (activeIndex == pos) return this.pause().cycle()
+
+    return this.slide(pos > activeIndex ? 'next' : 'prev', this.$items.eq(pos))
+  }
+
+  Carousel.prototype.pause = function (e) {
+    e || (this.paused = true)
+
+    if (this.$element.find('.next, .prev').length && $.support.transition) {
+      this.$element.trigger($.support.transition.end)
+      this.cycle(true)
+    }
+
+    this.interval = clearInterval(this.interval)
+
+    return this
+  }
+
+  Carousel.prototype.next = function () {
+    if (this.sliding) return
+    return this.slide('next')
+  }
+
+  Carousel.prototype.prev = function () {
+    if (this.sliding) return
+    return this.slide('prev')
+  }
+
+  Carousel.prototype.slide = function (type, next) {
+    var $active   = this.$element.find('.item.active')
+    var $next     = next || this.getItemForDirection(type, $active)
+    var isCycling = this.interval
+    var direction = type == 'next' ? 'left' : 'right'
+    var that      = this
+
+    if ($next.hasClass('active')) return (this.sliding = false)
+
+    var relatedTarget = $next[0]
+    var slideEvent = $.Event('slide.bs.carousel', {
+      relatedTarget: relatedTarget,
+      direction: direction
+    })
+    this.$element.trigger(slideEvent)
+    if (slideEvent.isDefaultPrevented()) return
+
+    this.sliding = true
+
+    isCycling && this.pause()
+
+    if (this.$indicators.length) {
+      this.$indicators.find('.active').removeClass('active')
+      var $nextIndicator = $(this.$indicators.children()[this.getItemIndex($next)])
+      $nextIndicator && $nextIndicator.addClass('active')
+    }
+
+    var slidEvent = $.Event('slid.bs.carousel', { relatedTarget: relatedTarget, direction: direction }) // yes, "slid"
+    if ($.support.transition && this.$element.hasClass('slide')) {
+      $next.addClass(type)
+      $next[0].offsetWidth // force reflow
+      $active.addClass(direction)
+      $next.addClass(direction)
+      $active
+        .one('bsTransitionEnd', function () {
+          $next.removeClass([type, direction].join(' ')).addClass('active')
+          $active.removeClass(['active', direction].join(' '))
+          that.sliding = false
+          setTimeout(function () {
+            that.$element.trigger(slidEvent)
+          }, 0)
+        })
+        .emulateTransitionEnd(Carousel.TRANSITION_DURATION)
+    } else {
+      $active.removeClass('active')
+      $next.addClass('active')
+      this.sliding = false
+      this.$element.trigger(slidEvent)
+    }
+
+    isCycling && this.cycle()
+
+    return this
+  }
+
+
+  // CAROUSEL PLUGIN DEFINITION
+  // ==========================
+
+  function Plugin(option) {
+    return this.each(function () {
+      var $this   = $(this)
+      var data    = $this.data('bs.carousel')
+      var options = $.extend({}, Carousel.DEFAULTS, $this.data(), typeof option == 'object' && option)
+      var action  = typeof option == 'string' ? option : options.slide
+
+      if (!data) $this.data('bs.carousel', (data = new Carousel(this, options)))
+      if (typeof option == 'number') data.to(option)
+      else if (action) data[action]()
+      else if (options.interval) data.pause().cycle()
+    })
+  }
+
+  var old = $.fn.carousel
+
+  $.fn.carousel             = Plugin
+  $.fn.carousel.Constructor = Carousel
+
+
+  // CAROUSEL NO CONFLICT
+  // ====================
+
+  $.fn.carousel.noConflict = function () {
+    $.fn.carousel = old
+    return this
+  }
+
+
+  // CAROUSEL DATA-API
+  // =================
+
+  var clickHandler = function (e) {
+    var href
+    var $this   = $(this)
+    var $target = $($this.attr('data-target') || (href = $this.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '')) // strip for ie7
+    if (!$target.hasClass('carousel')) return
+    var options = $.extend({}, $target.data(), $this.data())
+    var slideIndex = $this.attr('data-slide-to')
+    if (slideIndex) options.interval = false
+
+    Plugin.call($target, options)
+
+    if (slideIndex) {
+      $target.data('bs.carousel').to(slideIndex)
+    }
+
+    e.preventDefault()
+  }
+
+  $(document)
+    .on('click.bs.carousel.data-api', '[data-slide]', clickHandler)
+    .on('click.bs.carousel.data-api', '[data-slide-to]', clickHandler)
+
+  $(window).on('load', function () {
+    $('[data-ride="carousel"]').each(function () {
+      var $carousel = $(this)
+      Plugin.call($carousel, $carousel.data())
+    })
+  })
+
+}(jQuery);
+
+/* ========================================================================
+ * Bootstrap: collapse.js v3.3.7
+ * http://getbootstrap.com/javascript/#collapse
+ * ========================================================================
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * ======================================================================== */
+
+/* jshint latedef: false */
+
++function ($) {
+  'use strict';
+
+  // COLLAPSE PUBLIC CLASS DEFINITION
+  // ================================
+
+  var Collapse = function (element, options) {
+    this.$element      = $(element)
+    this.options       = $.extend({}, Collapse.DEFAULTS, options)
+    this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                           '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+    this.transitioning = null
+
+    if (this.options.parent) {
+      this.$parent = this.getParent()
+    } else {
+      this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+    }
+
+    if (this.options.toggle) this.toggle()
+  }
+
+  Collapse.VERSION  = '3.3.7'
+
+  Collapse.TRANSITION_DURATION = 350
+
+  Collapse.DEFAULTS = {
+    toggle: true
+  }
+
+  Collapse.prototype.dimension = function () {
+    var hasWidth = this.$element.hasClass('width')
+    return hasWidth ? 'width' : 'height'
+  }
+
+  Collapse.prototype.show = function () {
+    if (this.transitioning || this.$element.hasClass('in')) return
+
+    var activesData
+    var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+    if (actives && actives.length) {
+      activesData = actives.data('bs.collapse')
+      if (activesData && activesData.transitioning) return
+    }
+
+    var startEvent = $.Event('show.bs.collapse')
+    this.$element.trigger(startEvent)
+    if (startEvent.isDefaultPrevented()) return
+
+    if (actives && actives.length) {
+      Plugin.call(actives, 'hide')
+      activesData || actives.data('bs.collapse', null)
+    }
+
+    var dimension = this.dimension()
+
+    this.$element
+      .removeClass('collapse')
+      .addClass('collapsing')[dimension](0)
+      .attr('aria-expanded', true)
+
+    this.$trigger
+      .removeClass('collapsed')
+      .attr('aria-expanded', true)
+
+    this.transitioning = 1
+
+    var complete = function () {
+      this.$element
+        .removeClass('collapsing')
+        .addClass('collapse in')[dimension]('')
+      this.transitioning = 0
+      this.$element
+        .trigger('shown.bs.collapse')
+    }
+
+    if (!$.support.transition) return complete.call(this)
+
+    var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+    this.$element
+      .one('bsTransitionEnd', $.proxy(complete, this))
+      .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+  }
+
+  Collapse.prototype.hide = function () {
+    if (this.transitioning || !this.$element.hasClass('in')) return
+
+    var startEvent = $.Event('hide.bs.collapse')
+    this.$element.trigger(startEvent)
+    if (startEvent.isDefaultPrevented()) return
+
+    var dimension = this.dimension()
+
+    this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+    this.$element
+      .addClass('collapsing')
+      .removeClass('collapse in')
+      .attr('aria-expanded', false)
+
+    this.$trigger
+      .addClass('collapsed')
+      .attr('aria-expanded', false)
+
+    this.transitioning = 1
+
+    var complete = function () {
+      this.transitioning = 0
+      this.$element
+        .removeClass('collapsing')
+        .addClass('collapse')
+        .trigger('hidden.bs.collapse')
+    }
+
+    if (!$.support.transition) return complete.call(this)
+
+    this.$element
+      [dimension](0)
+      .one('bsTransitionEnd', $.proxy(complete, this))
+      .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+  }
+
+  Collapse.prototype.toggle = function () {
+    this[this.$element.hasClass('in') ? 'hide' : 'show']()
+  }
+
+  Collapse.prototype.getParent = function () {
+    return $(this.options.parent)
+      .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+      .each($.proxy(function (i, element) {
+        var $element = $(element)
+        this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+      }, this))
+      .end()
+  }
+
+  Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+    var isOpen = $element.hasClass('in')
+
+    $element.attr('aria-expanded', isOpen)
+    $trigger
+      .toggleClass('collapsed', !isOpen)
+      .attr('aria-expanded', isOpen)
+  }
+
+  function getTargetFromTrigger($trigger) {
+    var href
+    var target = $trigger.attr('data-target')
+      || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+    return $(target)
+  }
+
+
+  // COLLAPSE PLUGIN DEFINITION
+  // ==========================
+
+  function Plugin(option) {
+    return this.each(function () {
+      var $this   = $(this)
+      var data    = $this.data('bs.collapse')
+      var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+      if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+      if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+      if (typeof option == 'string') data[option]()
+    })
+  }
+
+  var old = $.fn.collapse
+
+  $.fn.collapse             = Plugin
+  $.fn.collapse.Constructor = Collapse
+
+
+  // COLLAPSE NO CONFLICT
+  // ====================
+
+  $.fn.collapse.noConflict = function () {
+    $.fn.collapse = old
+    return this
+  }
+
+
+  // COLLAPSE DATA-API
+  // =================
+
+  $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+    var $this   = $(this)
+
+    if (!$this.attr('data-target')) e.preventDefault()
+
+    var $target = getTargetFromTrigger($this)
+    var data    = $target.data('bs.collapse')
+    var option  = data ? 'toggle' : $this.data()
+
+    Plugin.call($target, option)
+  })
+
+}(jQuery);
+
+/* ========================================================================
+ * Bootstrap: dropdown.js v3.3.7
+ * http://getbootstrap.com/javascript/#dropdowns
+ * ========================================================================
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * ======================================================================== */
+
+
++function ($) {
+  'use strict';
+
+  // DROPDOWN CLASS DEFINITION
+  // =========================
+
+  var backdrop = '.dropdown-backdrop'
+  var toggle   = '[data-toggle="dropdown"]'
+  var Dropdown = function (element) {
+    $(element).on('click.bs.dropdown', this.toggle)
+  }
+
+  Dropdown.VERSION = '3.3.7'
+
+  function getParent($this) {
+    var selector = $this.attr('data-target')
+
+    if (!selector) {
+      selector = $this.attr('href')
+      selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+    }
+
+    var $parent = selector && $(selector)
+
+    return $parent && $parent.length ? $parent : $this.parent()
+  }
+
+  function clearMenus(e) {
+    if (e && e.which === 3) return
+    $(backdrop).remove()
+    $(toggle).each(function () {
+      var $this         = $(this)
+      var $parent       = getParent($this)
+      var relatedTarget = { relatedTarget: this }
+
+      if (!$parent.hasClass('open')) return
+
+      if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+      $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+      if (e.isDefaultPrevented()) return
+
+      $this.attr('aria-expanded', 'false')
+      $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+    })
+  }
+
+  Dropdown.prototype.toggle = function (e) {
+    var $this = $(this)
+
+    if ($this.is('.disabled, :disabled')) return
+
+    var $parent  = getParent($this)
+    var isActive = $parent.hasClass('open')
+
+    clearMenus()
+
+    if (!isActive) {
+      if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+        // if mobile we use a backdrop because click events don't delegate
+        $(document.createElement('div'))
+          .addClass('dropdown-backdrop')
+          .insertAfter($(this))
+          .on('click', clearMenus)
+      }
+
+      var relatedTarget = { relatedTarget: this }
+      $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+      if (e.isDefaultPrevented()) return
+
+      $this
+        .trigger('focus')
+        .attr('aria-expanded', 'true')
+
+      $parent
+        .toggleClass('open')
+        .trigger($.Event('shown.bs.dropdown', relatedTarget))
+    }
+
+    return false
+  }
+
+  Dropdown.prototype.keydown = function (e) {
+    if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+    var $this = $(this)
+
+    e.preventDefault()
+    e.stopPropagation()
+
+    if ($this.is('.disabled, :disabled')) return
+
+    var $parent  = getParent($this)
+    var isActive = $parent.hasClass('open')
+
+    if (!isActive && e.which != 27 || isActive && e.which == 27) {
+      if (e.which == 27) $parent.find(toggle).trigger('focus')
+      return $this.trigger('click')
+    }
+
+    var desc = ' li:not(.disabled):visible a'
+    var $items = $parent.find('.dropdown-menu' + desc)
+
+    if (!$items.length) return
+
+    var index = $items.index(e.target)
+
+    if (e.which == 38 && index > 0)                 index--         // up
+    if (e.which == 40 && index < $items.length - 1) index++         // down
+    if (!~index)                                    index = 0
+
+    $items.eq(index).trigger('focus')
+  }
+
+
+  // DROPDOWN PLUGIN DEFINITION
+  // ==========================
+
+  function Plugin(option) {
+    return this.each(function () {
+      var $this = $(this)
+      var data  = $this.data('bs.dropdown')
+
+      if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+      if (typeof option == 'string') data[option].call($this)
+    })
+  }
+
+  var old = $.fn.dropdown
+
+  $.fn.dropdown             = Plugin
+  $.fn.dropdown.Constructor = Dropdown
+
+
+  // DROPDOWN NO CONFLICT
+  // ====================
+
+  $.fn.dropdown.noConflict = function () {
+    $.fn.dropdown = old
+    return this
+  }
+
+
+  // APPLY TO STANDARD DROPDOWN ELEMENTS
+  // ===================================
+
+  $(document)
+    .on('click.bs.dropdown.data-api', clearMenus)
+    .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+    .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+    .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+    .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+}(jQuery);
+
+/* ========================================================================
+ * Bootstrap: modal.js v3.3.7
+ * http://getbootstrap.com/javascript/#modals
+ * ========================================================================
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * ======================================================================== */
+
+
++function ($) {
+  'use strict';
+
+  // MODAL CLASS DEFINITION
+  // ======================
+
+  var Modal = function (element, options) {
+    this.options             = options
+    this.$body               = $(document.body)
+    this.$element            = $(element)
+    this.$dialog             = this.$element.find('.modal-dialog')
+    this.$backdrop           = null
+    this.isShown             = null
+    this.originalBodyPad     = null
+    this.scrollbarWidth      = 0
+    this.ignoreBackdropClick = false
+
+    if (this.options.remote) {
+      this.$element
+        .find('.modal-content')
+        .load(this.options.remote, $.proxy(function () {
+          this.$element.trigger('loaded.bs.modal')
+        }, this))
+    }
+  }
+
+  Modal.VERSION  = '3.3.7'
+
+  Modal.TRANSITION_DURATION = 300
+  Modal.BACKDROP_TRANSITION_DURATION = 150
+
+  Modal.DEFAULTS = {
+    backdrop: true,
+    keyboard: true,
+    show: true
+  }
+
+  Modal.prototype.toggle = function (_relatedTarget) {
+    return this.isShown ? this.hide() : this.show(_relatedTarget)
+  }
+
+  Modal.prototype.show = function (_relatedTarget) {
+    var that = this
+    var e    = $.Event('show.bs.modal', { relatedTarget: _relatedTarget })
+
+    this.$element.trigger(e)
+
+    if (this.isShown || e.isDefaultPrevented()) return
+
+    this.isShown = true
+
+    this.checkScrollbar()
+    this.setScrollbar()
+    this.$body.addClass('modal-open')
+
+    this.escape()
+    this.resize()
+
+    this.$element.on('click.dismiss.bs.modal', '[data-dismiss="modal"]', $.proxy(this.hide, this))
+
+    this.$dialog.on('mousedown.dismiss.bs.modal', function () {
+      that.$element.one('mouseup.dismiss.bs.modal', function (e) {
+        if ($(e.target).is(that.$element)) that.ignoreBackdropClick = true
+      })
+    })
+
+    this.backdrop(function () {
+      var transition = $.support.transition && that.$element.hasClass('fade')
+
+      if (!that.$element.parent().length) {
+        that.$element.appendTo(that.$body) // don't move modals dom position
+      }
+
+      that.$element
+        .show()
+        .scrollTop(0)
+
+      that.adjustDialog()
+
+      if (transition) {
+        that.$element[0].offsetWidth // force reflow
+      }
+
+      that.$element.addClass('in')
+
+      that.enforceFocus()
+
+      var e = $.Event('shown.bs.modal', { relatedTarget: _relatedTarget })
+
+      transition ?
+        that.$dialog // wait for modal to slide in
+          .one('bsTransitionEnd', function () {
+            that.$element.trigger('focus').trigger(e)
+          })
+          .emulateTransitionEnd(Modal.TRANSITION_DURATION) :
+        that.$element.trigger('focus').trigger(e)
+    })
+  }
+
+  Modal.prototype.hide = function (e) {
+    if (e) e.preventDefault()
+
+    e = $.Event('hide.bs.modal')
+
+    this.$element.trigger(e)
+
+    if (!this.isShown || e.isDefaultPrevented()) return
+
+    this.isShown = false
+
+    this.escape()
+    this.resize()
+
+    $(document).off('focusin.bs.modal')
+
+    this.$element
+      .removeClass('in')
+      .off('click.dismiss.bs.modal')
+      .off('mouseup.dismiss.bs.modal')
+
+    this.$dialog.off('mousedown.dismiss.bs.modal')
+
+    $.support.transition && this.$element.hasClass('fade') ?
+      this.$element
+        .one('bsTransitionEnd', $.proxy(this.hideModal, this))
+        .emulateTransitionEnd(Modal.TRANSITION_DURATION) :
+      this.hideModal()
+  }
+
+  Modal.prototype.enforceFocus = function () {
+    $(document)
+      .off('focusin.bs.modal') // guard against infinite focus loop
+      .on('focusin.bs.modal', $.proxy(function (e) {
+        if (document !== e.target &&
+            this.$element[0] !== e.target &&
+            !this.$element.has(e.target).length) {
+          this.$element.trigger('focus')
+        }
+      }, this))
+  }
+
+  Modal.prototype.escape = function () {
+    if (this.isShown && this.options.keyboard) {
+      this.$element.on('keydown.dismiss.bs.modal', $.proxy(function (e) {
+        e.which == 27 && this.hide()
+      }, this))
+    } else if (!this.isShown) {
+      this.$element.off('keydown.dismiss.bs.modal')
+    }
+  }
+
+  Modal.prototype.resize = function () {
+    if (this.isShown) {
+      $(window).on('resize.bs.modal', $.proxy(this.handleUpdate, this))
+    } else {
+      $(window).off('resize.bs.modal')
+    }
+  }
+
+  Modal.prototype.hideModal = function () {
+    var that = this
+    this.$element.hide()
+    this.backdrop(function () {
+      that.$body.removeClass('modal-open')
+      that.resetAdjustments()
+      that.resetScrollbar()
+      that.$element.trigger('hidden.bs.modal')
+    })
+  }
+
+  Modal.prototype.removeBackdrop = function () {
+    this.$backdrop && this.$backdrop.remove()
+    this.$backdrop = null
+  }
+
+  Modal.prototype.backdrop = function (callback) {
+    var that = this
+    var animate = this.$element.hasClass('fade') ? 'fade' : ''
+
+    if (this.isShown && this.options.backdrop) {
+      var doAnimate = $.support.transition && animate
+
+      this.$backdrop = $(document.createElement('div'))
+        .addClass('modal-backdrop ' + animate)
+        .appendTo(this.$body)
+
+      this.$element.on('click.dismiss.bs.modal', $.proxy(function (e) {
+        if (this.ignoreBackdropClick) {
+          this.ignoreBackdropClick = false
+          return
+        }
+        if (e.target !== e.currentTarget) return
+        this.options.backdrop == 'static'
+          ? this.$element[0].focus()
+          : this.hide()
+      }, this))
+
+      if (doAnimate) this.$backdrop[0].offsetWidth // force reflow
+
+      this.$backdrop.addClass('in')
+
+      if (!callback) return
+
+      doAnimate ?
+        this.$backdrop
+          .one('bsTransitionEnd', callback)
+          .emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION) :
+        callback()
+
+    } else if (!this.isShown && this.$backdrop) {
+      this.$backdrop.removeClass('in')
+
+      var callbackRemove = function () {
+        that.removeBackdrop()
+        callback && callback()
+      }
+      $.support.transition && this.$element.hasClass('fade') ?
+        this.$backdrop
+          .one('bsTransitionEnd', callbackRemove)
+          .emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION) :
+        callbackRemove()
+
+    } else if (callback) {
+      callback()
+    }
+  }
+
+  // these following methods are used to handle overflowing modals
+
+  Modal.prototype.handleUpdate = function () {
+    this.adjustDialog()
+  }
+
+  Modal.prototype.adjustDialog = function () {
+    var modalIsOverflowing = this.$element[0].scrollHeight > document.documentElement.clientHeight
+
+    this.$element.css({
+      paddingLeft:  !this.bodyIsOverflowing && modalIsOverflowing ? this.scrollbarWidth : '',
+      paddingRight: this.bodyIsOverflowing && !modalIsOverflowing ? this.scrollbarWidth : ''
+    })
+  }
+
+  Modal.prototype.resetAdjustments = function () {
+    this.$element.css({
+      paddingLeft: '',
+      paddingRight: ''
+    })
+  }
+
+  Modal.prototype.checkScrollbar = function () {
+    var fullWindowWidth = window.innerWidth
+    if (!fullWindowWidth) { // workaround for missing window.innerWidth in IE8
+      var documentElementRect = document.documentElement.getBoundingClientRect()
+      fullWindowWidth = documentElementRect.right - Math.abs(documentElementRect.left)
+    }
+    this.bodyIsOverflowing = document.body.clientWidth < fullWindowWidth
+    this.scrollbarWidth = this.measureScrollbar()
+  }
+
+  Modal.prototype.setScrollbar = function () {
+    var bodyPad = parseInt((this.$body.css('padding-right') || 0), 10)
+    this.originalBodyPad = document.body.style.paddingRight || ''
+    if (this.bodyIsOverflowing) this.$body.css('padding-right', bodyPad + this.scrollbarWidth)
+  }
+
+  Modal.prototype.resetScrollbar = function () {
+    this.$body.css('padding-right', this.originalBodyPad)
+  }
+
+  Modal.prototype.measureScrollbar = function () { // thx walsh
+    var scrollDiv = document.createElement('div')
+    scrollDiv.className = 'modal-scrollbar-measure'
+    this.$body.append(scrollDiv)
+    var scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth
+    this.$body[0].removeChild(scrollDiv)
+    return scrollbarWidth
+  }
+
+
+  // MODAL PLUGIN DEFINITION
+  // =======================
+
+  function Plugin(option, _relatedTarget) {
+    return this.each(function () {
+      var $this   = $(this)
+      var data    = $this.data('bs.modal')
+      var options = $.extend({}, Modal.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+      if (!data) $this.data('bs.modal', (data = new Modal(this, options)))
+      if (typeof option == 'string') data[option](_relatedTarget)
+      else if (options.show) data.show(_relatedTarget)
+    })
+  }
+
+  var old = $.fn.modal
+
+  $.fn.modal             = Plugin
+  $.fn.modal.Constructor = Modal
+
+
+  // MODAL NO CONFLICT
+  // =================
+
+  $.fn.modal.noConflict = function () {
+    $.fn.modal = old
+    return this
+  }
+
+
+  // MODAL DATA-API
+  // ==============
+
+  $(document).on('click.bs.modal.data-api', '[data-toggle="modal"]', function (e) {
+    var $this   = $(this)
+    var href    = $this.attr('href')
+    var $target = $($this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, ''))) // strip for ie7
+    var option  = $target.data('bs.modal') ? 'toggle' : $.extend({ remote: !/#/.test(href) && href }, $target.data(), $this.data())
+
+    if ($this.is('a')) e.preventDefault()
+
+    $target.one('show.bs.modal', function (showEvent) {
+      if (showEvent.isDefaultPrevented()) return // only register focus restorer if modal will actually get shown
+      $target.one('hidden.bs.modal', function () {
+        $this.is(':visible') && $this.trigger('focus')
+      })
+    })
+    Plugin.call($target, option, this)
+  })
+
+}(jQuery);
+
+/* ========================================================================
+ * Bootstrap: tooltip.js v3.3.7
+ * http://getbootstrap.com/javascript/#tooltip
+ * Inspired by the original jQuery.tipsy by Jason Frame
+ * ========================================================================
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * ======================================================================== */
+
+
++function ($) {
+  'use strict';
+
+  // TOOLTIP PUBLIC CLASS DEFINITION
+  // ===============================
+
+  var Tooltip = function (element, options) {
+    this.type       = null
+    this.options    = null
+    this.enabled    = null
+    this.timeout    = null
+    this.hoverState = null
+    this.$element   = null
+    this.inState    = null
+
+    this.init('tooltip', element, options)
+  }
+
+  Tooltip.VERSION  = '3.3.7'
+
+  Tooltip.TRANSITION_DURATION = 150
+
+  Tooltip.DEFAULTS = {
+    animation: true,
+    placement: 'top',
+    selector: false,
+    template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',
+    trigger: 'hover focus',
+    title: '',
+    delay: 0,
+    html: false,
+    container: false,
+    viewport: {
+      selector: 'body',
+      padding: 0
+    }
+  }
+
+  Tooltip.prototype.init = function (type, element, options) {
+    this.enabled   = true
+    this.type      = type
+    this.$element  = $(element)
+    this.options   = this.getOptions(options)
+    this.$viewport = this.options.viewport && $($.isFunction(this.options.viewport) ? this.options.viewport.call(this, this.$element) : (this.options.viewport.selector || this.options.viewport))
+    this.inState   = { click: false, hover: false, focus: false }
+
+    if (this.$element[0] instanceof document.constructor && !this.options.selector) {
+      throw new Error('`selector` option must be specified when initializing ' + this.type + ' on the window.document object!')
+    }
+
+    var triggers = this.options.trigger.split(' ')
+
+    for (var i = triggers.length; i--;) {
+      var trigger = triggers[i]
+
+      if (trigger == 'click') {
+        this.$element.on('click.' + this.type, this.options.selector, $.proxy(this.toggle, this))
+      } else if (trigger != 'manual') {
+        var eventIn  = trigger == 'hover' ? 'mouseenter' : 'focusin'
+        var eventOut = trigger == 'hover' ? 'mouseleave' : 'focusout'
+
+        this.$element.on(eventIn  + '.' + this.type, this.options.selector, $.proxy(this.enter, this))
+        this.$element.on(eventOut + '.' + this.type, this.options.selector, $.proxy(this.leave, this))
+      }
+    }
+
+    this.options.selector ?
+      (this._options = $.extend({}, this.options, { trigger: 'manual', selector: '' })) :
+      this.fixTitle()
+  }
+
+  Tooltip.prototype.getDefaults = function () {
+    return Tooltip.DEFAULTS
+  }
+
+  Tooltip.prototype.getOptions = function (options) {
+    options = $.extend({}, this.getDefaults(), this.$element.data(), options)
+
+    if (options.delay && typeof options.delay == 'number') {
+      options.delay = {
+        show: options.delay,
+        hide: options.delay
+      }
+    }
+
+    return options
+  }
+
+  Tooltip.prototype.getDelegateOptions = function () {
+    var options  = {}
+    var defaults = this.getDefaults()
+
+    this._options && $.each(this._options, function (key, value) {
+      if (defaults[key] != value) options[key] = value
+    })
+
+    return options
+  }
+
+  Tooltip.prototype.enter = function (obj) {
+    var self = obj instanceof this.constructor ?
+      obj : $(obj.currentTarget).data('bs.' + this.type)
+
+    if (!self) {
+      self = new this.constructor(obj.currentTarget, this.getDelegateOptions())
+      $(obj.currentTarget).data('bs.' + this.type, self)
+    }
+
+    if (obj instanceof $.Event) {
+      self.inState[obj.type == 'focusin' ? 'focus' : 'hover'] = true
+    }
+
+    if (self.tip().hasClass('in') || self.hoverState == 'in') {
+      self.hoverState = 'in'
+      return
+    }
+
+    clearTimeout(self.timeout)
+
+    self.hoverState = 'in'
+
+    if (!self.options.delay || !self.options.delay.show) return self.show()
+
+    self.timeout = setTimeout(function () {
+      if (self.hoverState == 'in') self.show()
+    }, self.options.delay.show)
+  }
+
+  Tooltip.prototype.isInStateTrue = function () {
+    for (var key in this.inState) {
+      if (this.inState[key]) return true
+    }
+
+    return false
+  }
+
+  Tooltip.prototype.leave = function (obj) {
+    var self = obj instanceof this.constructor ?
+      obj : $(obj.currentTarget).data('bs.' + this.type)
+
+    if (!self) {
+      self = new this.constructor(obj.currentTarget, this.getDelegateOptions())
+      $(obj.currentTarget).data('bs.' + this.type, self)
+    }
+
+    if (obj instanceof $.Event) {
+      self.inState[obj.type == 'focusout' ? 'focus' : 'hover'] = false
+    }
+
+    if (self.isInStateTrue()) return
+
+    clearTimeout(self.timeout)
+
+    self.hoverState = 'out'
+
+    if (!self.options.delay || !self.options.delay.hide) return self.hide()
+
+    self.timeout = setTimeout(function () {
+      if (self.hoverState == 'out') self.hide()
+    }, self.options.delay.hide)
+  }
+
+  Tooltip.prototype.show = function () {
+    var e = $.Event('show.bs.' + this.type)
+
+    if (this.hasContent() && this.enabled) {
+      this.$element.trigger(e)
+
+      var inDom = $.contains(this.$element[0].ownerDocument.documentElement, this.$element[0])
+      if (e.isDefaultPrevented() || !inDom) return
+      var that = this
+
+      var $tip = this.tip()
+
+      var tipId = this.getUID(this.type)
+
+      this.setContent()
+      $tip.attr('id', tipId)
+      this.$element.attr('aria-describedby', tipId)
+
+      if (this.options.animation) $tip.addClass('fade')
+
+      var placement = typeof this.options.placement == 'function' ?
+        this.options.placement.call(this, $tip[0], this.$element[0]) :
+        this.options.placement
+
+      var autoToken = /\s?auto?\s?/i
+      var autoPlace = autoToken.test(placement)
+      if (autoPlace) placement = placement.replace(autoToken, '') || 'top'
+
+      $tip
+        .detach()
+        .css({ top: 0, left: 0, display: 'block' })
+        .addClass(placement)
+        .data('bs.' + this.type, this)
+
+      this.options.container ? $tip.appendTo(this.options.container) : $tip.insertAfter(this.$element)
+      this.$element.trigger('inserted.bs.' + this.type)
+
+      var pos          = this.getPosition()
+      var actualWidth  = $tip[0].offsetWidth
+      var actualHeight = $tip[0].offsetHeight
+
+      if (autoPlace) {
+        var orgPlacement = placement
+        var viewportDim = this.getPosition(this.$viewport)
+
+        placement = placement == 'bottom' && pos.bottom + actualHeight > viewportDim.bottom ? 'top'    :
+                    placement == 'top'    && pos.top    - actualHeight < viewportDim.top    ? 'bottom' :
+                    placement == 'right'  && pos.right  + actualWidth  > viewportDim.width  ? 'left'   :
+                    placement == 'left'   && pos.left   - actualWidth  < viewportDim.left   ? 'right'  :
+                    placement
+
+        $tip
+          .removeClass(orgPlacement)
+          .addClass(placement)
+      }
+
+      var calculatedOffset = this.getCalculatedOffset(placement, pos, actualWidth, actualHeight)
+
+      this.applyPlacement(calculatedOffset, placement)
+
+      var complete = function () {
+        var prevHoverState = that.hoverState
+        that.$element.trigger('shown.bs.' + that.type)
+        that.hoverState = null
+
+        if (prevHoverState == 'out') that.leave(that)
+      }
+
+      $.support.transition && this.$tip.hasClass('fade') ?
+        $tip
+          .one('bsTransitionEnd', complete)
+          .emulateTransitionEnd(Tooltip.TRANSITION_DURATION) :
+        complete()
+    }
+  }
+
+  Tooltip.prototype.applyPlacement = function (offset, placement) {
+    var $tip   = this.tip()
+    var width  = $tip[0].offsetWidth
+    var height = $tip[0].offsetHeight
+
+    // manually read margins because getBoundingClientRect includes difference
+    var marginTop = parseInt($tip.css('margin-top'), 10)
+    var marginLeft = parseInt($tip.css('margin-left'), 10)
+
+    // we must check for NaN for ie 8/9
+    if (isNaN(marginTop))  marginTop  = 0
+    if (isNaN(marginLeft)) marginLeft = 0
+
+    offset.top  += marginTop
+    offset.left += marginLeft
+
+    // $.fn.offset doesn't round pixel values
+    // so we use setOffset directly with our own function B-0
+    $.offset.setOffset($tip[0], $.extend({
+      using: function (props) {
+        $tip.css({
+          top: Math.round(props.top),
+          left: Math.round(props.left)
+        })
+      }
+    }, offset), 0)
+
+    $tip.addClass('in')
+
+    // check to see if placing tip in new offset caused the tip to resize itself
+    var actualWidth  = $tip[0].offsetWidth
+    var actualHeight = $tip[0].offsetHeight
+
+    if (placement == 'top' && actualHeight != height) {
+      offset.top = offset.top + height - actualHeight
+    }
+
+    var delta = this.getViewportAdjustedDelta(placement, offset, actualWidth, actualHeight)
+
+    if (delta.left) offset.left += delta.left
+    else offset.top += delta.top
+
+    var isVertical          = /top|bottom/.test(placement)
+    var arrowDelta          = isVertical ? delta.left * 2 - width + actualWidth : delta.top * 2 - height + actualHeight
+    var arrowOffsetPosition = isVertical ? 'offsetWidth' : 'offsetHeight'
+
+    $tip.offset(offset)
+    this.replaceArrow(arrowDelta, $tip[0][arrowOffsetPosition], isVertical)
+  }
+
+  Tooltip.prototype.replaceArrow = function (delta, dimension, isVertical) {
+    this.arrow()
+      .css(isVertical ? 'left' : 'top', 50 * (1 - delta / dimension) + '%')
+      .css(isVertical ? 'top' : 'left', '')
+  }
+
+  Tooltip.prototype.setContent = function () {
+    var $tip  = this.tip()
+    var title = this.getTitle()
+
+    $tip.find('.tooltip-inner')[this.options.html ? 'html' : 'text'](title)
+    $tip.removeClass('fade in top bottom left right')
+  }
+
+  Tooltip.prototype.hide = function (callback) {
+    var that = this
+    var $tip = $(this.$tip)
+    var e    = $.Event('hide.bs.' + this.type)
+
+    function complete() {
+      if (that.hoverState != 'in') $tip.detach()
+      if (that.$element) { // TODO: Check whether guarding this code with this `if` is really necessary.
+        that.$element
+          .removeAttr('aria-describedby')
+          .trigger('hidden.bs.' + that.type)
+      }
+      callback && callback()
+    }
+
+    this.$element.trigger(e)
+
+    if (e.isDefaultPrevented()) return
+
+    $tip.removeClass('in')
+
+    $.support.transition && $tip.hasClass('fade') ?
+      $tip
+        .one('bsTransitionEnd', complete)
+        .emulateTransitionEnd(Tooltip.TRANSITION_DURATION) :
+      complete()
+
+    this.hoverState = null
+
+    return this
+  }
+
+  Tooltip.prototype.fixTitle = function () {
+    var $e = this.$element
+    if ($e.attr('title') || typeof $e.attr('data-original-title') != 'string') {
+      $e.attr('data-original-title', $e.attr('title') || '').attr('title', '')
+    }
+  }
+
+  Tooltip.prototype.hasContent = function () {
+    return this.getTitle()
+  }
+
+  Tooltip.prototype.getPosition = function ($element) {
+    $element   = $element || this.$element
+
+    var el     = $element[0]
+    var isBody = el.tagName == 'BODY'
+
+    var elRect    = el.getBoundingClientRect()
+    if (elRect.width == null) {
+      // width and height are missing in IE8, so compute them manually; see https://github.com/twbs/bootstrap/issues/14093
+      elRect = $.extend({}, elRect, { width: elRect.right - elRect.left, height: elRect.bottom - elRect.top })
+    }
+    var isSvg = window.SVGElement && el instanceof window.SVGElement
+    // Avoid using $.offset() on SVGs since it gives incorrect results in jQuery 3.
+    // See https://github.com/twbs/bootstrap/issues/20280
+    var elOffset  = isBody ? { top: 0, left: 0 } : (isSvg ? null : $element.offset())
+    var scroll    = { scroll: isBody ? document.documentElement.scrollTop || document.body.scrollTop : $element.scrollTop() }
+    var outerDims = isBody ? { width: $(window).width(), height: $(window).height() } : null
+
+    return $.extend({}, elRect, scroll, outerDims, elOffset)
+  }
+
+  Tooltip.prototype.getCalculatedOffset = function (placement, pos, actualWidth, actualHeight) {
+    return placement == 'bottom' ? { top: pos.top + pos.height,   left: pos.left + pos.width / 2 - actualWidth / 2 } :
+           placement == 'top'    ? { top: pos.top - actualHeight, left: pos.left + pos.width / 2 - actualWidth / 2 } :
+           placement == 'left'   ? { top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left - actualWidth } :
+        /* placement == 'right' */ { top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left + pos.width }
+
+  }
+
+  Tooltip.prototype.getViewportAdjustedDelta = function (placement, pos, actualWidth, actualHeight) {
+    var delta = { top: 0, left: 0 }
+    if (!this.$viewport) return delta
+
+    var viewportPadding = this.options.viewport && this.options.viewport.padding || 0
+    var viewportDimensions = this.getPosition(this.$viewport)
+
+    if (/right|left/.test(placement)) {
+      var topEdgeOffset    = pos.top - viewportPadding - viewportDimensions.scroll
+      var bottomEdgeOffset = pos.top + viewportPadding - viewportDimensions.scroll + actualHeight
+      if (topEdgeOffset < viewportDimensions.top) { // top overflow
+        delta.top = viewportDimensions.top - topEdgeOffset
+      } else if (bottomEdgeOffset > viewportDimensions.top + viewportDimensions.height) { // bottom overflow
+        delta.top = viewportDimensions.top + viewportDimensions.height - bottomEdgeOffset
+      }
+    } else {
+      var leftEdgeOffset  = pos.left - viewportPadding
+      var rightEdgeOffset = pos.left + viewportPadding + actualWidth
+      if (leftEdgeOffset < viewportDimensions.left) { // left overflow
+        delta.left = viewportDimensions.left - leftEdgeOffset
+      } else if (rightEdgeOffset > viewportDimensions.right) { // right overflow
+        delta.left = viewportDimensions.left + viewportDimensions.width - rightEdgeOffset
+      }
+    }
+
+    return delta
+  }
+
+  Tooltip.prototype.getTitle = function () {
+    var title
+    var $e = this.$element
+    var o  = this.options
+
+    title = $e.attr('data-original-title')
+      || (typeof o.title == 'function' ? o.title.call($e[0]) :  o.title)
+
+    return title
+  }
+
+  Tooltip.prototype.getUID = function (prefix) {
+    do prefix += ~~(Math.random() * 1000000)
+    while (document.getElementById(prefix))
+    return prefix
+  }
+
+  Tooltip.prototype.tip = function () {
+    if (!this.$tip) {
+      this.$tip = $(this.options.template)
+      if (this.$tip.length != 1) {
+        throw new Error(this.type + ' `template` option must consist of exactly 1 top-level element!')
+      }
+    }
+    return this.$tip
+  }
+
+  Tooltip.prototype.arrow = function () {
+    return (this.$arrow = this.$arrow || this.tip().find('.tooltip-arrow'))
+  }
+
+  Tooltip.prototype.enable = function () {
+    this.enabled = true
+  }
+
+  Tooltip.prototype.disable = function () {
+    this.enabled = false
+  }
+
+  Tooltip.prototype.toggleEnabled = function () {
+    this.enabled = !this.enabled
+  }
+
+  Tooltip.prototype.toggle = function (e) {
+    var self = this
+    if (e) {
+      self = $(e.currentTarget).data('bs.' + this.type)
+      if (!self) {
+        self = new this.constructor(e.currentTarget, this.getDelegateOptions())
+        $(e.currentTarget).data('bs.' + this.type, self)
+      }
+    }
+
+    if (e) {
+      self.inState.click = !self.inState.click
+      if (self.isInStateTrue()) self.enter(self)
+      else self.leave(self)
+    } else {
+      self.tip().hasClass('in') ? self.leave(self) : self.enter(self)
+    }
+  }
+
+  Tooltip.prototype.destroy = function () {
+    var that = this
+    clearTimeout(this.timeout)
+    this.hide(function () {
+      that.$element.off('.' + that.type).removeData('bs.' + that.type)
+      if (that.$tip) {
+        that.$tip.detach()
+      }
+      that.$tip = null
+      that.$arrow = null
+      that.$viewport = null
+      that.$element = null
+    })
+  }
+
+
+  // TOOLTIP PLUGIN DEFINITION
+  // =========================
+
+  function Plugin(option) {
+    return this.each(function () {
+      var $this   = $(this)
+      var data    = $this.data('bs.tooltip')
+      var options = typeof option == 'object' && option
+
+      if (!data && /destroy|hide/.test(option)) return
+      if (!data) $this.data('bs.tooltip', (data = new Tooltip(this, options)))
+      if (typeof option == 'string') data[option]()
+    })
+  }
+
+  var old = $.fn.tooltip
+
+  $.fn.tooltip             = Plugin
+  $.fn.tooltip.Constructor = Tooltip
+
+
+  // TOOLTIP NO CONFLICT
+  // ===================
+
+  $.fn.tooltip.noConflict = function () {
+    $.fn.tooltip = old
+    return this
+  }
+
+}(jQuery);
+
+/* ========================================================================
+ * Bootstrap: popover.js v3.3.7
+ * http://getbootstrap.com/javascript/#popovers
+ * ========================================================================
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * ======================================================================== */
+
+
++function ($) {
+  'use strict';
+
+  // POPOVER PUBLIC CLASS DEFINITION
+  // ===============================
+
+  var Popover = function (element, options) {
+    this.init('popover', element, options)
+  }
+
+  if (!$.fn.tooltip) throw new Error('Popover requires tooltip.js')
+
+  Popover.VERSION  = '3.3.7'
+
+  Popover.DEFAULTS = $.extend({}, $.fn.tooltip.Constructor.DEFAULTS, {
+    placement: 'right',
+    trigger: 'click',
+    content: '',
+    template: '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>'
+  })
+
+
+  // NOTE: POPOVER EXTENDS tooltip.js
+  // ================================
+
+  Popover.prototype = $.extend({}, $.fn.tooltip.Constructor.prototype)
+
+  Popover.prototype.constructor = Popover
+
+  Popover.prototype.getDefaults = function () {
+    return Popover.DEFAULTS
+  }
+
+  Popover.prototype.setContent = function () {
+    var $tip    = this.tip()
+    var title   = this.getTitle()
+    var content = this.getContent()
+
+    $tip.find('.popover-title')[this.options.html ? 'html' : 'text'](title)
+    $tip.find('.popover-content').children().detach().end()[ // we use append for html objects to maintain js events
+      this.options.html ? (typeof content == 'string' ? 'html' : 'append') : 'text'
+    ](content)
+
+    $tip.removeClass('fade top bottom left right in')
+
+    // IE8 doesn't accept hiding via the `:empty` pseudo selector, we have to do
+    // this manually by checking the contents.
+    if (!$tip.find('.popover-title').html()) $tip.find('.popover-title').hide()
+  }
+
+  Popover.prototype.hasContent = function () {
+    return this.getTitle() || this.getContent()
+  }
+
+  Popover.prototype.getContent = function () {
+    var $e = this.$element
+    var o  = this.options
+
+    return $e.attr('data-content')
+      || (typeof o.content == 'function' ?
+            o.content.call($e[0]) :
+            o.content)
+  }
+
+  Popover.prototype.arrow = function () {
+    return (this.$arrow = this.$arrow || this.tip().find('.arrow'))
+  }
+
+
+  // POPOVER PLUGIN DEFINITION
+  // =========================
+
+  function Plugin(option) {
+    return this.each(function () {
+      var $this   = $(this)
+      var data    = $this.data('bs.popover')
+      var options = typeof option == 'object' && option
+
+      if (!data && /destroy|hide/.test(option)) return
+      if (!data) $this.data('bs.popover', (data = new Popover(this, options)))
+      if (typeof option == 'string') data[option]()
+    })
+  }
+
+  var old = $.fn.popover
+
+  $.fn.popover             = Plugin
+  $.fn.popover.Constructor = Popover
+
+
+  // POPOVER NO CONFLICT
+  // ===================
+
+  $.fn.popover.noConflict = function () {
+    $.fn.popover = old
+    return this
+  }
+
+}(jQuery);
+
+/* ========================================================================
+ * Bootstrap: scrollspy.js v3.3.7
+ * http://getbootstrap.com/javascript/#scrollspy
+ * ========================================================================
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * ======================================================================== */
+
+
++function ($) {
+  'use strict';
+
+  // SCROLLSPY CLASS DEFINITION
+  // ==========================
+
+  function ScrollSpy(element, options) {
+    this.$body          = $(document.body)
+    this.$scrollElement = $(element).is(document.body) ? $(window) : $(element)
+    this.options        = $.extend({}, ScrollSpy.DEFAULTS, options)
+    this.selector       = (this.options.target || '') + ' .nav li > a'
+    this.offsets        = []
+    this.targets        = []
+    this.activeTarget   = null
+    this.scrollHeight   = 0
+
+    this.$scrollElement.on('scroll.bs.scrollspy', $.proxy(this.process, this))
+    this.refresh()
+    this.process()
+  }
+
+  ScrollSpy.VERSION  = '3.3.7'
+
+  ScrollSpy.DEFAULTS = {
+    offset: 10
+  }
+
+  ScrollSpy.prototype.getScrollHeight = function () {
+    return this.$scrollElement[0].scrollHeight || Math.max(this.$body[0].scrollHeight, document.documentElement.scrollHeight)
+  }
+
+  ScrollSpy.prototype.refresh = function () {
+    var that          = this
+    var offsetMethod  = 'offset'
+    var offsetBase    = 0
+
+    this.offsets      = []
+    this.targets      = []
+    this.scrollHeight = this.getScrollHeight()
+
+    if (!$.isWindow(this.$scrollElement[0])) {
+      offsetMethod = 'position'
+      offsetBase   = this.$scrollElement.scrollTop()
+    }
+
+    this.$body
+      .find(this.selector)
+      .map(function () {
+        var $el   = $(this)
+        var href  = $el.data('target') || $el.attr('href')
+        var $href = /^#./.test(href) && $(href)
+
+        return ($href
+          && $href.length
+          && $href.is(':visible')
+          && [[$href[offsetMethod]().top + offsetBase, href]]) || null
+      })
+      .sort(function (a, b) { return a[0] - b[0] })
+      .each(function () {
+        that.offsets.push(this[0])
+        that.targets.push(this[1])
+      })
+  }
+
+  ScrollSpy.prototype.process = function () {
+    var scrollTop    = this.$scrollElement.scrollTop() + this.options.offset
+    var scrollHeight = this.getScrollHeight()
+    var maxScroll    = this.options.offset + scrollHeight - this.$scrollElement.height()
+    var offsets      = this.offsets
+    var targets      = this.targets
+    var activeTarget = this.activeTarget
+    var i
+
+    if (this.scrollHeight != scrollHeight) {
+      this.refresh()
+    }
+
+    if (scrollTop >= maxScroll) {
+      return activeTarget != (i = targets[targets.length - 1]) && this.activate(i)
+    }
+
+    if (activeTarget && scrollTop < offsets[0]) {
+      this.activeTarget = null
+      return this.clear()
+    }
+
+    for (i = offsets.length; i--;) {
+      activeTarget != targets[i]
+        && scrollTop >= offsets[i]
+        && (offsets[i + 1] === undefined || scrollTop < offsets[i + 1])
+        && this.activate(targets[i])
+    }
+  }
+
+  ScrollSpy.prototype.activate = function (target) {
+    this.activeTarget = target
+
+    this.clear()
+
+    var selector = this.selector +
+      '[data-target="' + target + '"],' +
+      this.selector + '[href="' + target + '"]'
+
+    var active = $(selector)
+      .parents('li')
+      .addClass('active')
+
+    if (active.parent('.dropdown-menu').length) {
+      active = active
+        .closest('li.dropdown')
+        .addClass('active')
+    }
+
+    active.trigger('activate.bs.scrollspy')
+  }
+
+  ScrollSpy.prototype.clear = function () {
+    $(this.selector)
+      .parentsUntil(this.options.target, '.active')
+      .removeClass('active')
+  }
+
+
+  // SCROLLSPY PLUGIN DEFINITION
+  // ===========================
+
+  function Plugin(option) {
+    return this.each(function () {
+      var $this   = $(this)
+      var data    = $this.data('bs.scrollspy')
+      var options = typeof option == 'object' && option
+
+      if (!data) $this.data('bs.scrollspy', (data = new ScrollSpy(this, options)))
+      if (typeof option == 'string') data[option]()
+    })
+  }
+
+  var old = $.fn.scrollspy
+
+  $.fn.scrollspy             = Plugin
+  $.fn.scrollspy.Constructor = ScrollSpy
+
+
+  // SCROLLSPY NO CONFLICT
+  // =====================
+
+  $.fn.scrollspy.noConflict = function () {
+    $.fn.scrollspy = old
+    return this
+  }
+
+
+  // SCROLLSPY DATA-API
+  // ==================
+
+  $(window).on('load.bs.scrollspy.data-api', function () {
+    $('[data-spy="scroll"]').each(function () {
+      var $spy = $(this)
+      Plugin.call($spy, $spy.data())
+    })
+  })
+
+}(jQuery);
+
+/* ========================================================================
+ * Bootstrap: tab.js v3.3.7
+ * http://getbootstrap.com/javascript/#tabs
+ * ========================================================================
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * ======================================================================== */
+
+
++function ($) {
+  'use strict';
+
+  // TAB CLASS DEFINITION
+  // ====================
+
+  var Tab = function (element) {
+    // jscs:disable requireDollarBeforejQueryAssignment
+    this.element = $(element)
+    // jscs:enable requireDollarBeforejQueryAssignment
+  }
+
+  Tab.VERSION = '3.3.7'
+
+  Tab.TRANSITION_DURATION = 150
+
+  Tab.prototype.show = function () {
+    var $this    = this.element
+    var $ul      = $this.closest('ul:not(.dropdown-menu)')
+    var selector = $this.data('target')
+
+    if (!selector) {
+      selector = $this.attr('href')
+      selector = selector && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+    }
+
+    if ($this.parent('li').hasClass('active')) return
+
+    var $previous = $ul.find('.active:last a')
+    var hideEvent = $.Event('hide.bs.tab', {
+      relatedTarget: $this[0]
+    })
+    var showEvent = $.Event('show.bs.tab', {
+      relatedTarget: $previous[0]
+    })
+
+    $previous.trigger(hideEvent)
+    $this.trigger(showEvent)
+
+    if (showEvent.isDefaultPrevented() || hideEvent.isDefaultPrevented()) return
+
+    var $target = $(selector)
+
+    this.activate($this.closest('li'), $ul)
+    this.activate($target, $target.parent(), function () {
+      $previous.trigger({
+        type: 'hidden.bs.tab',
+        relatedTarget: $this[0]
+      })
+      $this.trigger({
+        type: 'shown.bs.tab',
+        relatedTarget: $previous[0]
+      })
+    })
+  }
+
+  Tab.prototype.activate = function (element, container, callback) {
+    var $active    = container.find('> .active')
+    var transition = callback
+      && $.support.transition
+      && ($active.length && $active.hasClass('fade') || !!container.find('> .fade').length)
+
+    function next() {
+      $active
+        .removeClass('active')
+        .find('> .dropdown-menu > .active')
+          .removeClass('active')
+        .end()
+        .find('[data-toggle="tab"]')
+          .attr('aria-expanded', false)
+
+      element
+        .addClass('active')
+        .find('[data-toggle="tab"]')
+          .attr('aria-expanded', true)
+
+      if (transition) {
+        element[0].offsetWidth // reflow for transition
+        element.addClass('in')
+      } else {
+        element.removeClass('fade')
+      }
+
+      if (element.parent('.dropdown-menu').length) {
+        element
+          .closest('li.dropdown')
+            .addClass('active')
+          .end()
+          .find('[data-toggle="tab"]')
+            .attr('aria-expanded', true)
+      }
+
+      callback && callback()
+    }
+
+    $active.length && transition ?
+      $active
+        .one('bsTransitionEnd', next)
+        .emulateTransitionEnd(Tab.TRANSITION_DURATION) :
+      next()
+
+    $active.removeClass('in')
+  }
+
+
+  // TAB PLUGIN DEFINITION
+  // =====================
+
+  function Plugin(option) {
+    return this.each(function () {
+      var $this = $(this)
+      var data  = $this.data('bs.tab')
+
+      if (!data) $this.data('bs.tab', (data = new Tab(this)))
+      if (typeof option == 'string') data[option]()
+    })
+  }
+
+  var old = $.fn.tab
+
+  $.fn.tab             = Plugin
+  $.fn.tab.Constructor = Tab
+
+
+  // TAB NO CONFLICT
+  // ===============
+
+  $.fn.tab.noConflict = function () {
+    $.fn.tab = old
+    return this
+  }
+
+
+  // TAB DATA-API
+  // ============
+
+  var clickHandler = function (e) {
+    e.preventDefault()
+    Plugin.call($(this), 'show')
+  }
+
+  $(document)
+    .on('click.bs.tab.data-api', '[data-toggle="tab"]', clickHandler)
+    .on('click.bs.tab.data-api', '[data-toggle="pill"]', clickHandler)
+
+}(jQuery);
+
+/* ========================================================================
+ * Bootstrap: affix.js v3.3.7
+ * http://getbootstrap.com/javascript/#affix
+ * ========================================================================
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * ======================================================================== */
+
+
++function ($) {
+  'use strict';
+
+  // AFFIX CLASS DEFINITION
+  // ======================
+
+  var Affix = function (element, options) {
+    this.options = $.extend({}, Affix.DEFAULTS, options)
+
+    this.$target = $(this.options.target)
+      .on('scroll.bs.affix.data-api', $.proxy(this.checkPosition, this))
+      .on('click.bs.affix.data-api',  $.proxy(this.checkPositionWithEventLoop, this))
+
+    this.$element     = $(element)
+    this.affixed      = null
+    this.unpin        = null
+    this.pinnedOffset = null
+
+    this.checkPosition()
+  }
+
+  Affix.VERSION  = '3.3.7'
+
+  Affix.RESET    = 'affix affix-top affix-bottom'
+
+  Affix.DEFAULTS = {
+    offset: 0,
+    target: window
+  }
+
+  Affix.prototype.getState = function (scrollHeight, height, offsetTop, offsetBottom) {
+    var scrollTop    = this.$target.scrollTop()
+    var position     = this.$element.offset()
+    var targetHeight = this.$target.height()
+
+    if (offsetTop != null && this.affixed == 'top') return scrollTop < offsetTop ? 'top' : false
+
+    if (this.affixed == 'bottom') {
+      if (offsetTop != null) return (scrollTop + this.unpin <= position.top) ? false : 'bottom'
+      return (scrollTop + targetHeight <= scrollHeight - offsetBottom) ? false : 'bottom'
+    }
+
+    var initializing   = this.affixed == null
+    var colliderTop    = initializing ? scrollTop : position.top
+    var colliderHeight = initializing ? targetHeight : height
+
+    if (offsetTop != null && scrollTop <= offsetTop) return 'top'
+    if (offsetBottom != null && (colliderTop + colliderHeight >= scrollHeight - offsetBottom)) return 'bottom'
+
+    return false
+  }
+
+  Affix.prototype.getPinnedOffset = function () {
+    if (this.pinnedOffset) return this.pinnedOffset
+    this.$element.removeClass(Affix.RESET).addClass('affix')
+    var scrollTop = this.$target.scrollTop()
+    var position  = this.$element.offset()
+    return (this.pinnedOffset = position.top - scrollTop)
+  }
+
+  Affix.prototype.checkPositionWithEventLoop = function () {
+    setTimeout($.proxy(this.checkPosition, this), 1)
+  }
+
+  Affix.prototype.checkPosition = function () {
+    if (!this.$element.is(':visible')) return
+
+    var height       = this.$element.height()
+    var offset       = this.options.offset
+    var offsetTop    = offset.top
+    var offsetBottom = offset.bottom
+    var scrollHeight = Math.max($(document).height(), $(document.body).height())
+
+    if (typeof offset != 'object')         offsetBottom = offsetTop = offset
+    if (typeof offsetTop == 'function')    offsetTop    = offset.top(this.$element)
+    if (typeof offsetBottom == 'function') offsetBottom = offset.bottom(this.$element)
+
+    var affix = this.getState(scrollHeight, height, offsetTop, offsetBottom)
+
+    if (this.affixed != affix) {
+      if (this.unpin != null) this.$element.css('top', '')
+
+      var affixType = 'affix' + (affix ? '-' + affix : '')
+      var e         = $.Event(affixType + '.bs.affix')
+
+      this.$element.trigger(e)
+
+      if (e.isDefaultPrevented()) return
+
+      this.affixed = affix
+      this.unpin = affix == 'bottom' ? this.getPinnedOffset() : null
+
+      this.$element
+        .removeClass(Affix.RESET)
+        .addClass(affixType)
+        .trigger(affixType.replace('affix', 'affixed') + '.bs.affix')
+    }
+
+    if (affix == 'bottom') {
+      this.$element.offset({
+        top: scrollHeight - height - offsetBottom
+      })
+    }
+  }
+
+
+  // AFFIX PLUGIN DEFINITION
+  // =======================
+
+  function Plugin(option) {
+    return this.each(function () {
+      var $this   = $(this)
+      var data    = $this.data('bs.affix')
+      var options = typeof option == 'object' && option
+
+      if (!data) $this.data('bs.affix', (data = new Affix(this, options)))
+      if (typeof option == 'string') data[option]()
+    })
+  }
+
+  var old = $.fn.affix
+
+  $.fn.affix             = Plugin
+  $.fn.affix.Constructor = Affix
+
+
+  // AFFIX NO CONFLICT
+  // =================
+
+  $.fn.affix.noConflict = function () {
+    $.fn.affix = old
+    return this
+  }
+
+
+  // AFFIX DATA-API
+  // ==============
+
+  $(window).on('load', function () {
+    $('[data-spy="affix"]').each(function () {
+      var $spy = $(this)
+      var data = $spy.data()
+
+      data.offset = data.offset || {}
+
+      if (data.offsetBottom != null) data.offset.bottom = data.offsetBottom
+      if (data.offsetTop    != null) data.offset.top    = data.offsetTop
+
+      Plugin.call($spy, data)
+    })
+  })
+
+}(jQuery);
+
+/*!
+ * Bootstrap v3.3.7 (http://getbootstrap.com)
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under the MIT license
+ */
+if("undefined"==typeof jQuery)throw new Error("Bootstrap's JavaScript requires jQuery");+function(a){"use strict";var b=a.fn.jquery.split(" ")[0].split(".");if(b[0]<2&&b[1]<9||1==b[0]&&9==b[1]&&b[2]<1||b[0]>3)throw new Error("Bootstrap's JavaScript requires jQuery version 1.9.1 or higher, but lower than version 4")}(jQuery),+function(a){"use strict";function b(){var a=document.createElement("bootstrap"),b={WebkitTransition:"webkitTransitionEnd",MozTransition:"transitionend",OTransition:"oTransitionEnd otransitionend",transition:"transitionend"};for(var c in b)if(void 0!==a.style[c])return{end:b[c]};return!1}a.fn.emulateTransitionEnd=function(b){var c=!1,d=this;a(this).one("bsTransitionEnd",function(){c=!0});var e=function(){c||a(d).trigger(a.support.transition.end)};return setTimeout(e,b),this},a(function(){a.support.transition=b(),a.support.transition&&(a.event.special.bsTransitionEnd={bindType:a.support.transition.end,delegateType:a.support.transition.end,handle:function(b){if(a(b.target).is(this))return b.handleObj.handler.apply(this,arguments)}})})}(jQuery),+function(a){"use strict";function b(b){return this.each(function(){var c=a(this),e=c.data("bs.alert");e||c.data("bs.alert",e=new d(this)),"string"==typeof b&&e[b].call(c)})}var c='[data-dismiss="alert"]',d=function(b){a(b).on("click",c,this.close)};d.VERSION="3.3.7",d.TRANSITION_DURATION=150,d.prototype.close=function(b){function c(){g.detach().trigger("closed.bs.alert").remove()}var e=a(this),f=e.attr("data-target");f||(f=e.attr("href"),f=f&&f.replace(/.*(?=#[^\s]*$)/,""));var g=a("#"===f?[]:f);b&&b.preventDefault(),g.length||(g=e.closest(".alert")),g.trigger(b=a.Event("close.bs.alert")),b.isDefaultPrevented()||(g.removeClass("in"),a.support.transition&&g.hasClass("fade")?g.one("bsTransitionEnd",c).emulateTransitionEnd(d.TRANSITION_DURATION):c())};var e=a.fn.alert;a.fn.alert=b,a.fn.alert.Constructor=d,a.fn.alert.noConflict=function(){return a.fn.alert=e,this},a(document).on("click.bs.alert.data-api",c,d.prototype.close)}(jQuery),+function(a){"use strict";function b(b){return this.each(function(){var d=a(this),e=d.data("bs.button"),f="object"==typeof b&&b;e||d.data("bs.button",e=new c(this,f)),"toggle"==b?e.toggle():b&&e.setState(b)})}var c=function(b,d){this.$element=a(b),this.options=a.extend({},c.DEFAULTS,d),this.isLoading=!1};c.VERSION="3.3.7",c.DEFAULTS={loadingText:"loading..."},c.prototype.setState=function(b){var c="disabled",d=this.$element,e=d.is("input")?"val":"html",f=d.data();b+="Text",null==f.resetText&&d.data("resetText",d[e]()),setTimeout(a.proxy(function(){d[e](null==f[b]?this.options[b]:f[b]),"loadingText"==b?(this.isLoading=!0,d.addClass(c).attr(c,c).prop(c,!0)):this.isLoading&&(this.isLoading=!1,d.removeClass(c).removeAttr(c).prop(c,!1))},this),0)},c.prototype.toggle=function(){var a=!0,b=this.$element.closest('[data-toggle="buttons"]');if(b.length){var c=this.$element.find("input");"radio"==c.prop("type")?(c.prop("checked")&&(a=!1),b.find(".active").removeClass("active"),this.$element.addClass("active")):"checkbox"==c.prop("type")&&(c.prop("checked")!==this.$element.hasClass("active")&&(a=!1),this.$element.toggleClass("active")),c.prop("checked",this.$element.hasClass("active")),a&&c.trigger("change")}else this.$element.attr("aria-pressed",!this.$element.hasClass("active")),this.$element.toggleClass("active")};var d=a.fn.button;a.fn.button=b,a.fn.button.Constructor=c,a.fn.button.noConflict=function(){return a.fn.button=d,this},a(document).on("click.bs.button.data-api",'[data-toggle^="button"]',function(c){var d=a(c.target).closest(".btn");b.call(d,"toggle"),a(c.target).is('input[type="radio"], input[type="checkbox"]')||(c.preventDefault(),d.is("input,button")?d.trigger("focus"):d.find("input:visible,button:visible").first().trigger("focus"))}).on("focus.bs.button.data-api blur.bs.button.data-api",'[data-toggle^="button"]',function(b){a(b.target).closest(".btn").toggleClass("focus",/^focus(in)?$/.test(b.type))})}(jQuery),+function(a){"use strict";function b(b){return this.each(function(){var d=a(this),e=d.data("bs.carousel"),f=a.extend({},c.DEFAULTS,d.data(),"object"==typeof b&&b),g="string"==typeof b?b:f.slide;e||d.data("bs.carousel",e=new c(this,f)),"number"==typeof b?e.to(b):g?e[g]():f.interval&&e.pause().cycle()})}var c=function(b,c){this.$element=a(b),this.$indicators=this.$element.find(".carousel-indicators"),this.options=c,this.paused=null,this.sliding=null,this.interval=null,this.$active=null,this.$items=null,this.options.keyboard&&this.$element.on("keydown.bs.carousel",a.proxy(this.keydown,this)),"hover"==this.options.pause&&!("ontouchstart"in document.documentElement)&&this.$element.on("mouseenter.bs.carousel",a.proxy(this.pause,this)).on("mouseleave.bs.carousel",a.proxy(this.cycle,this))};c.VERSION="3.3.7",c.TRANSITION_DURATION=600,c.DEFAULTS={interval:5e3,pause:"hover",wrap:!0,keyboard:!0},c.prototype.keydown=function(a){if(!/input|textarea/i.test(a.target.tagName)){switch(a.which){case 37:this.prev();break;case 39:this.next();break;default:return}a.preventDefault()}},c.prototype.cycle=function(b){return b||(this.paused=!1),this.interval&&clearInterval(this.interval),this.options.interval&&!this.paused&&(this.interval=setInterval(a.proxy(this.next,this),this.options.interval)),this},c.prototype.getItemIndex=function(a){return this.$items=a.parent().children(".item"),this.$items.index(a||this.$active)},c.prototype.getItemForDirection=function(a,b){var c=this.getItemIndex(b),d="prev"==a&&0===c||"next"==a&&c==this.$items.length-1;if(d&&!this.options.wrap)return b;var e="prev"==a?-1:1,f=(c+e)%this.$items.length;return this.$items.eq(f)},c.prototype.to=function(a){var b=this,c=this.getItemIndex(this.$active=this.$element.find(".item.active"));if(!(a>this.$items.length-1||a<0))return this.sliding?this.$element.one("slid.bs.carousel",function(){b.to(a)}):c==a?this.pause().cycle():this.slide(a>c?"next":"prev",this.$items.eq(a))},c.prototype.pause=function(b){return b||(this.paused=!0),this.$element.find(".next, .prev").length&&a.support.transition&&(this.$element.trigger(a.support.transition.end),this.cycle(!0)),this.interval=clearInterval(this.interval),this},c.prototype.next=function(){if(!this.sliding)return this.slide("next")},c.prototype.prev=function(){if(!this.sliding)return this.slide("prev")},c.prototype.slide=function(b,d){var e=this.$element.find(".item.active"),f=d||this.getItemForDirection(b,e),g=this.interval,h="next"==b?"left":"right",i=this;if(f.hasClass("active"))return this.sliding=!1;var j=f[0],k=a.Event("slide.bs.carousel",{relatedTarget:j,direction:h});if(this.$element.trigger(k),!k.isDefaultPrevented()){if(this.sliding=!0,g&&this.pause(),this.$indicators.length){this.$indicators.find(".active").removeClass("active");var l=a(this.$indicators.children()[this.getItemIndex(f)]);l&&l.addClass("active")}var m=a.Event("slid.bs.carousel",{relatedTarget:j,direction:h});return a.support.transition&&this.$element.hasClass("slide")?(f.addClass(b),f[0].offsetWidth,e.addClass(h),f.addClass(h),e.one("bsTransitionEnd",function(){f.removeClass([b,h].join(" ")).addClass("active"),e.removeClass(["active",h].join(" ")),i.sliding=!1,setTimeout(function(){i.$element.trigger(m)},0)}).emulateTransitionEnd(c.TRANSITION_DURATION)):(e.removeClass("active"),f.addClass("active"),this.sliding=!1,this.$element.trigger(m)),g&&this.cycle(),this}};var d=a.fn.carousel;a.fn.carousel=b,a.fn.carousel.Constructor=c,a.fn.carousel.noConflict=function(){return a.fn.carousel=d,this};var e=function(c){var d,e=a(this),f=a(e.attr("data-target")||(d=e.attr("href"))&&d.replace(/.*(?=#[^\s]+$)/,""));if(f.hasClass("carousel")){var g=a.extend({},f.data(),e.data()),h=e.attr("data-slide-to");h&&(g.interval=!1),b.call(f,g),h&&f.data("bs.carousel").to(h),c.preventDefault()}};a(document).on("click.bs.carousel.data-api","[data-slide]",e).on("click.bs.carousel.data-api","[data-slide-to]",e),a(window).on("load",function(){a('[data-ride="carousel"]').each(function(){var c=a(this);b.call(c,c.data())})})}(jQuery),+function(a){"use strict";function b(b){var c,d=b.attr("data-target")||(c=b.attr("href"))&&c.replace(/.*(?=#[^\s]+$)/,"");return a(d)}function c(b){return this.each(function(){var c=a(this),e=c.data("bs.collapse"),f=a.extend({},d.DEFAULTS,c.data(),"object"==typeof b&&b);!e&&f.toggle&&/show|hide/.test(b)&&(f.toggle=!1),e||c.data("bs.collapse",e=new d(this,f)),"string"==typeof b&&e[b]()})}var d=function(b,c){this.$element=a(b),this.options=a.extend({},d.DEFAULTS,c),this.$trigger=a('[data-toggle="collapse"][href="#'+b.id+'"],[data-toggle="collapse"][data-target="#'+b.id+'"]'),this.transitioning=null,this.options.parent?this.$parent=this.getParent():this.addAriaAndCollapsedClass(this.$element,this.$trigger),this.options.toggle&&this.toggle()};d.VERSION="3.3.7",d.TRANSITION_DURATION=350,d.DEFAULTS={toggle:!0},d.prototype.dimension=function(){var a=this.$element.hasClass("width");return a?"width":"height"},d.prototype.show=function(){if(!this.transitioning&&!this.$element.hasClass("in")){var b,e=this.$parent&&this.$parent.children(".panel").children(".in, .collapsing");if(!(e&&e.length&&(b=e.data("bs.collapse"),b&&b.transitioning))){var f=a.Event("show.bs.collapse");if(this.$element.trigger(f),!f.isDefaultPrevented()){e&&e.length&&(c.call(e,"hide"),b||e.data("bs.collapse",null));var g=this.dimension();this.$element.removeClass("collapse").addClass("collapsing")[g](0).attr("aria-expanded",!0),this.$trigger.removeClass("collapsed").attr("aria-expanded",!0),this.transitioning=1;var h=function(){this.$element.removeClass("collapsing").addClass("collapse in")[g](""),this.transitioning=0,this.$element.trigger("shown.bs.collapse")};if(!a.support.transition)return h.call(this);var i=a.camelCase(["scroll",g].join("-"));this.$element.one("bsTransitionEnd",a.proxy(h,this)).emulateTransitionEnd(d.TRANSITION_DURATION)[g](this.$element[0][i])}}}},d.prototype.hide=function(){if(!this.transitioning&&this.$element.hasClass("in")){var b=a.Event("hide.bs.collapse");if(this.$element.trigger(b),!b.isDefaultPrevented()){var c=this.dimension();this.$element[c](this.$element[c]())[0].offsetHeight,this.$element.addClass("collapsing").removeClass("collapse in").attr("aria-expanded",!1),this.$trigger.addClass("collapsed").attr("aria-expanded",!1),this.transitioning=1;var e=function(){this.transitioning=0,this.$element.removeClass("collapsing").addClass("collapse").trigger("hidden.bs.collapse")};return a.support.transition?void this.$element[c](0).one("bsTransitionEnd",a.proxy(e,this)).emulateTransitionEnd(d.TRANSITION_DURATION):e.call(this)}}},d.prototype.toggle=function(){this[this.$element.hasClass("in")?"hide":"show"]()},d.prototype.getParent=function(){return a(this.options.parent).find('[data-toggle="collapse"][data-parent="'+this.options.parent+'"]').each(a.proxy(function(c,d){var e=a(d);this.addAriaAndCollapsedClass(b(e),e)},this)).end()},d.prototype.addAriaAndCollapsedClass=function(a,b){var c=a.hasClass("in");a.attr("aria-expanded",c),b.toggleClass("collapsed",!c).attr("aria-expanded",c)};var e=a.fn.collapse;a.fn.collapse=c,a.fn.collapse.Constructor=d,a.fn.collapse.noConflict=function(){return a.fn.collapse=e,this},a(document).on("click.bs.collapse.data-api",'[data-toggle="collapse"]',function(d){var e=a(this);e.attr("data-target")||d.preventDefault();var f=b(e),g=f.data("bs.collapse"),h=g?"toggle":e.data();c.call(f,h)})}(jQuery),+function(a){"use strict";function b(b){var c=b.attr("data-target");c||(c=b.attr("href"),c=c&&/#[A-Za-z]/.test(c)&&c.replace(/.*(?=#[^\s]*$)/,""));var d=c&&a(c);return d&&d.length?d:b.parent()}function c(c){c&&3===c.which||(a(e).remove(),a(f).each(function(){var d=a(this),e=b(d),f={relatedTarget:this};e.hasClass("open")&&(c&&"click"==c.type&&/input|textarea/i.test(c.target.tagName)&&a.contains(e[0],c.target)||(e.trigger(c=a.Event("hide.bs.dropdown",f)),c.isDefaultPrevented()||(d.attr("aria-expanded","false"),e.removeClass("open").trigger(a.Event("hidden.bs.dropdown",f)))))}))}function d(b){return this.each(function(){var c=a(this),d=c.data("bs.dropdown");d||c.data("bs.dropdown",d=new g(this)),"string"==typeof b&&d[b].call(c)})}var e=".dropdown-backdrop",f='[data-toggle="dropdown"]',g=function(b){a(b).on("click.bs.dropdown",this.toggle)};g.VERSION="3.3.7",g.prototype.toggle=function(d){var e=a(this);if(!e.is(".disabled, :disabled")){var f=b(e),g=f.hasClass("open");if(c(),!g){"ontouchstart"in document.documentElement&&!f.closest(".navbar-nav").length&&a(document.createElement("div")).addClass("dropdown-backdrop").insertAfter(a(this)).on("click",c);var h={relatedTarget:this};if(f.trigger(d=a.Event("show.bs.dropdown",h)),d.isDefaultPrevented())return;e.trigger("focus").attr("aria-expanded","true"),f.toggleClass("open").trigger(a.Event("shown.bs.dropdown",h))}return!1}},g.prototype.keydown=function(c){if(/(38|40|27|32)/.test(c.which)&&!/input|textarea/i.test(c.target.tagName)){var d=a(this);if(c.preventDefault(),c.stopPropagation(),!d.is(".disabled, :disabled")){var e=b(d),g=e.hasClass("open");if(!g&&27!=c.which||g&&27==c.which)return 27==c.which&&e.find(f).trigger("focus"),d.trigger("click");var h=" li:not(.disabled):visible a",i=e.find(".dropdown-menu"+h);if(i.length){var j=i.index(c.target);38==c.which&&j>0&&j--,40==c.which&&j<i.length-1&&j++,~j||(j=0),i.eq(j).trigger("focus")}}}};var h=a.fn.dropdown;a.fn.dropdown=d,a.fn.dropdown.Constructor=g,a.fn.dropdown.noConflict=function(){return a.fn.dropdown=h,this},a(document).on("click.bs.dropdown.data-api",c).on("click.bs.dropdown.data-api",".dropdown form",function(a){a.stopPropagation()}).on("click.bs.dropdown.data-api",f,g.prototype.toggle).on("keydown.bs.dropdown.data-api",f,g.prototype.keydown).on("keydown.bs.dropdown.data-api",".dropdown-menu",g.prototype.keydown)}(jQuery),+function(a){"use strict";function b(b,d){return this.each(function(){var e=a(this),f=e.data("bs.modal"),g=a.extend({},c.DEFAULTS,e.data(),"object"==typeof b&&b);f||e.data("bs.modal",f=new c(this,g)),"string"==typeof b?f[b](d):g.show&&f.show(d)})}var c=function(b,c){this.options=c,this.$body=a(document.body),this.$element=a(b),this.$dialog=this.$element.find(".modal-dialog"),this.$backdrop=null,this.isShown=null,this.originalBodyPad=null,this.scrollbarWidth=0,this.ignoreBackdropClick=!1,this.options.remote&&this.$element.find(".modal-content").load(this.options.remote,a.proxy(function(){this.$element.trigger("loaded.bs.modal")},this))};c.VERSION="3.3.7",c.TRANSITION_DURATION=300,c.BACKDROP_TRANSITION_DURATION=150,c.DEFAULTS={backdrop:!0,keyboard:!0,show:!0},c.prototype.toggle=function(a){return this.isShown?this.hide():this.show(a)},c.prototype.show=function(b){var d=this,e=a.Event("show.bs.modal",{relatedTarget:b});this.$element.trigger(e),this.isShown||e.isDefaultPrevented()||(this.isShown=!0,this.checkScrollbar(),this.setScrollbar(),this.$body.addClass("modal-open"),this.escape(),this.resize(),this.$element.on("click.dismiss.bs.modal",'[data-dismiss="modal"]',a.proxy(this.hide,this)),this.$dialog.on("mousedown.dismiss.bs.modal",function(){d.$element.one("mouseup.dismiss.bs.modal",function(b){a(b.target).is(d.$element)&&(d.ignoreBackdropClick=!0)})}),this.backdrop(function(){var e=a.support.transition&&d.$element.hasClass("fade");d.$element.parent().length||d.$element.appendTo(d.$body),d.$element.show().scrollTop(0),d.adjustDialog(),e&&d.$element[0].offsetWidth,d.$element.addClass("in"),d.enforceFocus();var f=a.Event("shown.bs.modal",{relatedTarget:b});e?d.$dialog.one("bsTransitionEnd",function(){d.$element.trigger("focus").trigger(f)}).emulateTransitionEnd(c.TRANSITION_DURATION):d.$element.trigger("focus").trigger(f)}))},c.prototype.hide=function(b){b&&b.preventDefault(),b=a.Event("hide.bs.modal"),this.$element.trigger(b),this.isShown&&!b.isDefaultPrevented()&&(this.isShown=!1,this.escape(),this.resize(),a(document).off("focusin.bs.modal"),this.$element.removeClass("in").off("click.dismiss.bs.modal").off("mouseup.dismiss.bs.modal"),this.$dialog.off("mousedown.dismiss.bs.modal"),a.support.transition&&this.$element.hasClass("fade")?this.$element.one("bsTransitionEnd",a.proxy(this.hideModal,this)).emulateTransitionEnd(c.TRANSITION_DURATION):this.hideModal())},c.prototype.enforceFocus=function(){a(document).off("focusin.bs.modal").on("focusin.bs.modal",a.proxy(function(a){document===a.target||this.$element[0]===a.target||this.$element.has(a.target).length||this.$element.trigger("focus")},this))},c.prototype.escape=function(){this.isShown&&this.options.keyboard?this.$element.on("keydown.dismiss.bs.modal",a.proxy(function(a){27==a.which&&this.hide()},this)):this.isShown||this.$element.off("keydown.dismiss.bs.modal")},c.prototype.resize=function(){this.isShown?a(window).on("resize.bs.modal",a.proxy(this.handleUpdate,this)):a(window).off("resize.bs.modal")},c.prototype.hideModal=function(){var a=this;this.$element.hide(),this.backdrop(function(){a.$body.removeClass("modal-open"),a.resetAdjustments(),a.resetScrollbar(),a.$element.trigger("hidden.bs.modal")})},c.prototype.removeBackdrop=function(){this.$backdrop&&this.$backdrop.remove(),this.$backdrop=null},c.prototype.backdrop=function(b){var d=this,e=this.$element.hasClass("fade")?"fade":"";if(this.isShown&&this.options.backdrop){var f=a.support.transition&&e;if(this.$backdrop=a(document.createElement("div")).addClass("modal-backdrop "+e).appendTo(this.$body),this.$element.on("click.dismiss.bs.modal",a.proxy(function(a){return this.ignoreBackdropClick?void(this.ignoreBackdropClick=!1):void(a.target===a.currentTarget&&("static"==this.options.backdrop?this.$element[0].focus():this.hide()))},this)),f&&this.$backdrop[0].offsetWidth,this.$backdrop.addClass("in"),!b)return;f?this.$backdrop.one("bsTransitionEnd",b).emulateTransitionEnd(c.BACKDROP_TRANSITION_DURATION):b()}else if(!this.isShown&&this.$backdrop){this.$backdrop.removeClass("in");var g=function(){d.removeBackdrop(),b&&b()};a.support.transition&&this.$element.hasClass("fade")?this.$backdrop.one("bsTransitionEnd",g).emulateTransitionEnd(c.BACKDROP_TRANSITION_DURATION):g()}else b&&b()},c.prototype.handleUpdate=function(){this.adjustDialog()},c.prototype.adjustDialog=function(){var a=this.$element[0].scrollHeight>document.documentElement.clientHeight;this.$element.css({paddingLeft:!this.bodyIsOverflowing&&a?this.scrollbarWidth:"",paddingRight:this.bodyIsOverflowing&&!a?this.scrollbarWidth:""})},c.prototype.resetAdjustments=function(){this.$element.css({paddingLeft:"",paddingRight:""})},c.prototype.checkScrollbar=function(){var a=window.innerWidth;if(!a){var b=document.documentElement.getBoundingClientRect();a=b.right-Math.abs(b.left)}this.bodyIsOverflowing=document.body.clientWidth<a,this.scrollbarWidth=this.measureScrollbar()},c.prototype.setScrollbar=function(){var a=parseInt(this.$body.css("padding-right")||0,10);this.originalBodyPad=document.body.style.paddingRight||"",this.bodyIsOverflowing&&this.$body.css("padding-right",a+this.scrollbarWidth)},c.prototype.resetScrollbar=function(){this.$body.css("padding-right",this.originalBodyPad)},c.prototype.measureScrollbar=function(){var a=document.createElement("div");a.className="modal-scrollbar-measure",this.$body.append(a);var b=a.offsetWidth-a.clientWidth;return this.$body[0].removeChild(a),b};var d=a.fn.modal;a.fn.modal=b,a.fn.modal.Constructor=c,a.fn.modal.noConflict=function(){return a.fn.modal=d,this},a(document).on("click.bs.modal.data-api",'[data-toggle="modal"]',function(c){var d=a(this),e=d.attr("href"),f=a(d.attr("data-target")||e&&e.replace(/.*(?=#[^\s]+$)/,"")),g=f.data("bs.modal")?"toggle":a.extend({remote:!/#/.test(e)&&e},f.data(),d.data());d.is("a")&&c.preventDefault(),f.one("show.bs.modal",function(a){a.isDefaultPrevented()||f.one("hidden.bs.modal",function(){d.is(":visible")&&d.trigger("focus")})}),b.call(f,g,this)})}(jQuery),+function(a){"use strict";function b(b){return this.each(function(){var d=a(this),e=d.data("bs.tooltip"),f="object"==typeof b&&b;!e&&/destroy|hide/.test(b)||(e||d.data("bs.tooltip",e=new c(this,f)),"string"==typeof b&&e[b]())})}var c=function(a,b){this.type=null,this.options=null,this.enabled=null,this.timeout=null,this.hoverState=null,this.$element=null,this.inState=null,this.init("tooltip",a,b)};c.VERSION="3.3.7",c.TRANSITION_DURATION=150,c.DEFAULTS={animation:!0,placement:"top",selector:!1,template:'<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',trigger:"hover focus",title:"",delay:0,html:!1,container:!1,viewport:{selector:"body",padding:0}},c.prototype.init=function(b,c,d){if(this.enabled=!0,this.type=b,this.$element=a(c),this.options=this.getOptions(d),this.$viewport=this.options.viewport&&a(a.isFunction(this.options.viewport)?this.options.viewport.call(this,this.$element):this.options.viewport.selector||this.options.viewport),this.inState={click:!1,hover:!1,focus:!1},this.$element[0]instanceof document.constructor&&!this.options.selector)throw new Error("`selector` option must be specified when initializing "+this.type+" on the window.document object!");for(var e=this.options.trigger.split(" "),f=e.length;f--;){var g=e[f];if("click"==g)this.$element.on("click."+this.type,this.options.selector,a.proxy(this.toggle,this));else if("manual"!=g){var h="hover"==g?"mouseenter":"focusin",i="hover"==g?"mouseleave":"focusout";this.$element.on(h+"."+this.type,this.options.selector,a.proxy(this.enter,this)),this.$element.on(i+"."+this.type,this.options.selector,a.proxy(this.leave,this))}}this.options.selector?this._options=a.extend({},this.options,{trigger:"manual",selector:""}):this.fixTitle()},c.prototype.getDefaults=function(){return c.DEFAULTS},c.prototype.getOptions=function(b){return b=a.extend({},this.getDefaults(),this.$element.data(),b),b.delay&&"number"==typeof b.delay&&(b.delay={show:b.delay,hide:b.delay}),b},c.prototype.getDelegateOptions=function(){var b={},c=this.getDefaults();return this._options&&a.each(this._options,function(a,d){c[a]!=d&&(b[a]=d)}),b},c.prototype.enter=function(b){var c=b instanceof this.constructor?b:a(b.currentTarget).data("bs."+this.type);return c||(c=new this.constructor(b.currentTarget,this.getDelegateOptions()),a(b.currentTarget).data("bs."+this.type,c)),b instanceof a.Event&&(c.inState["focusin"==b.type?"focus":"hover"]=!0),c.tip().hasClass("in")||"in"==c.hoverState?void(c.hoverState="in"):(clearTimeout(c.timeout),c.hoverState="in",c.options.delay&&c.options.delay.show?void(c.timeout=setTimeout(function(){"in"==c.hoverState&&c.show()},c.options.delay.show)):c.show())},c.prototype.isInStateTrue=function(){for(var a in this.inState)if(this.inState[a])return!0;return!1},c.prototype.leave=function(b){var c=b instanceof this.constructor?b:a(b.currentTarget).data("bs."+this.type);if(c||(c=new this.constructor(b.currentTarget,this.getDelegateOptions()),a(b.currentTarget).data("bs."+this.type,c)),b instanceof a.Event&&(c.inState["focusout"==b.type?"focus":"hover"]=!1),!c.isInStateTrue())return clearTimeout(c.timeout),c.hoverState="out",c.options.delay&&c.options.delay.hide?void(c.timeout=setTimeout(function(){"out"==c.hoverState&&c.hide()},c.options.delay.hide)):c.hide()},c.prototype.show=function(){var b=a.Event("show.bs."+this.type);if(this.hasContent()&&this.enabled){this.$element.trigger(b);var d=a.contains(this.$element[0].ownerDocument.documentElement,this.$element[0]);if(b.isDefaultPrevented()||!d)return;var e=this,f=this.tip(),g=this.getUID(this.type);this.setContent(),f.attr("id",g),this.$element.attr("aria-describedby",g),this.options.animation&&f.addClass("fade");var h="function"==typeof this.options.placement?this.options.placement.call(this,f[0],this.$element[0]):this.options.placement,i=/\s?auto?\s?/i,j=i.test(h);j&&(h=h.replace(i,"")||"top"),f.detach().css({top:0,left:0,display:"block"}).addClass(h).data("bs."+this.type,this),this.options.container?f.appendTo(this.options.container):f.insertAfter(this.$element),this.$element.trigger("inserted.bs."+this.type);var k=this.getPosition(),l=f[0].offsetWidth,m=f[0].offsetHeight;if(j){var n=h,o=this.getPosition(this.$viewport);h="bottom"==h&&k.bottom+m>o.bottom?"top":"top"==h&&k.top-m<o.top?"bottom":"right"==h&&k.right+l>o.width?"left":"left"==h&&k.left-l<o.left?"right":h,f.removeClass(n).addClass(h)}var p=this.getCalculatedOffset(h,k,l,m);this.applyPlacement(p,h);var q=function(){var a=e.hoverState;e.$element.trigger("shown.bs."+e.type),e.hoverState=null,"out"==a&&e.leave(e)};a.support.transition&&this.$tip.hasClass("fade")?f.one("bsTransitionEnd",q).emulateTransitionEnd(c.TRANSITION_DURATION):q()}},c.prototype.applyPlacement=function(b,c){var d=this.tip(),e=d[0].offsetWidth,f=d[0].offsetHeight,g=parseInt(d.css("margin-top"),10),h=parseInt(d.css("margin-left"),10);isNaN(g)&&(g=0),isNaN(h)&&(h=0),b.top+=g,b.left+=h,a.offset.setOffset(d[0],a.extend({using:function(a){d.css({top:Math.round(a.top),left:Math.round(a.left)})}},b),0),d.addClass("in");var i=d[0].offsetWidth,j=d[0].offsetHeight;"top"==c&&j!=f&&(b.top=b.top+f-j);var k=this.getViewportAdjustedDelta(c,b,i,j);k.left?b.left+=k.left:b.top+=k.top;var l=/top|bottom/.test(c),m=l?2*k.left-e+i:2*k.top-f+j,n=l?"offsetWidth":"offsetHeight";d.offset(b),this.replaceArrow(m,d[0][n],l)},c.prototype.replaceArrow=function(a,b,c){this.arrow().css(c?"left":"top",50*(1-a/b)+"%").css(c?"top":"left","")},c.prototype.setContent=function(){var a=this.tip(),b=this.getTitle();a.find(".tooltip-inner")[this.options.html?"html":"text"](b),a.removeClass("fade in top bottom left right")},c.prototype.hide=function(b){function d(){"in"!=e.hoverState&&f.detach(),e.$element&&e.$element.removeAttr("aria-describedby").trigger("hidden.bs."+e.type),b&&b()}var e=this,f=a(this.$tip),g=a.Event("hide.bs."+this.type);if(this.$element.trigger(g),!g.isDefaultPrevented())return f.removeClass("in"),a.support.transition&&f.hasClass("fade")?f.one("bsTransitionEnd",d).emulateTransitionEnd(c.TRANSITION_DURATION):d(),this.hoverState=null,this},c.prototype.fixTitle=function(){var a=this.$element;(a.attr("title")||"string"!=typeof a.attr("data-original-title"))&&a.attr("data-original-title",a.attr("title")||"").attr("title","")},c.prototype.hasContent=function(){return this.getTitle()},c.prototype.getPosition=function(b){b=b||this.$element;var c=b[0],d="BODY"==c.tagName,e=c.getBoundingClientRect();null==e.width&&(e=a.extend({},e,{width:e.right-e.left,height:e.bottom-e.top}));var f=window.SVGElement&&c instanceof window.SVGElement,g=d?{top:0,left:0}:f?null:b.offset(),h={scroll:d?document.documentElement.scrollTop||document.body.scrollTop:b.scrollTop()},i=d?{width:a(window).width(),height:a(window).height()}:null;return a.extend({},e,h,i,g)},c.prototype.getCalculatedOffset=function(a,b,c,d){return"bottom"==a?{top:b.top+b.height,left:b.left+b.width/2-c/2}:"top"==a?{top:b.top-d,left:b.left+b.width/2-c/2}:"left"==a?{top:b.top+b.height/2-d/2,left:b.left-c}:{top:b.top+b.height/2-d/2,left:b.left+b.width}},c.prototype.getViewportAdjustedDelta=function(a,b,c,d){var e={top:0,left:0};if(!this.$viewport)return e;var f=this.options.viewport&&this.options.viewport.padding||0,g=this.getPosition(this.$viewport);if(/right|left/.test(a)){var h=b.top-f-g.scroll,i=b.top+f-g.scroll+d;h<g.top?e.top=g.top-h:i>g.top+g.height&&(e.top=g.top+g.height-i)}else{var j=b.left-f,k=b.left+f+c;j<g.left?e.left=g.left-j:k>g.right&&(e.left=g.left+g.width-k)}return e},c.prototype.getTitle=function(){var a,b=this.$element,c=this.options;return a=b.attr("data-original-title")||("function"==typeof c.title?c.title.call(b[0]):c.title)},c.prototype.getUID=function(a){do a+=~~(1e6*Math.random());while(document.getElementById(a));return a},c.prototype.tip=function(){if(!this.$tip&&(this.$tip=a(this.options.template),1!=this.$tip.length))throw new Error(this.type+" `template` option must consist of exactly 1 top-level element!");return this.$tip},c.prototype.arrow=function(){return this.$arrow=this.$arrow||this.tip().find(".tooltip-arrow")},c.prototype.enable=function(){this.enabled=!0},c.prototype.disable=function(){this.enabled=!1},c.prototype.toggleEnabled=function(){this.enabled=!this.enabled},c.prototype.toggle=function(b){var c=this;b&&(c=a(b.currentTarget).data("bs."+this.type),c||(c=new this.constructor(b.currentTarget,this.getDelegateOptions()),a(b.currentTarget).data("bs."+this.type,c))),b?(c.inState.click=!c.inState.click,c.isInStateTrue()?c.enter(c):c.leave(c)):c.tip().hasClass("in")?c.leave(c):c.enter(c)},c.prototype.destroy=function(){var a=this;clearTimeout(this.timeout),this.hide(function(){a.$element.off("."+a.type).removeData("bs."+a.type),a.$tip&&a.$tip.detach(),a.$tip=null,a.$arrow=null,a.$viewport=null,a.$element=null})};var d=a.fn.tooltip;a.fn.tooltip=b,a.fn.tooltip.Constructor=c,a.fn.tooltip.noConflict=function(){return a.fn.tooltip=d,this}}(jQuery),+function(a){"use strict";function b(b){return this.each(function(){var d=a(this),e=d.data("bs.popover"),f="object"==typeof b&&b;!e&&/destroy|hide/.test(b)||(e||d.data("bs.popover",e=new c(this,f)),"string"==typeof b&&e[b]())})}var c=function(a,b){this.init("popover",a,b)};if(!a.fn.tooltip)throw new Error("Popover requires tooltip.js");c.VERSION="3.3.7",c.DEFAULTS=a.extend({},a.fn.tooltip.Constructor.DEFAULTS,{placement:"right",trigger:"click",content:"",template:'<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>'}),c.prototype=a.extend({},a.fn.tooltip.Constructor.prototype),c.prototype.constructor=c,c.prototype.getDefaults=function(){return c.DEFAULTS},c.prototype.setContent=function(){var a=this.tip(),b=this.getTitle(),c=this.getContent();a.find(".popover-title")[this.options.html?"html":"text"](b),a.find(".popover-content").children().detach().end()[this.options.html?"string"==typeof c?"html":"append":"text"](c),a.removeClass("fade top bottom left right in"),a.find(".popover-title").html()||a.find(".popover-title").hide()},c.prototype.hasContent=function(){return this.getTitle()||this.getContent()},c.prototype.getContent=function(){var a=this.$element,b=this.options;return a.attr("data-content")||("function"==typeof b.content?b.content.call(a[0]):b.content)},c.prototype.arrow=function(){return this.$arrow=this.$arrow||this.tip().find(".arrow")};var d=a.fn.popover;a.fn.popover=b,a.fn.popover.Constructor=c,a.fn.popover.noConflict=function(){return a.fn.popover=d,this}}(jQuery),+function(a){"use strict";function b(c,d){this.$body=a(document.body),this.$scrollElement=a(a(c).is(document.body)?window:c),this.options=a.extend({},b.DEFAULTS,d),this.selector=(this.options.target||"")+" .nav li > a",this.offsets=[],this.targets=[],this.activeTarget=null,this.scrollHeight=0,this.$scrollElement.on("scroll.bs.scrollspy",a.proxy(this.process,this)),this.refresh(),this.process()}function c(c){return this.each(function(){var d=a(this),e=d.data("bs.scrollspy"),f="object"==typeof c&&c;e||d.data("bs.scrollspy",e=new b(this,f)),"string"==typeof c&&e[c]()})}b.VERSION="3.3.7",b.DEFAULTS={offset:10},b.prototype.getScrollHeight=function(){return this.$scrollElement[0].scrollHeight||Math.max(this.$body[0].scrollHeight,document.documentElement.scrollHeight)},b.prototype.refresh=function(){var b=this,c="offset",d=0;this.offsets=[],this.targets=[],this.scrollHeight=this.getScrollHeight(),a.isWindow(this.$scrollElement[0])||(c="position",d=this.$scrollElement.scrollTop()),this.$body.find(this.selector).map(function(){var b=a(this),e=b.data("target")||b.attr("href"),f=/^#./.test(e)&&a(e);return f&&f.length&&f.is(":visible")&&[[f[c]().top+d,e]]||null}).sort(function(a,b){return a[0]-b[0]}).each(function(){b.offsets.push(this[0]),b.targets.push(this[1])})},b.prototype.process=function(){var a,b=this.$scrollElement.scrollTop()+this.options.offset,c=this.getScrollHeight(),d=this.options.offset+c-this.$scrollElement.height(),e=this.offsets,f=this.targets,g=this.activeTarget;if(this.scrollHeight!=c&&this.refresh(),b>=d)return g!=(a=f[f.length-1])&&this.activate(a);if(g&&b<e[0])return this.activeTarget=null,this.clear();for(a=e.length;a--;)g!=f[a]&&b>=e[a]&&(void 0===e[a+1]||b<e[a+1])&&this.activate(f[a])},b.prototype.activate=function(b){
+this.activeTarget=b,this.clear();var c=this.selector+'[data-target="'+b+'"],'+this.selector+'[href="'+b+'"]',d=a(c).parents("li").addClass("active");d.parent(".dropdown-menu").length&&(d=d.closest("li.dropdown").addClass("active")),d.trigger("activate.bs.scrollspy")},b.prototype.clear=function(){a(this.selector).parentsUntil(this.options.target,".active").removeClass("active")};var d=a.fn.scrollspy;a.fn.scrollspy=c,a.fn.scrollspy.Constructor=b,a.fn.scrollspy.noConflict=function(){return a.fn.scrollspy=d,this},a(window).on("load.bs.scrollspy.data-api",function(){a('[data-spy="scroll"]').each(function(){var b=a(this);c.call(b,b.data())})})}(jQuery),+function(a){"use strict";function b(b){return this.each(function(){var d=a(this),e=d.data("bs.tab");e||d.data("bs.tab",e=new c(this)),"string"==typeof b&&e[b]()})}var c=function(b){this.element=a(b)};c.VERSION="3.3.7",c.TRANSITION_DURATION=150,c.prototype.show=function(){var b=this.element,c=b.closest("ul:not(.dropdown-menu)"),d=b.data("target");if(d||(d=b.attr("href"),d=d&&d.replace(/.*(?=#[^\s]*$)/,"")),!b.parent("li").hasClass("active")){var e=c.find(".active:last a"),f=a.Event("hide.bs.tab",{relatedTarget:b[0]}),g=a.Event("show.bs.tab",{relatedTarget:e[0]});if(e.trigger(f),b.trigger(g),!g.isDefaultPrevented()&&!f.isDefaultPrevented()){var h=a(d);this.activate(b.closest("li"),c),this.activate(h,h.parent(),function(){e.trigger({type:"hidden.bs.tab",relatedTarget:b[0]}),b.trigger({type:"shown.bs.tab",relatedTarget:e[0]})})}}},c.prototype.activate=function(b,d,e){function f(){g.removeClass("active").find("> .dropdown-menu > .active").removeClass("active").end().find('[data-toggle="tab"]').attr("aria-expanded",!1),b.addClass("active").find('[data-toggle="tab"]').attr("aria-expanded",!0),h?(b[0].offsetWidth,b.addClass("in")):b.removeClass("fade"),b.parent(".dropdown-menu").length&&b.closest("li.dropdown").addClass("active").end().find('[data-toggle="tab"]').attr("aria-expanded",!0),e&&e()}var g=d.find("> .active"),h=e&&a.support.transition&&(g.length&&g.hasClass("fade")||!!d.find("> .fade").length);g.length&&h?g.one("bsTransitionEnd",f).emulateTransitionEnd(c.TRANSITION_DURATION):f(),g.removeClass("in")};var d=a.fn.tab;a.fn.tab=b,a.fn.tab.Constructor=c,a.fn.tab.noConflict=function(){return a.fn.tab=d,this};var e=function(c){c.preventDefault(),b.call(a(this),"show")};a(document).on("click.bs.tab.data-api",'[data-toggle="tab"]',e).on("click.bs.tab.data-api",'[data-toggle="pill"]',e)}(jQuery),+function(a){"use strict";function b(b){return this.each(function(){var d=a(this),e=d.data("bs.affix"),f="object"==typeof b&&b;e||d.data("bs.affix",e=new c(this,f)),"string"==typeof b&&e[b]()})}var c=function(b,d){this.options=a.extend({},c.DEFAULTS,d),this.$target=a(this.options.target).on("scroll.bs.affix.data-api",a.proxy(this.checkPosition,this)).on("click.bs.affix.data-api",a.proxy(this.checkPositionWithEventLoop,this)),this.$element=a(b),this.affixed=null,this.unpin=null,this.pinnedOffset=null,this.checkPosition()};c.VERSION="3.3.7",c.RESET="affix affix-top affix-bottom",c.DEFAULTS={offset:0,target:window},c.prototype.getState=function(a,b,c,d){var e=this.$target.scrollTop(),f=this.$element.offset(),g=this.$target.height();if(null!=c&&"top"==this.affixed)return e<c&&"top";if("bottom"==this.affixed)return null!=c?!(e+this.unpin<=f.top)&&"bottom":!(e+g<=a-d)&&"bottom";var h=null==this.affixed,i=h?e:f.top,j=h?g:b;return null!=c&&e<=c?"top":null!=d&&i+j>=a-d&&"bottom"},c.prototype.getPinnedOffset=function(){if(this.pinnedOffset)return this.pinnedOffset;this.$element.removeClass(c.RESET).addClass("affix");var a=this.$target.scrollTop(),b=this.$element.offset();return this.pinnedOffset=b.top-a},c.prototype.checkPositionWithEventLoop=function(){setTimeout(a.proxy(this.checkPosition,this),1)},c.prototype.checkPosition=function(){if(this.$element.is(":visible")){var b=this.$element.height(),d=this.options.offset,e=d.top,f=d.bottom,g=Math.max(a(document).height(),a(document.body).height());"object"!=typeof d&&(f=e=d),"function"==typeof e&&(e=d.top(this.$element)),"function"==typeof f&&(f=d.bottom(this.$element));var h=this.getState(g,b,e,f);if(this.affixed!=h){null!=this.unpin&&this.$element.css("top","");var i="affix"+(h?"-"+h:""),j=a.Event(i+".bs.affix");if(this.$element.trigger(j),j.isDefaultPrevented())return;this.affixed=h,this.unpin="bottom"==h?this.getPinnedOffset():null,this.$element.removeClass(c.RESET).addClass(i).trigger(i.replace("affix","affixed")+".bs.affix")}"bottom"==h&&this.$element.offset({top:g-b-f})}};var d=a.fn.affix;a.fn.affix=b,a.fn.affix.Constructor=c,a.fn.affix.noConflict=function(){return a.fn.affix=d,this},a(window).on("load",function(){a('[data-spy="affix"]').each(function(){var c=a(this),d=c.data();d.offset=d.offset||{},null!=d.offsetBottom&&(d.offset.bottom=d.offsetBottom),null!=d.offsetTop&&(d.offset.top=d.offsetTop),b.call(c,d)})})}(jQuery);
+// This file is autogenerated via the `commonjs` Grunt task. You can require() this file in a CommonJS environment.
+require('../../js/transition.js')
+require('../../js/alert.js')
+require('../../js/button.js')
+require('../../js/carousel.js')
+require('../../js/collapse.js')
+require('../../js/dropdown.js')
+require('../../js/modal.js')
+require('../../js/tooltip.js')
+require('../../js/popover.js')
+require('../../js/scrollspy.js')
+require('../../js/tab.js')
+require('../../js/affix.js')
+/*!
  * bootstrap-fileinput v4.3.5
  * http://plugins.krajee.com/file-input
  *
@@ -57114,2404 +59512,6 @@ holdReady:function(a){a?r.readyWait++:r.ready(!0)},ready:function(a){(a===!0?--r
  */!function(a){"use strict";"function"==typeof define&&define.amd?define(["jquery"],a):"object"==typeof module&&module.exports?module.exports=a(require("jquery")):a(window.jQuery)}(function(a){"use strict";a.fn.fileinputLocales={},a.fn.fileinputThemes={};var b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$,_,aa,ba,ca,da,ea,fa,ga,ha,ia,ja,ka,la,ma,na,oa;b=".fileinput",c="kvFileinputModal",d='style="width:{width};height:{height};"',e='<param name="controller" value="true" />\n<param name="allowFullScreen" value="true" />\n<param name="allowScriptAccess" value="always" />\n<param name="autoPlay" value="false" />\n<param name="autoStart" value="false" />\n<param name="quality" value="high" />\n',f='<div class="file-preview-other">\n<span class="{previewFileIconClass}">{previewFileIcon}</span>\n</div>',g=window.URL||window.webkitURL,h=function(a,b,c){return void 0!==a&&(c?a===b:a.match(b))},i=function(a){if("Microsoft Internet Explorer"!==navigator.appName)return!1;if(10===a)return new RegExp("msie\\s"+a,"i").test(navigator.userAgent);var c,b=document.createElement("div");return b.innerHTML="<!--[if IE "+a+"]> <i></i> <![endif]-->",c=b.getElementsByTagName("i").length,document.body.appendChild(b),b.parentNode.removeChild(b),c},j=function(a,c,d,e){var f=e?c:c.split(" ").join(b+" ")+b;a.off(f).on(f,d)},k={data:{},init:function(a){var b=a.initialPreview,c=a.id;b.length>0&&!ea(b)&&(b=b.split(a.initialPreviewDelimiter)),k.data[c]={content:b,config:a.initialPreviewConfig,tags:a.initialPreviewThumbTags,delimiter:a.initialPreviewDelimiter,previewFileType:a.initialPreviewFileType,previewAsData:a.initialPreviewAsData,template:a.previewGenericTemplate,showZoom:a.fileActionSettings.showZoom,showDrag:a.fileActionSettings.showDrag,getSize:function(b){return a._getSize(b)},parseTemplate:function(b,c,d,e,f,g,h){var i=" file-preview-initial";return a._generatePreviewTemplate(b,c,d,e,f,!1,null,i,g,h)},msg:function(b){return a._getMsgSelected(b)},initId:a.previewInitId,footer:a._getLayoutTemplate("footer").replace(/\{progress}/g,a._renderThumbProgress()),isDelete:a.initialPreviewShowDelete,caption:a.initialCaption,actions:function(b,c,d,e,f,g,h){return a._renderFileActions(b,c,d,e,f,g,h,!0)}}},fetch:function(a){return k.data[a].content.filter(function(a){return null!==a})},count:function(a,b){return k.data[a]&&k.data[a].content?b?k.data[a].content.length:k.fetch(a).length:0},get:function(b,c,d){var j,l,n,o,p,q,e="init_"+c,f=k.data[b],g=f.config[c],h=f.content[c],i=f.initId+"-"+e,m=" file-preview-initial",r=fa("previewAsData",g,f.previewAsData);return d=void 0===d||d,h?(g&&g.frameClass&&(m+=" "+g.frameClass),r?(n=f.previewAsData?fa("type",g,f.previewFileType||"generic"):"generic",o=fa("caption",g),p=k.footer(b,c,d,g&&g.size||null),q=fa("filetype",g,n),j=f.parseTemplate(n,h,o,q,i,p,e,null)):j=f.template.replace(/\{previewId}/g,i).replace(/\{frameClass}/g,m).replace(/\{fileindex}/g,e).replace(/\{content}/g,f.content[c]).replace(/\{template}/g,fa("type",g,f.previewFileType)).replace(/\{footer}/g,k.footer(b,c,d,g&&g.size||null)),f.tags.length&&f.tags[c]&&(j=ia(j,f.tags[c])),da(g)||da(g.frameAttr)||(l=a(document.createElement("div")).html(j),l.find(".file-preview-initial").attr(g.frameAttr),j=l.html(),l.remove()),j):""},add:function(b,c,d,e,f){var h,g=a.extend(!0,{},k.data[b]);return ea(c)||(c=c.split(g.delimiter)),f?(h=g.content.push(c)-1,g.config[h]=d,g.tags[h]=e):(h=c.length-1,g.content=c,g.config=d,g.tags=e),k.data[b]=g,h},set:function(b,c,d,e,f){var h,i,g=a.extend(!0,{},k.data[b]);if(c&&c.length&&(ea(c)||(c=c.split(g.delimiter)),i=c.filter(function(a){return null!==a}),i.length)){if(void 0===g.content&&(g.content=[]),void 0===g.config&&(g.config=[]),void 0===g.tags&&(g.tags=[]),f){for(h=0;h<c.length;h++)c[h]&&g.content.push(c[h]);for(h=0;h<d.length;h++)d[h]&&g.config.push(d[h]);for(h=0;h<e.length;h++)e[h]&&g.tags.push(e[h])}else g.content=c,g.config=d,g.tags=e;k.data[b]=g}},unset:function(a,b){var c=k.count(a);if(c){if(1===c)return k.data[a].content=[],k.data[a].config=[],void(k.data[a].tags=[]);k.data[a].content[b]=null,k.data[a].config[b]=null,k.data[a].tags[b]=null}},out:function(a){var d,b="",c=k.data[a],e=k.count(a,!0);if(0===e)return{content:"",caption:""};for(var f=0;f<e;f++)b+=k.get(a,f);return d=c.msg(k.count(a)),{content:'<div class="file-initial-thumbs">'+b+"</div>",caption:d}},footer:function(a,b,c,d){var e=k.data[a];if(c=void 0===c||c,0===e.config.length||da(e.config[b]))return"";var f=e.config[b],g=fa("caption",f),h=fa("width",f,"auto"),i=fa("url",f,!1),j=fa("key",f,null),l=fa("showDelete",f,!0),m=fa("showZoom",f,e.showZoom),n=fa("showDrag",f,e.showDrag),o=i===!1&&c,p=e.isDelete?e.actions(!1,l,m,n,o,i,j):"",q=e.footer.replace(/\{actions}/g,p);return q.replace(/\{caption}/g,g).replace(/\{size}/g,e.getSize(d)).replace(/\{width}/g,h).replace(/\{indicator}/g,"").replace(/\{indicatorTitle}/g,"")}},l=function(a,b){return b=b||0,"number"==typeof a?a:("string"==typeof a&&(a=parseFloat(a)),isNaN(a)?b:a)},m=function(){return!(!window.File||!window.FileReader)},n=function(){var a=document.createElement("div");return!i(9)&&(void 0!==a.draggable||void 0!==a.ondragstart&&void 0!==a.ondrop)},o=function(){return m()&&window.FormData},p=function(a,b){a.removeClass(b).addClass(b)},X={showRemove:!0,showUpload:!0,showZoom:!0,showDrag:!0,removeIcon:'<i class="glyphicon glyphicon-trash text-danger"></i>',removeClass:"btn btn-xs btn-default",removeTitle:"Remove file",uploadIcon:'<i class="glyphicon glyphicon-upload text-info"></i>',uploadClass:"btn btn-xs btn-default",uploadTitle:"Upload file",zoomIcon:'<i class="glyphicon glyphicon-zoom-in"></i>',zoomClass:"btn btn-xs btn-default",zoomTitle:"View Details",dragIcon:'<i class="glyphicon glyphicon-menu-hamburger"></i>',dragClass:"text-info",dragTitle:"Move / Rearrange",dragSettings:{},indicatorNew:'<i class="glyphicon glyphicon-hand-down text-warning"></i>',indicatorSuccess:'<i class="glyphicon glyphicon-ok-sign text-success"></i>',indicatorError:'<i class="glyphicon glyphicon-exclamation-sign text-danger"></i>',indicatorLoading:'<i class="glyphicon glyphicon-hand-up text-muted"></i>',indicatorNewTitle:"Not uploaded yet",indicatorSuccessTitle:"Uploaded",indicatorErrorTitle:"Upload Error",indicatorLoadingTitle:"Uploading ..."},q='{preview}\n<div class="kv-upload-progress hide"></div>\n<div class="input-group {class}">\n   {caption}\n   <div class="input-group-btn">\n       {remove}\n       {cancel}\n       {upload}\n       {browse}\n   </div>\n</div>',r='{preview}\n<div class="kv-upload-progress hide"></div>\n{remove}\n{cancel}\n{upload}\n{browse}\n',s='<div class="file-preview {class}">\n    {close}    <div class="{dropClass}">\n    <div class="file-preview-thumbnails">\n    </div>\n    <div class="clearfix"></div>    <div class="file-preview-status text-center text-success"></div>\n    <div class="kv-fileinput-error"></div>\n    </div>\n</div>',u='<div class="close fileinput-remove">&times;</div>\n',t='<i class="glyphicon glyphicon-file kv-caption-icon"></i>',v='<div tabindex="500" class="form-control file-caption {class}">\n   <div class="file-caption-name"></div>\n</div>\n',w='<button type="{type}" tabindex="500" title="{title}" class="{css}" {status}>{icon} {label}</button>',x='<a href="{href}" tabindex="500" title="{title}" class="{css}" {status}>{icon} {label}</a>',y='<div tabindex="500" class="{css}" {status}>{icon} {label}</div>',z='<div id="'+c+'" class="file-zoom-dialog modal fade" tabindex="-1" aria-labelledby="'+c+'Label"></div>',A='<div class="modal-dialog modal-lg" role="document">\n  <div class="modal-content">\n    <div class="modal-header">\n      <div class="kv-zoom-actions pull-right">{toggleheader}{fullscreen}{borderless}{close}</div>\n      <h3 class="modal-title">{heading} <small><span class="kv-zoom-title"></span></small></h3>\n    </div>\n    <div class="modal-body">\n      <div class="floating-buttons"></div>\n      <div class="kv-zoom-body file-zoom-content"></div>\n{prev} {next}\n    </div>\n  </div>\n</div>\n',B='<div class="progress">\n    <div class="{class}" role="progressbar" aria-valuenow="{percent}" aria-valuemin="0" aria-valuemax="100" style="width:{percent}%;">\n        {percent}%\n     </div>\n</div>',C=" <br><samp>({sizeText})</samp>",D='<div class="file-thumbnail-footer">\n    <div class="file-footer-caption" title="{caption}">{caption}{size}</div>\n    {progress} {actions}\n</div>',E='<div class="file-actions">\n    <div class="file-footer-buttons">\n        {upload} {delete} {zoom} {other}    </div>\n    {drag}\n    <div class="file-upload-indicator" title="{indicatorTitle}">{indicator}</div>\n    <div class="clearfix"></div>\n</div>',F='<button type="button" class="kv-file-remove {removeClass}" title="{removeTitle}" {dataUrl}{dataKey}>{removeIcon}</button>\n',G='<button type="button" class="kv-file-upload {uploadClass}" title="{uploadTitle}">{uploadIcon}</button>',H='<button type="button" class="kv-file-zoom {zoomClass}" title="{zoomTitle}">{zoomIcon}</button>',I='<span class="file-drag-handle {dragClass}" title="{dragTitle}">{dragIcon}</span>',J='<div class="file-preview-frame{frameClass}" id="{previewId}" data-fileindex="{fileindex}" data-template="{template}"',K=J+'><div class="kv-file-content">\n',L=J+' title="{caption}" '+d+'><div class="kv-file-content">\n',M="</div>{footer}\n</div>\n",N="{content}\n",O='<div class="kv-preview-data file-preview-html" title="{caption}" '+d+">{data}</div>\n",P='<img src="{data}" class="kv-preview-data file-preview-image" title="{caption}" alt="{caption}" '+d+">\n",Q='<textarea class="kv-preview-data file-preview-text" title="{caption}" readonly '+d+">{data}</textarea>\n",R='<video class="kv-preview-data" width="{width}" height="{height}" controls>\n<source src="{data}" type="{type}">\n'+f+"\n</video>\n",S='<audio class="kv-preview-data" controls>\n<source src="{data}" type="{type}">\n'+f+"\n</audio>\n",T='<object class="kv-preview-data file-object" type="application/x-shockwave-flash" width="{width}" height="{height}" data="{data}">\n'+e+" "+f+"\n</object>\n",U='<object class="kv-preview-data file-object" data="{data}" type="{type}" width="{width}" height="{height}">\n<param name="movie" value="{caption}" />\n'+e+" "+f+"\n</object>\n",V='<embed class="kv-preview-data" src="{data}" width="{width}" height="{height}" type="application/pdf">\n',W='<div class="kv-preview-data file-preview-other-frame">\n'+f+"\n</div>\n",Y={main1:q,main2:r,preview:s,close:u,fileIcon:t,caption:v,modalMain:z,modal:A,progress:B,size:C,footer:D,actions:E,actionDelete:F,actionUpload:G,actionZoom:H,actionDrag:I,btnDefault:w,btnLink:x,btnBrowse:y},Z={generic:K+N+M,html:K+O+M,image:K+P+M,text:K+Q+M,video:L+R+M,audio:L+S+M,flash:L+T+M,object:L+U+M,pdf:L+V+M,other:L+W+M},_=["image","html","text","video","audio","flash","pdf","object"],ba={image:{width:"auto",height:"160px"},html:{width:"213px",height:"160px"},text:{width:"213px",height:"160px"},video:{width:"213px",height:"160px"},audio:{width:"213px",height:"80px"},flash:{width:"213px",height:"160px"},object:{width:"160px",height:"160px"},pdf:{width:"160px",height:"160px"},other:{width:"160px",height:"160px"}},$={image:{width:"100%",height:"100%"},html:{width:"100%",height:"100%","min-height":"480px"},text:{width:"100%",height:"100%","min-height":"480px"},video:{width:"auto",height:"100%","max-width":"100%"},audio:{width:"100%",height:"30px"},flash:{width:"auto",height:"480px"},object:{width:"auto",height:"100%","min-height":"480px"},pdf:{width:"100%",height:"100%","min-height":"480px"},other:{width:"auto",height:"100%","min-height":"480px"}},ca={image:function(a,b){return h(a,"image.*")||h(b,/\.(gif|png|jpe?g)$/i)},html:function(a,b){return h(a,"text/html")||h(b,/\.(htm|html)$/i)},text:function(a,b){return h(a,"text.*")||h(b,/\.(xml|javascript)$/i)||h(b,/\.(txt|md|csv|nfo|ini|json|php|js|css)$/i)},video:function(a,b){return h(a,"video.*")&&(h(a,/(ogg|mp4|mp?g|webm|3gp)$/i)||h(b,/\.(og?|mp4|webm|mp?g|3gp)$/i))},audio:function(a,b){return h(a,"audio.*")&&(h(b,/(ogg|mp3|mp?g|wav)$/i)||h(b,/\.(og?|mp3|mp?g|wav)$/i))},flash:function(a,b){return h(a,"application/x-shockwave-flash",!0)||h(b,/\.(swf)$/i)},pdf:function(a,b){return h(a,"application/pdf",!0)||h(b,/\.(pdf)$/i)},object:function(){return!0},other:function(){return!0}},da=function(b,c){return void 0===b||null===b||0===b.length||c&&""===a.trim(b)},ea=function(a){return Array.isArray(a)||"[object Array]"===Object.prototype.toString.call(a)},fa=function(a,b,c){return c=c||"",b&&"object"==typeof b&&a in b?b[a]:c},aa=function(b,c,d){return da(b)||da(b[c])?d:a(b[c])},ga=function(){return Math.round((new Date).getTime()+100*Math.random())},ha=function(a){return a.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;")},ia=function(b,c){var d=b;return c?(a.each(c,function(a,b){"function"==typeof b&&(b=b()),d=d.split(a).join(b)}),d):d},ja=function(a){var b=a.is("img")?a.attr("src"):a.find("source").attr("src");g.revokeObjectURL(b)},ka=function(a){var b=a.lastIndexOf("/");return b===-1&&(b=a.lastIndexOf("\\")),a.split(a.substring(b,b+1)).pop()},la=function(){return document.fullscreenElement||document.mozFullScreenElement||document.webkitFullscreenElement||document.msFullscreenElement},ma=function(a){a&&!la()?document.documentElement.requestFullscreen?document.documentElement.requestFullscreen():document.documentElement.msRequestFullscreen?document.documentElement.msRequestFullscreen():document.documentElement.mozRequestFullScreen?document.documentElement.mozRequestFullScreen():document.documentElement.webkitRequestFullscreen&&document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT):document.exitFullscreen?document.exitFullscreen():document.msExitFullscreen?document.msExitFullscreen():document.mozCancelFullScreen?document.mozCancelFullScreen():document.webkitExitFullscreen&&document.webkitExitFullscreen()},na=function(a,b,c){if(c>=a.length)for(var d=c-a.length;d--+1;)a.push(void 0);return a.splice(c,0,a.splice(b,1)[0]),a},oa=function(b,c){var d=this;d.$element=a(b),d._validate()&&(d.isPreviewable=m(),d.isIE9=i(9),d.isIE10=i(10),d.isPreviewable||d.isIE9?(d._init(c),d._listen()):d.$element.removeClass("file-loading"))},oa.prototype={constructor:oa,_init:function(b){var e,c=this,d=c.$element;a.each(b,function(a,b){switch(a){case"minFileCount":case"maxFileCount":case"maxFileSize":c[a]=l(b);break;default:c[a]=b}}),c.fileInputCleared=!1,c.fileBatchCompleted=!0,c.isPreviewable||(c.showPreview=!1),c.uploadFileAttr=da(d.attr("name"))?"file_data":d.attr("name"),c.reader=null,c.formdata={},c.clearStack(),c.uploadCount=0,c.uploadStatus={},c.uploadLog=[],c.uploadAsyncCount=0,c.loadedImages=[],c.totalImagesCount=0,c.ajaxRequests=[],c.isError=!1,c.ajaxAborted=!1,c.cancelling=!1,e=c._getLayoutTemplate("progress"),c.progressTemplate=e.replace("{class}",c.progressClass),c.progressCompleteTemplate=e.replace("{class}",c.progressCompleteClass),c.progressErrorTemplate=e.replace("{class}",c.progressErrorClass),c.dropZoneEnabled=n()&&c.dropZoneEnabled,c.isDisabled=c.$element.attr("disabled")||c.$element.attr("readonly"),c.isUploadable=o()&&!da(c.uploadUrl),c.isClickable=c.browseOnZoneClick&&c.showPreview&&(c.isUploadable&&c.dropZoneEnabled||!da(c.defaultPreviewContent)),c.slug="function"==typeof b.slugCallback?b.slugCallback:c._slugDefault,c.mainTemplate=c.showCaption?c._getLayoutTemplate("main1"):c._getLayoutTemplate("main2"),c.captionTemplate=c._getLayoutTemplate("caption"),c.previewGenericTemplate=c._getPreviewTemplate("generic"),c.resizeImage&&(c.maxImageWidth||c.maxImageHeight)&&(c.imageCanvas=document.createElement("canvas"),c.imageCanvasContext=c.imageCanvas.getContext("2d")),da(c.$element.attr("id"))&&c.$element.attr("id",ga()),void 0===c.$container?c.$container=c._createContainer():c._refreshContainer(),c.$dropZone=c.$container.find(".file-drop-zone"),c.$progress=c.$container.find(".kv-upload-progress"),c.$btnUpload=c.$container.find(".fileinput-upload"),c.$captionContainer=aa(b,"elCaptionContainer",c.$container.find(".file-caption")),c.$caption=aa(b,"elCaptionText",c.$container.find(".file-caption-name")),c.$previewContainer=aa(b,"elPreviewContainer",c.$container.find(".file-preview")),c.$preview=aa(b,"elPreviewImage",c.$container.find(".file-preview-thumbnails")),c.$previewStatus=aa(b,"elPreviewStatus",c.$container.find(".file-preview-status")),c.$errorContainer=aa(b,"elErrorContainer",c.$previewContainer.find(".kv-fileinput-error")),da(c.msgErrorClass)||p(c.$errorContainer,c.msgErrorClass),c.$errorContainer.hide(),c.fileActionSettings=a.extend(!0,X,b.fileActionSettings),c.previewInitId="preview-"+ga(),c.id=c.$element.attr("id"),k.init(c),c._initPreview(!0),c._initPreviewActions(),c.options=b,c._setFileDropZoneTitle(),c.$element.removeClass("file-loading"),c.$element.attr("disabled")&&c.disable(),c._initZoom()},_validate:function(){var b,a=this;return"file"===a.$element.attr("type")||(b='<div class="help-block alert alert-warning"><h4>Invalid Input Type</h4>You must set an input <code>type = file</code> for <b>bootstrap-fileinput</b> plugin to initialize.</div>',a.$element.after(b),!1)},_errorsExist:function(){var c,b=this;return!!b.$errorContainer.find("li").length||(c=a(document.createElement("div")).html(b.$errorContainer.html()),c.find("span.kv-error-close").remove(),c.find("ul").remove(),!!a.trim(c.text()).length)},_errorHandler:function(a,b){var c=this,d=a.target.error;d.code===d.NOT_FOUND_ERR?c._showError(c.msgFileNotFound.replace("{name}",b)):d.code===d.SECURITY_ERR?c._showError(c.msgFileSecured.replace("{name}",b)):d.code===d.NOT_READABLE_ERR?c._showError(c.msgFileNotReadable.replace("{name}",b)):d.code===d.ABORT_ERR?c._showError(c.msgFilePreviewAborted.replace("{name}",b)):c._showError(c.msgFilePreviewError.replace("{name}",b))},_addError:function(a){var b=this,c=b.$errorContainer;a&&c.length&&(c.html(b.errorCloseButton+a),j(c.find(".kv-error-close"),"click",function(){c.fadeOut("slow")}))},_resetErrors:function(a){var b=this,c=b.$errorContainer;b.isError=!1,b.$container.removeClass("has-error"),c.html(""),a?c.fadeOut("slow"):c.hide()},_showFolderError:function(a){var d,b=this,c=b.$errorContainer;a&&(d=b.msgFoldersNotAllowed.replace(/\{n}/g,a),b._addError(d),p(b.$container,"has-error"),c.fadeIn(800),b._raise("filefoldererror",[a,d]))},_showUploadError:function(a,b,c){var d=this,e=d.$errorContainer,f=c||"fileuploaderror",g=b&&b.id?'<li data-file-id="'+b.id+'">'+a+"</li>":"<li>"+a+"</li>";return 0===e.find("ul").length?d._addError("<ul>"+g+"</ul>"):e.find("ul").append(g),e.fadeIn(800),d._raise(f,[b,a]),d.$container.removeClass("file-input-new"),p(d.$container,"has-error"),!0},_showError:function(a,b,c){var d=this,e=d.$errorContainer,f=c||"fileerror";return b=b||{},b.reader=d.reader,d._addError(a),e.fadeIn(800),d._raise(f,[b,a]),d.isUploadable||d._clearFileInput(),d.$container.removeClass("file-input-new"),p(d.$container,"has-error"),d.$btnUpload.attr("disabled",!0),!0},_noFilesError:function(a){var b=this,c=b.minFileCount>1?b.filePlural:b.fileSingle,d=b.msgFilesTooLess.replace("{n}",b.minFileCount).replace("{files}",c),e=b.$errorContainer;b._addError(d),b.isError=!0,b._updateFileDetails(0),e.fadeIn(800),b._raise("fileerror",[a,d]),b._clearFileInput(),p(b.$container,"has-error")},_parseError:function(b,c,d){var e=this,f=a.trim(c+""),g="."===f.slice(-1)?"":".",h=void 0!==b.responseJSON&&void 0!==b.responseJSON.error?b.responseJSON.error:b.responseText;return e.cancelling&&e.msgUploadAborted&&(f=e.msgUploadAborted),e.showAjaxErrorDetails&&h?(h=a.trim(h.replace(/\n\s*\n/g,"\n")),h=h.length>0?"<pre>"+h+"</pre>":"",f+=g+h):f+=g,e.cancelling=!1,d?"<b>"+d+": </b>"+f:f},_parseFileType:function(a){var c,d,e,f,b=this;for(f=0;f<_.length;f+=1)if(e=_[f],c=fa(e,b.fileTypeSettings,ca[e]),d=c(a.type,a.name)?e:"",!da(d))return d;return"other"},_parseFilePreviewIcon:function(b,c){var e,f,d=this,g=d.previewFileIcon;return c&&c.indexOf(".")>-1&&(f=c.split(".").pop(),d.previewFileIconSettings&&d.previewFileIconSettings[f]&&(g=d.previewFileIconSettings[f]),d.previewFileExtSettings&&a.each(d.previewFileExtSettings,function(a,b){return d.previewFileIconSettings[a]&&b(f)?void(g=d.previewFileIconSettings[a]):void(e=!0)})),b.indexOf("{previewFileIcon}")>-1?b.replace(/\{previewFileIconClass}/g,d.previewFileIconClass).replace(/\{previewFileIcon}/g,g):b},_raise:function(b,c){var d=this,e=a.Event(b);if(void 0!==c?d.$element.trigger(e,c):d.$element.trigger(e),e.isDefaultPrevented())return!1;if(!e.result)return e.result;switch(b){case"filebatchuploadcomplete":case"filebatchuploadsuccess":case"fileuploaded":case"fileclear":case"filecleared":case"filereset":case"fileerror":case"filefoldererror":case"fileuploaderror":case"filebatchuploaderror":case"filedeleteerror":case"filecustomerror":case"filesuccessremove":break;default:d.ajaxAborted=e.result}return!0},_listenFullScreen:function(a){var d,e,b=this,c=b.$modal;c&&c.length&&(d=c&&c.find(".btn-fullscreen"),e=c&&c.find(".btn-borderless"),d.length&&e.length&&(d.removeClass("active").attr("aria-pressed","false"),e.removeClass("active").attr("aria-pressed","false"),a?d.addClass("active").attr("aria-pressed","true"):e.addClass("active").attr("aria-pressed","true"),c.hasClass("file-zoom-fullscreen")?b._maximizeZoomDialog():a?b._maximizeZoomDialog():e.removeClass("active").attr("aria-pressed","false")))},_listen:function(){var b=this,c=b.$element,d=c.closest("form"),e=b.$container;j(c,"change",a.proxy(b._change,b)),b.showBrowse&&j(b.$btnFile,"click",a.proxy(b._browse,b)),j(d,"reset",a.proxy(b.reset,b)),j(e.find(".fileinput-remove:not([disabled])"),"click",a.proxy(b.clear,b)),j(e.find(".fileinput-cancel"),"click",a.proxy(b.cancel,b)),b._initDragDrop(),b.isUploadable||j(d,"submit",a.proxy(b._submitForm,b)),j(b.$container.find(".fileinput-upload"),"click",a.proxy(b._uploadClick,b)),j(a(window),"resize",function(){b._listenFullScreen(screen.width===window.innerWidth&&screen.height===window.innerHeight)}),j(a(document),"webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange",function(){b._listenFullScreen(la())}),b._initClickable()},_initClickable:function(){var c,b=this;b.isClickable&&(c=b.isUploadable?b.$dropZone:b.$preview.find(".file-default-preview"),p(c,"clickable"),c.attr("tabindex",-1),j(c,"click",function(d){var e=a(d.target);e.parents(".file-preview-thumbnails").length&&!e.parents(".file-default-preview").length||(b.$element.trigger("click"),c.blur())}))},_initDragDrop:function(){var b=this,c=b.$dropZone;b.isUploadable&&b.dropZoneEnabled&&b.showPreview&&(j(c,"dragenter dragover",a.proxy(b._zoneDragEnter,b)),j(c,"dragleave",a.proxy(b._zoneDragLeave,b)),j(c,"drop",a.proxy(b._zoneDrop,b)),j(a(document),"dragenter dragover drop",b._zoneDragDropInit))},_zoneDragDropInit:function(a){a.stopPropagation(),a.preventDefault()},_zoneDragEnter:function(b){var c=this,d=a.inArray("Files",b.originalEvent.dataTransfer.types)>-1;return c._zoneDragDropInit(b),c.isDisabled||!d?(b.originalEvent.dataTransfer.effectAllowed="none",void(b.originalEvent.dataTransfer.dropEffect="none")):void p(c.$dropZone,"file-highlighted")},_zoneDragLeave:function(a){var b=this;b._zoneDragDropInit(a),b.isDisabled||b.$dropZone.removeClass("file-highlighted")},_zoneDrop:function(a){var b=this;a.preventDefault(),b.isDisabled||da(a.originalEvent.dataTransfer.files)||(b._change(a,"dragdrop"),b.$dropZone.removeClass("file-highlighted"))},_uploadClick:function(a){var d,b=this,c=b.$container.find(".fileinput-upload"),e=!c.hasClass("disabled")&&da(c.attr("disabled"));if(!a||!a.isDefaultPrevented()){if(!b.isUploadable)return void(e&&"submit"!==c.attr("type")&&(d=c.closest("form"),d.length&&d.trigger("submit"),a.preventDefault()));a.preventDefault(),e&&b.upload()}},_submitForm:function(){var a=this,b=a.$element,c=b.get(0).files;return c&&a.minFileCount>0&&a._getFileCount(c.length)<a.minFileCount?(a._noFilesError({}),!1):!a._abort({})},_clearPreview:function(){var a=this,b=a.showUploadedThumbs?a.$preview.find(".file-preview-frame:not(.file-preview-success)"):a.$preview.find(".file-preview-frame");b.remove(),a.$preview.find(".file-preview-frame").length&&a.showPreview||a._resetUpload(),a._validateDefaultPreview()},_initSortable:function(){var d,e,b=this,c=b.$preview;window.KvSortable&&(d=c.find(".file-initial-thumbs"),e={handle:".drag-handle-init",dataIdAttr:"data-preview-id",draggable:".file-preview-initial",onSort:function(c){var d=c.oldIndex,e=c.newIndex;b.initialPreview=na(b.initialPreview,d,e),b.initialPreviewConfig=na(b.initialPreviewConfig,d,e),k.init(b),b._raise("filesorted",{previewId:a(c.item).attr("id"),oldIndex:d,newIndex:e,stack:b.initialPreviewConfig})}},d.data("kvsortable")&&d.kvsortable("destroy"),a.extend(!0,e,b.fileActionSettings.dragSettings),d.kvsortable(e))},_initPreview:function(a){var d,b=this,c=b.initialCaption||"";return k.count(b.id)?(d=k.out(b.id),c=a&&b.initialCaption?b.initialCaption:d.caption,b.$preview.html(d.content),b._setCaption(c),b._initSortable(),void(da(d.content)||b.$container.removeClass("file-input-new"))):(b._clearPreview(),void(a?b._setCaption(c):b._initCaption()))},_getZoomButton:function(a){var b=this,c=b.previewZoomButtonIcons[a],d=b.previewZoomButtonClasses[a],e=' title="'+(b.previewZoomButtonTitles[a]||"")+'" ',f=e+("close"===a?' data-dismiss="modal" aria-hidden="true"':"");return"fullscreen"!==a&&"borderless"!==a&&"toggleheader"!==a||(f+=' data-toggle="button" aria-pressed="false" autocomplete="off"'),'<button type="button" class="'+d+" btn-"+a+'"'+f+">"+c+"</button>"},_getModalContent:function(){var a=this;return a._getLayoutTemplate("modal").replace(/\{heading}/g,a.msgZoomModalHeading).replace(/\{prev}/g,a._getZoomButton("prev")).replace(/\{next}/g,a._getZoomButton("next")).replace(/\{toggleheader}/g,a._getZoomButton("toggleheader")).replace(/\{fullscreen}/g,a._getZoomButton("fullscreen")).replace(/\{borderless}/g,a._getZoomButton("borderless")).replace(/\{close}/g,a._getZoomButton("close"))},_listenModalEvent:function(a){var b=this,c=b.$modal,d=function(a){return{sourceEvent:a,previewId:c.data("previewId"),modal:c}};c.on(a+".bs.modal",function(e){var f=c.find(".btn-fullscreen"),g=c.find(".btn-borderless");b._raise("filezoom"+a,d(e)),"shown"===a&&(g.removeClass("active").attr("aria-pressed","false"),f.removeClass("active").attr("aria-pressed","false"),c.hasClass("file-zoom-fullscreen")&&(b._maximizeZoomDialog(),la()?f.addClass("active").attr("aria-pressed","true"):g.addClass("active").attr("aria-pressed","true")))})},_initZoom:function(){var d,b=this,e=b._getLayoutTemplate("modalMain"),f="#"+c;b.$modal=a(f),b.$modal&&b.$modal.length||(d=a(document.createElement("div")).html(e).insertAfter(b.$container),b.$modal=a("#"+c).insertBefore(d),d.remove()),b.$modal.html(b._getModalContent()),b._listenModalEvent("show"),b._listenModalEvent("shown"),b._listenModalEvent("hide"),b._listenModalEvent("hidden"),b._listenModalEvent("loaded")},_initZoomButtons:function(){var d,e,b=this,c=b.$modal.data("previewId")||"",f=b.$preview.find(".file-preview-frame").toArray(),g=f.length,h=b.$modal.find(".btn-prev"),i=b.$modal.find(".btn-next");g&&(d=a(f[0]),e=a(f[g-1]),h.removeAttr("disabled"),i.removeAttr("disabled"),d.length&&d.attr("id")===c&&h.attr("disabled",!0),e.length&&e.attr("id")===c&&i.attr("disabled",!0))},_maximizeZoomDialog:function(){var b=this,c=b.$modal,d=c.find(".modal-header:visible"),e=c.find(".modal-footer:visible"),f=c.find(".modal-body"),g=a(window).height(),h=0;c.addClass("file-zoom-fullscreen"),d&&d.length&&(g-=d.outerHeight(!0)),e&&e.length&&(g-=e.outerHeight(!0)),f&&f.length&&(h=f.outerHeight(!0)-f.height(),g-=h),c.find(".kv-zoom-body").height(g)},_resizeZoomDialog:function(a){var b=this,c=b.$modal,d=c.find(".btn-fullscreen"),e=c.find(".btn-borderless");if(c.hasClass("file-zoom-fullscreen"))ma(!1),a?d.hasClass("active")||(c.removeClass("file-zoom-fullscreen"),b._resizeZoomDialog(!0),e.hasClass("active")&&e.removeClass("active").attr("aria-pressed","false")):d.hasClass("active")?d.removeClass("active").attr("aria-pressed","false"):(c.removeClass("file-zoom-fullscreen"),b.$modal.find(".kv-zoom-body").css("height",b.zoomModalHeight));else{if(!a)return void b._maximizeZoomDialog();ma(!0)}c.focus()},_setZoomContent:function(b,c){var e,f,g,h,i,k,l,r,d=this,m=b.attr("id"),n=d.$modal,o=n.find(".btn-prev"),q=n.find(".btn-next"),s=n.find(".btn-fullscreen"),t=n.find(".btn-borderless"),u=n.find(".btn-toggleheader");f=b.data("template")||"generic",e=b.find(".kv-file-content"),g=e.length?e.html():"",h=b.find(".file-footer-caption").text()||"",n.find(".kv-zoom-title").html(h),i=n.find(".kv-zoom-body"),c?(r=i.clone().insertAfter(i),i.html(g).hide(),r.fadeOut("fast",function(){i.fadeIn("fast"),r.remove()})):i.html(g),l=d.previewZoomSettings[f],l&&(k=i.find(".kv-preview-data"),p(k,"file-zoom-detail"),a.each(l,function(a,b){k.css(a,b),(k.attr("width")&&"width"===a||k.attr("height")&&"height"===a)&&k.removeAttr(a)})),n.data("previewId",m),j(o,"click",function(){d._zoomSlideShow("prev",m)}),j(q,"click",function(){d._zoomSlideShow("next",m)}),j(s,"click",function(){d._resizeZoomDialog(!0)}),j(t,"click",function(){d._resizeZoomDialog(!1)}),j(u,"click",function(){var c,a=n.find(".modal-header"),b=n.find(".modal-body .floating-buttons"),e=a.find(".kv-zoom-actions"),f=function(b){var c=d.$modal.find(".kv-zoom-body"),e=d.zoomModalHeight;n.hasClass("file-zoom-fullscreen")&&(e=c.outerHeight(!0),b||(e-=a.outerHeight(!0))),c.css("height",b?e+b:e)};a.is(":visible")?(c=a.outerHeight(!0),a.slideUp("slow",function(){e.find(".btn").appendTo(b),f(c)})):(b.find(".btn").appendTo(e),a.slideDown("slow",function(){f()})),n.focus()}),j(n,"keydown",function(a){var b=a.which||a.keyCode;37!==b||o.attr("disabled")||d._zoomSlideShow("prev",m),39!==b||q.attr("disabled")||d._zoomSlideShow("next",m)})},_zoomPreview:function(a){var c,b=this;if(!a.length)throw"Cannot zoom to detailed preview!";b.$modal.html(b._getModalContent()),c=a.closest(".file-preview-frame"),b._setZoomContent(c),b.$modal.modal("show"),b._initZoomButtons()},_zoomSlideShow:function(b,c){var f,g,j,d=this,e=d.$modal.find(".kv-zoom-actions .btn-"+b),h=d.$preview.find(".file-preview-frame").toArray(),i=h.length;if(!e.attr("disabled")){for(g=0;g<i;g++)if(a(h[g]).attr("id")===c){j="prev"===b?g-1:g+1;break}j<0||j>=i||!h[j]||(f=a(h[j]),f.length&&d._setZoomContent(f,!0),d._initZoomButtons(),d._raise("filezoom"+b,{previewId:c,modal:d.$modal}))}},_initZoomButton:function(){var b=this;b.$preview.find(".kv-file-zoom").each(function(){var c=a(this);j(c,"click",function(){b._zoomPreview(c)})})},_initPreviewActions:function(){var b=this,c=b.deleteExtraData||{},d=function(){var a=b.isUploadable?k.count(b.id):b.$element.get(0).files.length;0!==b.$preview.find(".kv-file-remove").length||a||(b.reset(),b.initialCaption="")};b._initZoomButton(),b.$preview.find(".kv-file-remove").each(function(){var e=a(this),f=e.data("url")||b.deleteUrl,g=e.data("key");if(!da(f)&&void 0!==g){var l,m,o,q,h=e.closest(".file-preview-frame"),i=k.data[b.id],n=h.data("fileindex");n=parseInt(n.replace("init_","")),o=da(i.config)&&da(i.config[n])?null:i.config[n],q=da(o)||da(o.extra)?c:o.extra,"function"==typeof q&&(q=q()),m={id:e.attr("id"),key:g,extra:q},l=a.extend(!0,{},{url:f,type:"POST",dataType:"json",data:a.extend(!0,{},{key:g},q),beforeSend:function(a){b.ajaxAborted=!1,b._raise("filepredelete",[g,a,q]),b.ajaxAborted?a.abort():(p(h,"file-uploading"),p(e,"disabled"))},success:function(a,c,f){var i,j;return da(a)||da(a.error)?(k.unset(b.id,n),i=k.count(b.id),j=i>0?b._getMsgSelected(i):"",b._raise("filedeleted",[g,f,q]),b._setCaption(j),h.removeClass("file-uploading").addClass("file-deleted"),void h.fadeOut("slow",function(){b._clearObjects(h),h.remove(),d(),i||0!==b.getFileStack().length||(b._setCaption(""),b.reset())})):(m.jqXHR=f,m.response=a,b._showError(a.error,m,"filedeleteerror"),h.removeClass("file-uploading"),e.removeClass("disabled"),void d())},error:function(a,c,e){var f=b._parseError(a,e);
 m.jqXHR=a,m.response={},b._showError(f,m,"filedeleteerror"),h.removeClass("file-uploading"),d()}},b.ajaxDeleteSettings),j(e,"click",function(){return!!b._validateMinCount()&&void a.ajax(l)})}})},_clearObjects:function(b){b.find("video audio").each(function(){this.pause(),a(this).remove()}),b.find("img object div").each(function(){a(this).remove()})},_clearFileInput:function(){var d,e,f,b=this,c=b.$element;b.fileInputCleared=!0,da(c.val())||(b.isIE9||b.isIE10?(d=c.closest("form"),e=a(document.createElement("form")),f=a(document.createElement("div")),c.before(f),d.length?d.after(e):f.after(e),e.append(c).trigger("reset"),f.before(c).remove(),e.remove()):c.val(""))},_resetUpload:function(){var a=this;a.uploadCache={content:[],config:[],tags:[],append:!0},a.uploadCount=0,a.uploadStatus={},a.uploadLog=[],a.uploadAsyncCount=0,a.loadedImages=[],a.totalImagesCount=0,a.$btnUpload.removeAttr("disabled"),a._setProgress(0),p(a.$progress,"hide"),a._resetErrors(!1),a.ajaxAborted=!1,a.ajaxRequests=[],a._resetCanvas()},_resetCanvas:function(){var a=this;a.canvas&&a.imageCanvasContext&&a.imageCanvasContext.clearRect(0,0,a.canvas.width,a.canvas.height)},_hasInitialPreview:function(){var a=this;return!a.overwriteInitial&&k.count(a.id)},_resetPreview:function(){var b,c,a=this;k.count(a.id)?(b=k.out(a.id),a.$preview.html(b.content),c=a.initialCaption?a.initialCaption:b.caption,a._setCaption(c)):(a._clearPreview(),a._initCaption()),a.showPreview&&(a._initZoom(),a._initSortable())},_clearDefaultPreview:function(){var a=this;a.$preview.find(".file-default-preview").remove()},_validateDefaultPreview:function(){var a=this;a.showPreview&&!da(a.defaultPreviewContent)&&(a.$preview.html('<div class="file-default-preview">'+a.defaultPreviewContent+"</div>"),a.$container.removeClass("file-input-new"),a._initClickable())},_resetPreviewThumbs:function(a){var c,b=this;return a?(b._clearPreview(),void b.clearStack()):void(b._hasInitialPreview()?(c=k.out(b.id),b.$preview.html(c.content),b._setCaption(c.caption),b._initPreviewActions()):b._clearPreview())},_getLayoutTemplate:function(a){var b=this,c=fa(a,b.layoutTemplates,Y[a]);return da(b.customLayoutTags)?c:ia(c,b.customLayoutTags)},_getPreviewTemplate:function(a){var b=this,c=fa(a,b.previewTemplates,Z[a]);return da(b.customPreviewTags)?c:ia(c,b.customPreviewTags)},_getOutData:function(a,b,c){var d=this;return a=a||{},b=b||{},c=c||d.filestack.slice(0)||{},{form:d.formdata,files:c,filenames:d.filenames,filescount:d.getFilesCount(),extra:d._getExtraData(),response:b,reader:d.reader,jqXHR:a}},_getMsgSelected:function(a){var b=this,c=1===a?b.fileSingle:b.filePlural;return a>0?b.msgSelected.replace("{n}",a).replace("{files}",c):b.msgNoFilesSelected},_getThumbs:function(a){return a=a||"",this.$preview.find(".file-preview-frame:not(.file-preview-initial)"+a)},_getExtraData:function(a,b){var c=this,d=c.uploadExtraData;return"function"==typeof c.uploadExtraData&&(d=c.uploadExtraData(a,b)),d},_initXhr:function(a,b,c){var d=this;return a.upload&&a.upload.addEventListener("progress",function(a){var e=0,f=a.total,g=a.loaded||a.position;a.lengthComputable&&(e=Math.floor(g/f*100)),b?d._setAsyncUploadStatus(b,e,c):d._setProgress(e)},!1),a},_ajaxSubmit:function(b,c,d,e,f,g){var i,h=this;h._raise("filepreajax",[f,g]),h._uploadExtra(f,g),i=a.extend(!0,{},{xhr:function(){var b=a.ajaxSettings.xhr();return h._initXhr(b,f,h.getFileStack().length)},url:h.uploadUrl,type:"POST",dataType:"json",data:h.formdata,cache:!1,processData:!1,contentType:!1,beforeSend:b,success:c,complete:d,error:e},h.ajaxSettings),h.ajaxRequests.push(a.ajax(i))},_initUploadSuccess:function(b,c,d){var f,g,h,i,j,l,m,n,e=this,o=function(a,b){e[a]instanceof Array||(e[a]=[]),b&&b.length&&(e[a]=e[a].concat(b))};e.showPreview&&"object"==typeof b&&!a.isEmptyObject(b)&&void 0!==b.initialPreview&&b.initialPreview.length>0&&(e.hasInitData=!0,j=b.initialPreview||[],l=b.initialPreviewConfig||[],m=b.initialPreviewThumbTags||[],f=!(void 0!==b.append&&!b.append),j.length>0&&!ea(j)&&(j=j.split(e.initialPreviewDelimiter)),e.overwriteInitial=!1,o("initialPreview",j),o("initialPreviewConfig",l),o("initialPreviewThumbTags",m),void 0!==c?d?(n=c.attr("data-fileindex"),e.uploadCache.content[n]=j[0],e.uploadCache.config[n]=l[0]||[],e.uploadCache.tags[n]=m[0]||[],e.uploadCache.append=f):(h=k.add(e.id,j,l[0],m[0],f),g=k.get(e.id,h,!1),i=a(g).hide(),c.after(i).fadeOut("slow",function(){i.fadeIn("slow").css("display:inline-block"),e._initPreviewActions(),e._clearFileInput(),c.remove()})):(k.set(e.id,j,l,m,f),e._initPreview(),e._initPreviewActions()))},_initSuccessThumbs:function(){var b=this;b.showPreview&&b._getThumbs(".file-preview-success").each(function(){var c=a(this),d=c.find(".kv-file-remove");d.removeAttr("disabled"),j(d,"click",function(){var a=b._raise("filesuccessremove",[c.attr("id"),c.data("fileindex")]);ja(c),a!==!1&&c.fadeOut("slow",function(){c.remove(),b.$preview.find(".file-preview-frame").length||b.reset()})})})},_checkAsyncComplete:function(){var c,d,b=this;for(d=0;d<b.filestack.length;d++)if(b.filestack[d]&&(c=b.previewInitId+"-"+d,a.inArray(c,b.uploadLog)===-1))return!1;return b.uploadAsyncCount===b.uploadLog.length},_uploadExtra:function(b,c){var d=this,e=d._getExtraData(b,c);0!==e.length&&a.each(e,function(a,b){d.formdata.append(a,b)})},_uploadSingle:function(b,c,d){var h,j,l,m,n,q,r,s,t,u,e=this,f=e.getFileStack().length,g=new FormData,i=e.previewInitId+"-"+b,o=e.filestack.length>0||!a.isEmptyObject(e.uploadExtraData),v={id:i,index:b};e.formdata=g,e.showPreview&&(j=a("#"+i+":not(.file-preview-initial)"),m=j.find(".kv-file-upload"),n=j.find(".kv-file-remove"),a("#"+i).find(".file-thumb-progress").removeClass("hide")),0===f||!o||m&&m.hasClass("disabled")||e._abort(v)||(u=function(a,b){e.updateStack(a,void 0),e.uploadLog.push(b),e._checkAsyncComplete()&&(e.fileBatchCompleted=!0)},l=function(){var a=e.uploadCache;e.fileBatchCompleted&&setTimeout(function(){e.showPreview&&(k.set(e.id,a.content,a.config,a.tags,a.append),e.hasInitData&&(e._initPreview(),e._initPreviewActions())),e.unlock(),e._clearFileInput(),e._raise("filebatchuploadcomplete",[e.filestack,e._getExtraData()]),e.uploadCount=0,e.uploadStatus={},e.uploadLog=[],e._setProgress(101)},100)},q=function(c){h=e._getOutData(c),e.fileBatchCompleted=!1,e.showPreview&&(j.hasClass("file-preview-success")||(e._setThumbStatus(j,"Loading"),p(j,"file-uploading")),m.attr("disabled",!0),n.attr("disabled",!0)),d||e.lock(),e._raise("filepreupload",[h,i,b]),a.extend(!0,v,h),e._abort(v)&&(c.abort(),e._setProgressCancelled())},r=function(c,f,g){var k=e.showPreview&&j.attr("id")?j.attr("id"):i;h=e._getOutData(g,c),a.extend(!0,v,h),setTimeout(function(){da(c)||da(c.error)?(e.showPreview&&(e._setThumbStatus(j,"Success"),m.hide(),e._initUploadSuccess(c,j,d)),e._raise("fileuploaded",[h,k,b]),d?u(b,k):e.updateStack(b,void 0)):(e._showUploadError(c.error,v),e._setPreviewError(j,b),d&&u(b,k))},100)},s=function(){setTimeout(function(){e.showPreview&&(m.removeAttr("disabled"),n.removeAttr("disabled"),j.removeClass("file-uploading"),e._setProgress(101,a("#"+i).find(".file-thumb-progress"))),d?l():(e.unlock(!1),e._clearFileInput()),e._initSuccessThumbs()},100)},t=function(f,g,h){var k=e._parseError(f,h,d?c[b].name:null);setTimeout(function(){d&&u(b,i),e.uploadStatus[i]=100,e._setPreviewError(j,b),a.extend(!0,v,e._getOutData(f)),e._showUploadError(k,v)},100)},g.append(e.uploadFileAttr,c[b],e.filenames[b]),g.append("file_id",b),e._ajaxSubmit(q,r,s,t,i,b))},_uploadBatch:function(){var f,g,h,i,k,b=this,c=b.filestack,d=c.length,e={},j=b.filestack.length>0||!a.isEmptyObject(b.uploadExtraData);b.formdata=new FormData,0!==d&&j&&!b._abort(e)&&(k=function(){a.each(c,function(a){b.updateStack(a,void 0)}),b._clearFileInput()},f=function(c){b.lock();var d=b._getOutData(c);b.showPreview&&b._getThumbs().each(function(){var c=a(this),d=c.find(".kv-file-upload"),e=c.find(".kv-file-remove");c.hasClass("file-preview-success")||(b._setThumbStatus(c,"Loading"),p(c,"file-uploading")),d.attr("disabled",!0),e.attr("disabled",!0)}),b._raise("filebatchpreupload",[d]),b._abort(d)&&(c.abort(),b._setProgressCancelled())},g=function(c,d,e){var f=b._getOutData(e,c),g=b._getThumbs(":not(.file-preview-error)"),h=0,i=da(c)||da(c.errorkeys)?[]:c.errorkeys;da(c)||da(c.error)?(b._raise("filebatchuploadsuccess",[f]),k(),b.showPreview?(g.each(function(){var c=a(this),d=c.find(".kv-file-upload");c.find(".kv-file-upload").hide(),b._setThumbStatus(c,"Success"),c.removeClass("file-uploading"),d.removeAttr("disabled")}),b._initUploadSuccess(c)):b.reset()):(b.showPreview&&(g.each(function(){var c=a(this),d=c.find(".kv-file-remove"),e=c.find(".kv-file-upload");return c.removeClass("file-uploading"),e.removeAttr("disabled"),d.removeAttr("disabled"),0===i.length?void b._setPreviewError(c):(a.inArray(h,i)!==-1?b._setPreviewError(c):(c.find(".kv-file-upload").hide(),b._setThumbStatus(c,"Success"),b.updateStack(h,void 0)),void h++)}),b._initUploadSuccess(c)),b._showUploadError(c.error,f,"filebatchuploaderror"))},i=function(){b._setProgress(101),b.unlock(),b._initSuccessThumbs(),b._clearFileInput(),b._raise("filebatchuploadcomplete",[b.filestack,b._getExtraData()])},h=function(c,e,f){var g=b._getOutData(c),h=b._parseError(c,f);b._showUploadError(h,g,"filebatchuploaderror"),b.uploadFileCount=d-1,b.showPreview&&(b._getThumbs().each(function(){var c=a(this),d=c.attr("data-fileindex");c.removeClass("file-uploading"),void 0!==b.filestack[d]&&b._setPreviewError(c)}),b._getThumbs().removeClass("file-uploading"),b._getThumbs(" .kv-file-upload").removeAttr("disabled"),b._getThumbs(" .kv-file-delete").removeAttr("disabled"))},a.each(c,function(a,d){da(c[a])||b.formdata.append(b.uploadFileAttr,d,b.filenames[a])}),b._ajaxSubmit(f,g,i,h))},_uploadExtraOnly:function(){var c,d,e,f,a=this,b={};a.formdata=new FormData,a._abort(b)||(c=function(c){a.lock();var d=a._getOutData(c);a._raise("filebatchpreupload",[d]),a._setProgress(50),b.data=d,b.xhr=c,a._abort(b)&&(c.abort(),a._setProgressCancelled())},d=function(b,c,d){var e=a._getOutData(d,b);da(b)||da(b.error)?(a._raise("filebatchuploadsuccess",[e]),a._clearFileInput(),a._initUploadSuccess(b)):a._showUploadError(b.error,e,"filebatchuploaderror")},e=function(){a._setProgress(101),a.unlock(),a._clearFileInput(),a._raise("filebatchuploadcomplete",[a.filestack,a._getExtraData()])},f=function(c,d,e){var f=a._getOutData(c),g=a._parseError(c,e);b.data=f,a._showUploadError(g,f,"filebatchuploaderror")},a._ajaxSubmit(c,d,e,f))},_initFileActions:function(){var b=this;b.showPreview&&(b._initZoomButton(),b.$preview.find(".kv-file-remove").each(function(){var e,h,i,l,c=a(this),d=c.closest(".file-preview-frame"),f=d.attr("id"),g=d.attr("data-fileindex");j(c,"click",function(){return l=b._raise("filepreremove",[f,g]),!(l===!1||!b._validateMinCount())&&(e=d.hasClass("file-preview-error"),ja(d),void d.fadeOut("slow",function(){b.updateStack(g,void 0),b._clearObjects(d),d.remove(),f&&e&&b.$errorContainer.find('li[data-file-id="'+f+'"]').fadeOut("fast",function(){a(this).remove(),b._errorsExist()||b._resetErrors()}),b._clearFileInput();var c=b.getFileStack(!0),j=k.count(b.id),l=c.length,m=b.showPreview&&b.$preview.find(".file-preview-frame").length;0!==l||0!==j||m?(h=j+l,i=h>1?b._getMsgSelected(h):c[0]?b._getFileNames()[0]:"",b._setCaption(i)):b.reset(),b._raise("fileremoved",[f,g])}))})}),b.$preview.find(".kv-file-upload").each(function(){var c=a(this);j(c,"click",function(){var a=c.closest(".file-preview-frame"),d=a.attr("data-fileindex");a.hasClass("file-preview-error")||b._uploadSingle(d,b.filestack,!1)})}))},_hideFileIcon:function(){this.overwriteInitial&&this.$captionContainer.find(".kv-caption-icon").hide()},_showFileIcon:function(){this.$captionContainer.find(".kv-caption-icon").show()},_getSize:function(a){var b=parseFloat(a);if(null===a||isNaN(b))return"";var d,f,g,c=this,e=c.fileSizeGetter;return"function"==typeof e?g=e(a):(d=Math.floor(Math.log(b)/Math.log(1024)),f=["B","KB","MB","GB","TB","PB","EB","ZB","YB"],g=1*(b/Math.pow(1024,d)).toFixed(2)+" "+f[d]),c._getLayoutTemplate("size").replace("{sizeText}",g)},_generatePreviewTemplate:function(a,b,c,d,e,f,g,h,i,j){var m,n,k=this,l=k._getPreviewTemplate(a),o=h||"",p=fa(a,k.previewSettings,ba[a]),q=k.slug(c),r=i||k._renderFileFooter(q,g,p.width,f);return j=j||e.slice(e.lastIndexOf("-")+1),l=k._parseFilePreviewIcon(l,c),"text"===a||"html"===a?(n="text"===a?ha(b):b,m=l.replace(/\{previewId}/g,e).replace(/\{caption}/g,q).replace(/\{width}/g,p.width).replace(/\{height}/g,p.height).replace(/\{frameClass}/g,o).replace(/\{cat}/g,d).replace(/\{footer}/g,r).replace(/\{fileindex}/g,j).replace(/\{data}/g,n).replace(/\{template}/g,a)):m=l.replace(/\{previewId}/g,e).replace(/\{caption}/g,q).replace(/\{frameClass}/g,o).replace(/\{type}/g,d).replace(/\{fileindex}/g,j).replace(/\{width}/g,p.width).replace(/\{height}/g,p.height).replace(/\{footer}/g,r).replace(/\{data}/g,b).replace(/\{template}/g,a),m},_previewDefault:function(b,c,d){var e=this,f=e.$preview,h=f.find(".file-live-thumbs");if(e.showPreview){var k,i=b?b.name:"",j=b?b.type:"",l=d===!0&&!e.isUploadable,m=g.createObjectURL(b);e._clearDefaultPreview(),k=e._generatePreviewTemplate("other",m,i,j,c,l,b.size),h.length||(h=a(document.createElement("div")).addClass("file-live-thumbs").appendTo(f)),h.append("\n"+k),d===!0&&e.isUploadable&&e._setThumbStatus(a("#"+c),"Error")}},_previewFile:function(b,c,d,e,f){if(this.showPreview){var q,g=this,h=g._parseFileType(c),i=c?c.name:"",j=g.slug(i),k=g.allowedPreviewTypes,l=g.allowedPreviewMimeTypes,m=g.$preview,n=k&&k.indexOf(h)>=0,o=m.find(".file-live-thumbs"),p="text"===h||"html"===h||"image"===h?d.target.result:f,r=l&&l.indexOf(c.type)!==-1;o.length||(o=a(document.createElement("div")).addClass("file-live-thumbs").appendTo(m)),"html"===h&&g.purifyHtml&&window.DOMPurify&&(p=window.DOMPurify.sanitize(p)),n||r?(q=g._generatePreviewTemplate(h,p,i,c.type,e,!1,c.size),g._clearDefaultPreview(),o.append("\n"+q),g._validateImage(b,e,j,c.type)):g._previewDefault(c,e),g._initSortable()}},_slugDefault:function(a){return da(a)?"":String(a).replace(/[\-\[\]\/\{}:;#%=\(\)\*\+\?\\\^\$\|<>&"']/g,"_")},_readFiles:function(b){this.reader=new FileReader;var q,c=this,d=c.$element,e=c.$preview,f=c.reader,i=c.$previewContainer,j=c.$previewStatus,k=c.msgLoading,l=c.msgProgress,m=c.previewInitId,n=b.length,o=c.fileTypeSettings,p=c.filestack.length,r=c.maxFilePreviewSize&&parseFloat(c.maxFilePreviewSize),s=e.length&&(!r||isNaN(r)),t=function(d,e,f,g){var h=a.extend(!0,{},c._getOutData({},{},b),{id:f,index:g}),i={id:f,index:g,file:e,files:b};return c._previewDefault(e,f,!0),c.isUploadable&&c.addToStack(void 0),setTimeout(function(){q(g+1)},100),c._initFileActions(),c.removeFromPreviewOnError&&a("#"+f).remove(),c.isUploadable?c._showUploadError(d,h):c._showError(d,i)};c.loadedImages=[],c.totalImagesCount=0,a.each(b,function(a,b){var d=c.fileTypeSettings.image||ca.image;d&&d(b.type)&&c.totalImagesCount++}),q=function(a){if(da(d.attr("multiple"))&&(n=1),a>=n)return c.isUploadable&&c.filestack.length>0?c._raise("filebatchselected",[c.getFileStack()]):c._raise("filebatchselected",[b]),i.removeClass("file-thumb-loading"),void j.html("");var w,x,B,F,G,H,I,u=p+a,v=m+"-"+u,y=b[a],z=y.name?c.slug(y.name):"",A=(y.size||0)/1e3,C="",D=g.createObjectURL(y),E=0,J=c.allowedFileTypes,K=da(J)?"":J.join(", "),L=c.allowedFileExtensions,M=da(L)?"":L.join(", ");if(da(L)||(C=new RegExp("\\.("+L.join("|")+")$","i")),A=A.toFixed(2),c.maxFileSize>0&&A>c.maxFileSize)return G=c.msgSizeTooLarge.replace("{name}",z).replace("{size}",A).replace("{maxSize}",c.maxFileSize),void(c.isError=t(G,y,v,a));if(!da(J)&&ea(J)){for(F=0;F<J.length;F+=1)H=J[F],B=o[H],I=void 0!==B&&B(y.type,z),E+=da(I)?0:I.length;if(0===E)return G=c.msgInvalidFileType.replace("{name}",z).replace("{types}",K),void(c.isError=t(G,y,v,a))}return 0!==E||da(L)||!ea(L)||da(C)||(I=h(z,C),E+=da(I)?0:I.length,0!==E)?c.showPreview?!s&&A>r?(c.addToStack(y),i.addClass("file-thumb-loading"),c._previewDefault(y,v),c._initFileActions(),c._updateFileDetails(n),void q(a+1)):(e.length&&void 0!==FileReader?(j.html(k.replace("{index}",a+1).replace("{files}",n)),i.addClass("file-thumb-loading"),f.onerror=function(a){c._errorHandler(a,z)},f.onload=function(b){c._previewFile(a,y,b,v,D),c._initFileActions()},f.onloadend=function(){G=l.replace("{index}",a+1).replace("{files}",n).replace("{percent}",50).replace("{name}",z),setTimeout(function(){j.html(G),c._updateFileDetails(n),q(a+1)},100),c._raise("fileloaded",[y,v,a,f])},f.onprogress=function(b){if(b.lengthComputable){var c=b.loaded/b.total*100,d=Math.ceil(c);G=l.replace("{index}",a+1).replace("{files}",n).replace("{percent}",d).replace("{name}",z),setTimeout(function(){j.html(G)},100)}},w=fa("text",o,ca.text),x=fa("image",o,ca.image),w(y.type,z)?f.readAsText(y,c.textEncoding):x(y.type,z)?f.readAsDataURL(y):f.readAsArrayBuffer(y)):(c._previewDefault(y,v),setTimeout(function(){q(a+1),c._updateFileDetails(n)},100),c._raise("fileloaded",[y,v,a,f])),void c.addToStack(y)):(c.addToStack(y),setTimeout(function(){q(a+1)},100),void c._raise("fileloaded",[y,v,a,f])):(G=c.msgInvalidFileExtension.replace("{name}",z).replace("{extensions}",M),void(c.isError=t(G,y,v,a)))},q(0),c._updateFileDetails(n,!1)},_updateFileDetails:function(a){var b=this,c=b.$element,d=b.getFileStack(),e=i(9)&&ka(c.val())||c[0].files[0]&&c[0].files[0].name||d.length&&d[0].name||"",f=b.slug(e),g=b.isUploadable?d.length:a,h=k.count(b.id)+g,j=g>1?b._getMsgSelected(h):f;b.isError?(b.$previewContainer.removeClass("file-thumb-loading"),b.$previewStatus.html(""),b.$captionContainer.find(".kv-caption-icon").hide()):b._showFileIcon(),b._setCaption(j,b.isError),b.$container.removeClass("file-input-new file-input-ajax-new"),1===arguments.length&&b._raise("fileselect",[a,f]),k.count(b.id)&&b._initPreviewActions()},_setThumbStatus:function(a,b){var c=this;if(c.showPreview){var d="indicator"+b,e=d+"Title",f="file-preview-"+b.toLowerCase(),g=a.find(".file-upload-indicator"),h=c.fileActionSettings;a.removeClass("file-preview-success file-preview-error file-preview-loading"),"Error"===b&&a.find(".kv-file-upload").attr("disabled",!0),"Success"===b&&(a.find(".file-drag-handle").remove(),g.css("margin-left",0)),g.html(h[d]),g.attr("title",h[e]),a.addClass(f)}},_setProgressCancelled:function(){var a=this;a._setProgress(101,a.$progress,a.msgCancelled)},_setProgress:function(a,b,c){var d=this,e=Math.min(a,100),f=e<100?d.progressTemplate:c?d.progressErrorTemplate:a<=100?d.progressTemplate:d.progressCompleteTemplate,g=d.progressUploadThreshold;if(b=b||d.$progress,!da(f)){if(g&&e>g&&a<=100){var h=f.replace("{percent}",g).replace("{percent}",g).replace("{percent}%",d.msgUploadThreshold);b.html(h)}else b.html(f.replace(/\{percent}/g,e));c&&b.find('[role="progressbar"]').html(c)}},_setFileDropZoneTitle:function(){var d,a=this,b=a.$container.find(".file-drop-zone"),c=a.dropZoneTitle;a.isClickable&&(d=da(a.$element.attr("multiple"))?a.fileSingle:a.filePlural,c+=a.dropZoneClickTitle.replace("{files}",d)),b.find("."+a.dropZoneTitleClass).remove(),a.isUploadable&&a.showPreview&&0!==b.length&&!(a.getFileStack().length>0)&&a.dropZoneEnabled&&(0===b.find(".file-preview-frame").length&&da(a.defaultPreviewContent)&&b.prepend('<div class="'+a.dropZoneTitleClass+'">'+c+"</div>"),a.$container.removeClass("file-input-new"),p(a.$container,"file-input-ajax-new"))},_setAsyncUploadStatus:function(b,c,d){var e=this,f=0;e._setProgress(c,a("#"+b).find(".file-thumb-progress")),e.uploadStatus[b]=c,a.each(e.uploadStatus,function(a,b){f+=b}),e._setProgress(Math.floor(f/d))},_validateMinCount:function(){var a=this,b=a.isUploadable?a.getFileStack().length:a.$element.get(0).files.length;return!(a.validateInitialCount&&a.minFileCount>0&&a._getFileCount(b-1)<a.minFileCount)||(a._noFilesError({}),!1)},_getFileCount:function(a){var b=this,c=0;return b.validateInitialCount&&!b.overwriteInitial&&(c=k.count(b.id),a+=c),a},_getFileName:function(a){return a&&a.name?this.slug(a.name):void 0},_getFileNames:function(a){var b=this;return b.filenames.filter(function(b){return a?void 0!==b:void 0!==b&&null!==b})},_setPreviewError:function(a,b,c){var d=this;void 0!==b&&d.updateStack(b,c),d.removeFromPreviewOnError?a.remove():d._setThumbStatus(a,"Error")},_checkDimensions:function(a,b,c,d,e,f,g){var i,j,m,n,h=this,k="Small"===b?"min":"max",l=h[k+"Image"+f];!da(l)&&c.length&&(m=c[0],j="Width"===f?m.naturalWidth||m.width:m.naturalHeight||m.height,n="Small"===b?j>=l:j<=l,n||(i=h["msgImage"+f+b].replace("{name}",e).replace("{size}",l),h._showUploadError(i,g),h._setPreviewError(d,a,null)))},_validateImage:function(a,b,c,d){var h,i,k,e=this,f=e.$preview,l=f.find("#"+b),m=l.find("img");c=c||"Untitled",m.length&&j(m,"load",function(){i=l.width(),k=f.width(),i>k&&(m.css("width","100%"),l.css("width","97%")),h={ind:a,id:b},e._checkDimensions(a,"Small",m,l,c,"Width",h),e._checkDimensions(a,"Small",m,l,c,"Height",h),e.resizeImage||(e._checkDimensions(a,"Large",m,l,c,"Width",h),e._checkDimensions(a,"Large",m,l,c,"Height",h)),e._raise("fileimageloaded",[b]),e.loadedImages.push({ind:a,img:m,thumb:l,pid:b,typ:d}),e._validateAllImages(),g.revokeObjectURL(m.attr("src"))})},_validateAllImages:function(){var b,c,d,e,f,g,i,a=this,h={};if(a.loadedImages.length===a.totalImagesCount&&(a._raise("fileimagesloaded"),a.resizeImage)){for(i=a.isUploadable?a._showUploadError:a._showError,b=0;b<a.loadedImages.length;b++)c=a.loadedImages[b],d=c.img,e=c.thumb,f=c.pid,g=c.ind,h={id:f,index:g},a._getResizedImage(d[0],c.typ,f,g)||(i(a.msgImageResizeError,h,"fileimageresizeerror"),a._setPreviewError(e,g));a._raise("fileimagesresized")}},_getResizedImage:function(a,b,c,d){var l,m,e=this,f=a.naturalWidth,g=a.naturalHeight,h=1,i=e.maxImageWidth||f,j=e.maxImageHeight||g,k=f&&g,n=e.imageCanvas,o=e.imageCanvasContext;if(!k)return!1;if(f===i&&g===j)return!0;b=b||e.resizeDefaultImageType,l=f>i,m=g>j,h="width"===e.resizePreference?l?i/f:m?j/g:1:m?j/g:l?i/f:1,e._resetCanvas(),f*=h,g*=h,n.width=f,n.height=g;try{return o.drawImage(a,0,0,f,g),n.toBlob(function(a){e._raise("fileimageresized",[c,d]),e.filestack[d]=a},b,e.resizeQuality),!0}catch(a){return!1}},_initBrowse:function(a){var b=this;b.showBrowse?(b.$btnFile=a.find(".btn-file"),b.$btnFile.append(b.$element)):b.$element.hide()},_initCaption:function(){var a=this,b=a.initialCaption||"";return a.overwriteInitial||da(b)?(a.$caption.html(""),!1):(a._setCaption(b),!0)},_setCaption:function(b,c){var e,f,g,h,d=this,i=d.getFileStack();if(d.$caption.length){if(c)e=a("<div>"+d.msgValidationError+"</div>").text(),g=i.length,h=g?1===g&&i[0]?d._getFileNames()[0]:d._getMsgSelected(g):d._getMsgSelected(d.msgNo),f='<span class="'+d.msgValidationErrorClass+'">'+d.msgValidationErrorIcon+(da(b)?h:b)+"</span>";else{if(da(b))return;e=a("<div>"+b+"</div>").text(),f=d._getLayoutTemplate("fileIcon")+e}d.$caption.html(f),d.$caption.attr("title",e),d.$captionContainer.find(".file-caption-ellipsis").attr("title",e)}},_createContainer:function(){var b=this,c=a(document.createElement("div")).attr({class:"file-input file-input-new"}).html(b._renderMain());return b.$element.before(c),b._initBrowse(c),b.theme&&c.addClass("theme-"+b.theme),c},_refreshContainer:function(){var a=this,b=a.$container;b.before(a.$element),b.html(a._renderMain()),a._initBrowse(b)},_renderMain:function(){var a=this,b=a.isUploadable&&a.dropZoneEnabled?" file-drop-zone":"file-drop-disabled",c=a.showClose?a._getLayoutTemplate("close"):"",d=a.showPreview?a._getLayoutTemplate("preview").replace(/\{class}/g,a.previewClass).replace(/\{dropClass}/g,b):"",e=a.isDisabled?a.captionClass+" file-caption-disabled":a.captionClass,f=a.captionTemplate.replace(/\{class}/g,e+" kv-fileinput-caption");return a.mainTemplate.replace(/\{class}/g,a.mainClass+(!a.showBrowse&&a.showCaption?" no-browse":"")).replace(/\{preview}/g,d).replace(/\{close}/g,c).replace(/\{caption}/g,f).replace(/\{upload}/g,a._renderButton("upload")).replace(/\{remove}/g,a._renderButton("remove")).replace(/\{cancel}/g,a._renderButton("cancel")).replace(/\{browse}/g,a._renderButton("browse"))},_renderButton:function(a){var b=this,c=b._getLayoutTemplate("btnDefault"),d=b[a+"Class"],e=b[a+"Title"],f=b[a+"Icon"],g=b[a+"Label"],h=b.isDisabled?" disabled":"",i="button";switch(a){case"remove":if(!b.showRemove)return"";break;case"cancel":if(!b.showCancel)return"";d+=" hide";break;case"upload":if(!b.showUpload)return"";b.isUploadable&&!b.isDisabled?c=b._getLayoutTemplate("btnLink").replace("{href}",b.uploadUrl):i="submit";break;case"browse":if(!b.showBrowse)return"";c=b._getLayoutTemplate("btnBrowse");break;default:return""}return d+="browse"===a?" btn-file":" fileinput-"+a+" fileinput-"+a+"-button",da(g)||(g=' <span class="'+b.buttonLabelClass+'">'+g+"</span>"),c.replace("{type}",i).replace("{css}",d).replace("{title}",e).replace("{status}",h).replace("{icon}",f).replace("{label}",g)},_renderThumbProgress:function(){return'<div class="file-thumb-progress hide">'+this.progressTemplate.replace(/\{percent}/g,"0")+"</div>"},_renderFileFooter:function(a,b,c,d){var k,e=this,f=e.fileActionSettings,g=f.showRemove,h=f.showDrag,i=f.showUpload,j=f.showZoom,l=e._getLayoutTemplate("footer"),m=d?f.indicatorError:f.indicatorNew,n=d?f.indicatorErrorTitle:f.indicatorNewTitle;return b=e._getSize(b),k=e.isUploadable?l.replace(/\{actions}/g,e._renderFileActions(i,g,j,h,!1,!1,!1)).replace(/\{caption}/g,a).replace(/\{size}/g,b).replace(/\{width}/g,c).replace(/\{progress}/g,e._renderThumbProgress()).replace(/\{indicator}/g,m).replace(/\{indicatorTitle}/g,n):l.replace(/\{actions}/g,e._renderFileActions(!1,!1,j,h,!1,!1,!1)).replace(/\{caption}/g,a).replace(/\{size}/g,b).replace(/\{width}/g,c).replace(/\{progress}/g,"").replace(/\{indicator}/g,m).replace(/\{indicatorTitle}/g,n),k=ia(k,e.previewThumbTags)},_renderFileActions:function(a,b,c,d,e,f,g,h){if(!(a||b||c||d))return"";var p,i=this,j=f===!1?"":' data-url="'+f+'"',k=g===!1?"":' data-key="'+g+'"',l="",m="",n="",o="",q=i._getLayoutTemplate("actions"),r=i.fileActionSettings,s=i.otherActionButtons.replace(/\{dataKey}/g,k),t=e?r.removeClass+" disabled":r.removeClass;return b&&(l=i._getLayoutTemplate("actionDelete").replace(/\{removeClass}/g,t).replace(/\{removeIcon}/g,r.removeIcon).replace(/\{removeTitle}/g,r.removeTitle).replace(/\{dataUrl}/g,j).replace(/\{dataKey}/g,k)),a&&(m=i._getLayoutTemplate("actionUpload").replace(/\{uploadClass}/g,r.uploadClass).replace(/\{uploadIcon}/g,r.uploadIcon).replace(/\{uploadTitle}/g,r.uploadTitle)),c&&(n=i._getLayoutTemplate("actionZoom").replace(/\{zoomClass}/g,r.zoomClass).replace(/\{zoomIcon}/g,r.zoomIcon).replace(/\{zoomTitle}/g,r.zoomTitle)),d&&h&&(p="drag-handle-init "+r.dragClass,o=i._getLayoutTemplate("actionDrag").replace(/\{dragClass}/g,p).replace(/\{dragTitle}/g,r.dragTitle).replace(/\{dragIcon}/g,r.dragIcon)),q.replace(/\{delete}/g,l).replace(/\{upload}/g,m).replace(/\{zoom}/g,n).replace(/\{drag}/g,o).replace(/\{other}/g,s)},_browse:function(a){var b=this;b._raise("filebrowse"),a&&a.isDefaultPrevented()||(b.isError&&!b.isUploadable&&b.clear(),b.$captionContainer.focus())},_change:function(b){var c=this,d=c.$element;if(!c.isUploadable&&da(d.val())&&c.fileInputCleared)return void(c.fileInputCleared=!1);c.fileInputCleared=!1;var e,f,g,l,m,n,h=arguments.length>1,i=c.isUploadable,j=0,o=h?b.originalEvent.dataTransfer.files:d.get(0).files,p=c.filestack.length,q=da(d.attr("multiple")),r=q&&p>0,s=0,t=function(b,d,e,f){var g=a.extend(!0,{},c._getOutData({},{},o),{id:e,index:f}),h={id:e,index:f,file:d,files:o};return c.isUploadable?c._showUploadError(b,g):c._showError(b,h)};if(c.reader=null,c._resetUpload(),c._hideFileIcon(),c.isUploadable&&c.$container.find(".file-drop-zone ."+c.dropZoneTitleClass).remove(),h)for(e=[];o[j];)l=o[j],l.type||l.size%4096!==0?e.push(l):s++,j++;else e=void 0===b.target.files?b.target&&b.target.value?[{name:b.target.value.replace(/^.+\\/,"")}]:[]:b.target.files;if(da(e)||0===e.length)return i||c.clear(),c._showFolderError(s),void c._raise("fileselectnone");if(c._resetErrors(),n=e.length,g=c._getFileCount(c.isUploadable?c.getFileStack().length+n:n),c.maxFileCount>0&&g>c.maxFileCount){if(!c.autoReplace||n>c.maxFileCount)return m=c.autoReplace&&n>c.maxFileCount?n:g,f=c.msgFilesTooMany.replace("{m}",c.maxFileCount).replace("{n}",m),c.isError=t(f,null,null,null),c.$captionContainer.find(".kv-caption-icon").hide(),c._setCaption("",!0),void c.$container.removeClass("file-input-new file-input-ajax-new");g>c.maxFileCount&&c._resetPreviewThumbs(i)}else!i||r?(c._resetPreviewThumbs(!1),r&&c.clearStack()):!i||0!==p||k.count(c.id)&&!c.overwriteInitial||c._resetPreviewThumbs(!0);c.isPreviewable?c._readFiles(e):c._updateFileDetails(1),c._showFolderError(s)},_abort:function(b){var d,c=this;return!(!c.ajaxAborted||"object"!=typeof c.ajaxAborted||void 0===c.ajaxAborted.message)&&(d=a.extend(!0,{},c._getOutData(),b),d.abortData=c.ajaxAborted.data||{},d.abortMessage=c.ajaxAborted.message,c.cancel(),c._setProgress(101,c.$progress,c.msgCancelled),c._showUploadError(c.ajaxAborted.message,d,"filecustomerror"),!0)},_resetFileStack:function(){var b=this,c=0,d=[],e=[];b._getThumbs().each(function(){var f=a(this),g=f.attr("data-fileindex"),h=b.filestack[g];g!==-1&&(void 0!==h?(d[c]=h,e[c]=b._getFileName(h),f.attr({id:b.previewInitId+"-"+c,"data-fileindex":c}),c++):f.attr({id:"uploaded-"+ga(),"data-fileindex":"-1"}))}),b.filestack=d,b.filenames=e},clearStack:function(){var a=this;return a.filestack=[],a.filenames=[],a.$element},updateStack:function(a,b){var c=this;return c.filestack[a]=b,c.filenames[a]=c._getFileName(b),c.$element},addToStack:function(a){var b=this;return b.filestack.push(a),b.filenames.push(b._getFileName(a)),b.$element},getFileStack:function(a){var b=this;return b.filestack.filter(function(b){return a?void 0!==b:void 0!==b&&null!==b})},getFilesCount:function(){var a=this,b=a.isUploadable?a.getFileStack().length:a.$element.get(0).files.length;return a._getFileCount(b)},lock:function(){var a=this;return a._resetErrors(),a.disable(),a.showRemove&&p(a.$container.find(".fileinput-remove"),"hide"),a.showCancel&&a.$container.find(".fileinput-cancel").removeClass("hide"),a._raise("filelock",[a.filestack,a._getExtraData()]),a.$element},unlock:function(a){var b=this;return void 0===a&&(a=!0),b.enable(),b.showCancel&&p(b.$container.find(".fileinput-cancel"),"hide"),b.showRemove&&b.$container.find(".fileinput-remove").removeClass("hide"),a&&b._resetFileStack(),b._raise("fileunlock",[b.filestack,b._getExtraData()]),b.$element},cancel:function(){var e,b=this,c=b.ajaxRequests,d=c.length;if(d>0)for(e=0;e<d;e+=1)b.cancelling=!0,c[e].abort();return b._setProgressCancelled(),b._getThumbs().each(function(){var c=a(this),d=c.attr("data-fileindex");c.removeClass("file-uploading"),void 0!==b.filestack[d]&&(c.find(".kv-file-upload").removeClass("disabled").removeAttr("disabled"),c.find(".kv-file-remove").removeClass("disabled").removeAttr("disabled")),b.unlock()}),b.$element},clear:function(){var c,b=this;return b.$btnUpload.removeAttr("disabled"),b._getThumbs().find("video,audio,img").each(function(){ja(a(this))}),b._resetUpload(),b.clearStack(),b._clearFileInput(),b._resetErrors(!0),b._raise("fileclear"),b._hasInitialPreview()?(b._showFileIcon(),b._resetPreview(),b._initPreviewActions(),b.$container.removeClass("file-input-new")):(b._getThumbs().each(function(){b._clearObjects(a(this))}),b.isUploadable&&(k.data[b.id]={}),b.$preview.html(""),c=!b.overwriteInitial&&b.initialCaption.length>0?b.initialCaption:"",b.$caption.html(c),b.$caption.attr("title",""),p(b.$container,"file-input-new"),b._validateDefaultPreview()),0===b.$container.find(".file-preview-frame").length&&(b._initCaption()||b.$captionContainer.find(".kv-caption-icon").hide()),b._hideFileIcon(),b._raise("filecleared"),b.$captionContainer.focus(),b._setFileDropZoneTitle(),b.$element},reset:function(){var a=this;return a._resetPreview(),a.$container.find(".fileinput-filename").text(""),a._raise("filereset"),p(a.$container,"file-input-new"),(a.$preview.find(".file-preview-frame").length||a.isUploadable&&a.dropZoneEnabled)&&a.$container.removeClass("file-input-new"),
 a._setFileDropZoneTitle(),a.clearStack(),a.formdata={},a.$element},disable:function(){var a=this;return a.isDisabled=!0,a._raise("filedisabled"),a.$element.attr("disabled","disabled"),a.$container.find(".kv-fileinput-caption").addClass("file-caption-disabled"),a.$container.find(".btn-file, .fileinput-remove, .fileinput-upload, .file-preview-frame button").attr("disabled",!0),a._initDragDrop(),a.$element},enable:function(){var a=this;return a.isDisabled=!1,a._raise("fileenabled"),a.$element.removeAttr("disabled"),a.$container.find(".kv-fileinput-caption").removeClass("file-caption-disabled"),a.$container.find(".btn-file, .fileinput-remove, .fileinput-upload, .file-preview-frame button").removeAttr("disabled"),a._initDragDrop(),a.$element},upload:function(){var e,f,g,b=this,c=b.getFileStack().length,d={},h=!a.isEmptyObject(b._getExtraData());if(b.minFileCount>0&&b._getFileCount(c)<b.minFileCount)return void b._noFilesError(d);if(b.isUploadable&&!b.isDisabled&&(0!==c||h)){if(b._resetUpload(),b.$progress.removeClass("hide"),b.uploadCount=0,b.uploadStatus={},b.uploadLog=[],b.lock(),b._setProgress(2),0===c&&h)return void b._uploadExtraOnly();if(g=b.filestack.length,b.hasInitData=!1,!b.uploadAsync)return b._uploadBatch(),b.$element;for(f=b._getOutData(),b._raise("filebatchpreupload",[f]),b.fileBatchCompleted=!1,b.uploadCache={content:[],config:[],tags:[],append:!0},b.uploadAsyncCount=b.getFileStack().length,e=0;e<g;e++)b.uploadCache.content[e]=null,b.uploadCache.config[e]=null,b.uploadCache.tags[e]=null;for(e=0;e<g;e++)void 0!==b.filestack[e]&&b._uploadSingle(e,b.filestack,!0)}},destroy:function(){var a=this,c=a.$container;return c.find(".file-drop-zone").off(),a.$element.insertBefore(c).off(b).removeData(),c.off().remove(),a.$element},refresh:function(b){var c=this,d=c.$element;return b=b?a.extend(!0,{},c.options,b):c.options,c.destroy(),d.fileinput(b),d.val()&&d.trigger("change.fileinput"),d}},a.fn.fileinput=function(b){if(m()||i(9)){var c=Array.apply(null,arguments),d=[];switch(c.shift(),this.each(function(){var l,e=a(this),f=e.data("fileinput"),g="object"==typeof b&&b,h=g.theme||e.data("theme"),i={},j={},k=g.language||e.data("language")||"en";f||(h&&(j=a.fn.fileinputThemes[h]||{}),"en"===k||da(a.fn.fileinputLocales[k])||(i=a.fn.fileinputLocales[k]||{}),l=a.extend(!0,{},a.fn.fileinput.defaults,j,a.fn.fileinputLocales.en,i,g,e.data()),f=new oa(this,l),e.data("fileinput",f)),"string"==typeof b&&d.push(f[b].apply(f,c))}),d.length){case 0:return this;case 1:return d[0];default:return d}}},a.fn.fileinput.defaults={language:"en",showCaption:!0,showBrowse:!0,showPreview:!0,showRemove:!0,showUpload:!0,showCancel:!0,showClose:!0,showUploadedThumbs:!0,browseOnZoneClick:!1,autoReplace:!1,previewClass:"",captionClass:"",mainClass:"file-caption-main",mainTemplate:null,purifyHtml:!0,fileSizeGetter:null,initialCaption:"",initialPreview:[],initialPreviewDelimiter:"*$$*",initialPreviewAsData:!1,initialPreviewFileType:"image",initialPreviewConfig:[],initialPreviewThumbTags:[],previewThumbTags:{},initialPreviewShowDelete:!0,removeFromPreviewOnError:!1,deleteUrl:"",deleteExtraData:{},overwriteInitial:!0,layoutTemplates:Y,previewTemplates:Z,previewZoomSettings:$,previewZoomButtonIcons:{prev:'<i class="glyphicon glyphicon-triangle-left"></i>',next:'<i class="glyphicon glyphicon-triangle-right"></i>',toggleheader:'<i class="glyphicon glyphicon-resize-vertical"></i>',fullscreen:'<i class="glyphicon glyphicon-fullscreen"></i>',borderless:'<i class="glyphicon glyphicon-resize-full"></i>',close:'<i class="glyphicon glyphicon-remove"></i>'},previewZoomButtonClasses:{prev:"btn btn-navigate",next:"btn btn-navigate",toggleheader:"btn btn-default btn-header-toggle",fullscreen:"btn btn-default",borderless:"btn btn-default",close:"btn btn-default"},allowedPreviewTypes:_,allowedPreviewMimeTypes:null,allowedFileTypes:null,allowedFileExtensions:null,defaultPreviewContent:null,customLayoutTags:{},customPreviewTags:{},previewSettings:ba,fileTypeSettings:ca,previewFileIcon:'<i class="glyphicon glyphicon-file"></i>',previewFileIconClass:"file-other-icon",previewFileIconSettings:{},previewFileExtSettings:{},buttonLabelClass:"hidden-xs",browseIcon:'<i class="glyphicon glyphicon-folder-open"></i>&nbsp;',browseClass:"btn btn-primary",removeIcon:'<i class="glyphicon glyphicon-trash"></i>',removeClass:"btn btn-default",cancelIcon:'<i class="glyphicon glyphicon-ban-circle"></i>',cancelClass:"btn btn-default",uploadIcon:'<i class="glyphicon glyphicon-upload"></i>',uploadClass:"btn btn-default",uploadUrl:null,uploadAsync:!0,uploadExtraData:{},zoomModalHeight:480,minImageWidth:null,minImageHeight:null,maxImageWidth:null,maxImageHeight:null,resizeImage:!1,resizePreference:"width",resizeQuality:.92,resizeDefaultImageType:"image/jpeg",maxFileSize:0,maxFilePreviewSize:25600,minFileCount:0,maxFileCount:0,validateInitialCount:!1,msgValidationErrorClass:"text-danger",msgValidationErrorIcon:'<i class="glyphicon glyphicon-exclamation-sign"></i> ',msgErrorClass:"file-error-message",progressThumbClass:"progress-bar progress-bar-success progress-bar-striped active",progressClass:"progress-bar progress-bar-success progress-bar-striped active",progressCompleteClass:"progress-bar progress-bar-success",progressErrorClass:"progress-bar progress-bar-danger",progressUploadThreshold:99,previewFileType:"image",elCaptionContainer:null,elCaptionText:null,elPreviewContainer:null,elPreviewImage:null,elPreviewStatus:null,elErrorContainer:null,errorCloseButton:'<span class="close kv-error-close">&times;</span>',slugCallback:null,dropZoneEnabled:!0,dropZoneTitleClass:"file-drop-zone-title",fileActionSettings:{},otherActionButtons:"",textEncoding:"UTF-8",ajaxSettings:{},ajaxDeleteSettings:{},showAjaxErrorDetails:!0},a.fn.fileinputLocales.en={fileSingle:"file",filePlural:"files",browseLabel:"Browse &hellip;",removeLabel:"Remove",removeTitle:"Clear selected files",cancelLabel:"Cancel",cancelTitle:"Abort ongoing upload",uploadLabel:"Upload",uploadTitle:"Upload selected files",msgNo:"No",msgNoFilesSelected:"No files selected",msgCancelled:"Cancelled",msgZoomModalHeading:"Detailed Preview",msgSizeTooLarge:'File "{name}" (<b>{size} KB</b>) exceeds maximum allowed upload size of <b>{maxSize} KB</b>.',msgFilesTooLess:"You must select at least <b>{n}</b> {files} to upload.",msgFilesTooMany:"Number of files selected for upload <b>({n})</b> exceeds maximum allowed limit of <b>{m}</b>.",msgFileNotFound:'File "{name}" not found!',msgFileSecured:'Security restrictions prevent reading the file "{name}".',msgFileNotReadable:'File "{name}" is not readable.',msgFilePreviewAborted:'File preview aborted for "{name}".',msgFilePreviewError:'An error occurred while reading the file "{name}".',msgInvalidFileType:'Invalid type for file "{name}". Only "{types}" files are supported.',msgInvalidFileExtension:'Invalid extension for file "{name}". Only "{extensions}" files are supported.',msgUploadAborted:"The file upload was aborted",msgUploadThreshold:"Processing...",msgValidationError:"Validation Error",msgLoading:"Loading file {index} of {files} &hellip;",msgProgress:"Loading file {index} of {files} - {name} - {percent}% completed.",msgSelected:"{n} {files} selected",msgFoldersNotAllowed:"Drag & drop files only! {n} folder(s) dropped were skipped.",msgImageWidthSmall:'Width of image file "{name}" must be at least {size} px.',msgImageHeightSmall:'Height of image file "{name}" must be at least {size} px.',msgImageWidthLarge:'Width of image file "{name}" cannot exceed {size} px.',msgImageHeightLarge:'Height of image file "{name}" cannot exceed {size} px.',msgImageResizeError:"Could not get the image dimensions to resize.",msgImageResizeException:"Error while resizing the image.<pre>{errors}</pre>",dropZoneTitle:"Drag & drop files here &hellip;",dropZoneClickTitle:"<br>(or click to select {files})",previewZoomButtonTitles:{prev:"View previous file",next:"View next file",toggleheader:"Toggle header",fullscreen:"Toggle full screen",borderless:"Toggle borderless mode",close:"Close detailed preview"}},a.fn.fileinput.Constructor=oa,a(document).ready(function(){var b=a("input.file[type=file]");b.length&&b.fileinput()})});
-/*!
- * Bootstrap v3.3.7 (http://getbootstrap.com)
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under the MIT license
- */
-
-if (typeof jQuery === 'undefined') {
-  throw new Error('Bootstrap\'s JavaScript requires jQuery')
-}
-
-+function ($) {
-  'use strict';
-  var version = $.fn.jquery.split(' ')[0].split('.')
-  if ((version[0] < 2 && version[1] < 9) || (version[0] == 1 && version[1] == 9 && version[2] < 1) || (version[0] > 3)) {
-    throw new Error('Bootstrap\'s JavaScript requires jQuery version 1.9.1 or higher, but lower than version 4')
-  }
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: transition.js v3.3.7
- * http://getbootstrap.com/javascript/#transitions
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
-  // ============================================================
-
-  function transitionEnd() {
-    var el = document.createElement('bootstrap')
-
-    var transEndEventNames = {
-      WebkitTransition : 'webkitTransitionEnd',
-      MozTransition    : 'transitionend',
-      OTransition      : 'oTransitionEnd otransitionend',
-      transition       : 'transitionend'
-    }
-
-    for (var name in transEndEventNames) {
-      if (el.style[name] !== undefined) {
-        return { end: transEndEventNames[name] }
-      }
-    }
-
-    return false // explicit for ie8 (  ._.)
-  }
-
-  // http://blog.alexmaccaw.com/css-transitions
-  $.fn.emulateTransitionEnd = function (duration) {
-    var called = false
-    var $el = this
-    $(this).one('bsTransitionEnd', function () { called = true })
-    var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
-    setTimeout(callback, duration)
-    return this
-  }
-
-  $(function () {
-    $.support.transition = transitionEnd()
-
-    if (!$.support.transition) return
-
-    $.event.special.bsTransitionEnd = {
-      bindType: $.support.transition.end,
-      delegateType: $.support.transition.end,
-      handle: function (e) {
-        if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
-      }
-    }
-  })
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: alert.js v3.3.7
- * http://getbootstrap.com/javascript/#alerts
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // ALERT CLASS DEFINITION
-  // ======================
-
-  var dismiss = '[data-dismiss="alert"]'
-  var Alert   = function (el) {
-    $(el).on('click', dismiss, this.close)
-  }
-
-  Alert.VERSION = '3.3.7'
-
-  Alert.TRANSITION_DURATION = 150
-
-  Alert.prototype.close = function (e) {
-    var $this    = $(this)
-    var selector = $this.attr('data-target')
-
-    if (!selector) {
-      selector = $this.attr('href')
-      selector = selector && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
-    }
-
-    var $parent = $(selector === '#' ? [] : selector)
-
-    if (e) e.preventDefault()
-
-    if (!$parent.length) {
-      $parent = $this.closest('.alert')
-    }
-
-    $parent.trigger(e = $.Event('close.bs.alert'))
-
-    if (e.isDefaultPrevented()) return
-
-    $parent.removeClass('in')
-
-    function removeElement() {
-      // detach from parent, fire event then clean up data
-      $parent.detach().trigger('closed.bs.alert').remove()
-    }
-
-    $.support.transition && $parent.hasClass('fade') ?
-      $parent
-        .one('bsTransitionEnd', removeElement)
-        .emulateTransitionEnd(Alert.TRANSITION_DURATION) :
-      removeElement()
-  }
-
-
-  // ALERT PLUGIN DEFINITION
-  // =======================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this = $(this)
-      var data  = $this.data('bs.alert')
-
-      if (!data) $this.data('bs.alert', (data = new Alert(this)))
-      if (typeof option == 'string') data[option].call($this)
-    })
-  }
-
-  var old = $.fn.alert
-
-  $.fn.alert             = Plugin
-  $.fn.alert.Constructor = Alert
-
-
-  // ALERT NO CONFLICT
-  // =================
-
-  $.fn.alert.noConflict = function () {
-    $.fn.alert = old
-    return this
-  }
-
-
-  // ALERT DATA-API
-  // ==============
-
-  $(document).on('click.bs.alert.data-api', dismiss, Alert.prototype.close)
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: button.js v3.3.7
- * http://getbootstrap.com/javascript/#buttons
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // BUTTON PUBLIC CLASS DEFINITION
-  // ==============================
-
-  var Button = function (element, options) {
-    this.$element  = $(element)
-    this.options   = $.extend({}, Button.DEFAULTS, options)
-    this.isLoading = false
-  }
-
-  Button.VERSION  = '3.3.7'
-
-  Button.DEFAULTS = {
-    loadingText: 'loading...'
-  }
-
-  Button.prototype.setState = function (state) {
-    var d    = 'disabled'
-    var $el  = this.$element
-    var val  = $el.is('input') ? 'val' : 'html'
-    var data = $el.data()
-
-    state += 'Text'
-
-    if (data.resetText == null) $el.data('resetText', $el[val]())
-
-    // push to event loop to allow forms to submit
-    setTimeout($.proxy(function () {
-      $el[val](data[state] == null ? this.options[state] : data[state])
-
-      if (state == 'loadingText') {
-        this.isLoading = true
-        $el.addClass(d).attr(d, d).prop(d, true)
-      } else if (this.isLoading) {
-        this.isLoading = false
-        $el.removeClass(d).removeAttr(d).prop(d, false)
-      }
-    }, this), 0)
-  }
-
-  Button.prototype.toggle = function () {
-    var changed = true
-    var $parent = this.$element.closest('[data-toggle="buttons"]')
-
-    if ($parent.length) {
-      var $input = this.$element.find('input')
-      if ($input.prop('type') == 'radio') {
-        if ($input.prop('checked')) changed = false
-        $parent.find('.active').removeClass('active')
-        this.$element.addClass('active')
-      } else if ($input.prop('type') == 'checkbox') {
-        if (($input.prop('checked')) !== this.$element.hasClass('active')) changed = false
-        this.$element.toggleClass('active')
-      }
-      $input.prop('checked', this.$element.hasClass('active'))
-      if (changed) $input.trigger('change')
-    } else {
-      this.$element.attr('aria-pressed', !this.$element.hasClass('active'))
-      this.$element.toggleClass('active')
-    }
-  }
-
-
-  // BUTTON PLUGIN DEFINITION
-  // ========================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.button')
-      var options = typeof option == 'object' && option
-
-      if (!data) $this.data('bs.button', (data = new Button(this, options)))
-
-      if (option == 'toggle') data.toggle()
-      else if (option) data.setState(option)
-    })
-  }
-
-  var old = $.fn.button
-
-  $.fn.button             = Plugin
-  $.fn.button.Constructor = Button
-
-
-  // BUTTON NO CONFLICT
-  // ==================
-
-  $.fn.button.noConflict = function () {
-    $.fn.button = old
-    return this
-  }
-
-
-  // BUTTON DATA-API
-  // ===============
-
-  $(document)
-    .on('click.bs.button.data-api', '[data-toggle^="button"]', function (e) {
-      var $btn = $(e.target).closest('.btn')
-      Plugin.call($btn, 'toggle')
-      if (!($(e.target).is('input[type="radio"], input[type="checkbox"]'))) {
-        // Prevent double click on radios, and the double selections (so cancellation) on checkboxes
-        e.preventDefault()
-        // The target component still receive the focus
-        if ($btn.is('input,button')) $btn.trigger('focus')
-        else $btn.find('input:visible,button:visible').first().trigger('focus')
-      }
-    })
-    .on('focus.bs.button.data-api blur.bs.button.data-api', '[data-toggle^="button"]', function (e) {
-      $(e.target).closest('.btn').toggleClass('focus', /^focus(in)?$/.test(e.type))
-    })
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: carousel.js v3.3.7
- * http://getbootstrap.com/javascript/#carousel
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // CAROUSEL CLASS DEFINITION
-  // =========================
-
-  var Carousel = function (element, options) {
-    this.$element    = $(element)
-    this.$indicators = this.$element.find('.carousel-indicators')
-    this.options     = options
-    this.paused      = null
-    this.sliding     = null
-    this.interval    = null
-    this.$active     = null
-    this.$items      = null
-
-    this.options.keyboard && this.$element.on('keydown.bs.carousel', $.proxy(this.keydown, this))
-
-    this.options.pause == 'hover' && !('ontouchstart' in document.documentElement) && this.$element
-      .on('mouseenter.bs.carousel', $.proxy(this.pause, this))
-      .on('mouseleave.bs.carousel', $.proxy(this.cycle, this))
-  }
-
-  Carousel.VERSION  = '3.3.7'
-
-  Carousel.TRANSITION_DURATION = 600
-
-  Carousel.DEFAULTS = {
-    interval: 5000,
-    pause: 'hover',
-    wrap: true,
-    keyboard: true
-  }
-
-  Carousel.prototype.keydown = function (e) {
-    if (/input|textarea/i.test(e.target.tagName)) return
-    switch (e.which) {
-      case 37: this.prev(); break
-      case 39: this.next(); break
-      default: return
-    }
-
-    e.preventDefault()
-  }
-
-  Carousel.prototype.cycle = function (e) {
-    e || (this.paused = false)
-
-    this.interval && clearInterval(this.interval)
-
-    this.options.interval
-      && !this.paused
-      && (this.interval = setInterval($.proxy(this.next, this), this.options.interval))
-
-    return this
-  }
-
-  Carousel.prototype.getItemIndex = function (item) {
-    this.$items = item.parent().children('.item')
-    return this.$items.index(item || this.$active)
-  }
-
-  Carousel.prototype.getItemForDirection = function (direction, active) {
-    var activeIndex = this.getItemIndex(active)
-    var willWrap = (direction == 'prev' && activeIndex === 0)
-                || (direction == 'next' && activeIndex == (this.$items.length - 1))
-    if (willWrap && !this.options.wrap) return active
-    var delta = direction == 'prev' ? -1 : 1
-    var itemIndex = (activeIndex + delta) % this.$items.length
-    return this.$items.eq(itemIndex)
-  }
-
-  Carousel.prototype.to = function (pos) {
-    var that        = this
-    var activeIndex = this.getItemIndex(this.$active = this.$element.find('.item.active'))
-
-    if (pos > (this.$items.length - 1) || pos < 0) return
-
-    if (this.sliding)       return this.$element.one('slid.bs.carousel', function () { that.to(pos) }) // yes, "slid"
-    if (activeIndex == pos) return this.pause().cycle()
-
-    return this.slide(pos > activeIndex ? 'next' : 'prev', this.$items.eq(pos))
-  }
-
-  Carousel.prototype.pause = function (e) {
-    e || (this.paused = true)
-
-    if (this.$element.find('.next, .prev').length && $.support.transition) {
-      this.$element.trigger($.support.transition.end)
-      this.cycle(true)
-    }
-
-    this.interval = clearInterval(this.interval)
-
-    return this
-  }
-
-  Carousel.prototype.next = function () {
-    if (this.sliding) return
-    return this.slide('next')
-  }
-
-  Carousel.prototype.prev = function () {
-    if (this.sliding) return
-    return this.slide('prev')
-  }
-
-  Carousel.prototype.slide = function (type, next) {
-    var $active   = this.$element.find('.item.active')
-    var $next     = next || this.getItemForDirection(type, $active)
-    var isCycling = this.interval
-    var direction = type == 'next' ? 'left' : 'right'
-    var that      = this
-
-    if ($next.hasClass('active')) return (this.sliding = false)
-
-    var relatedTarget = $next[0]
-    var slideEvent = $.Event('slide.bs.carousel', {
-      relatedTarget: relatedTarget,
-      direction: direction
-    })
-    this.$element.trigger(slideEvent)
-    if (slideEvent.isDefaultPrevented()) return
-
-    this.sliding = true
-
-    isCycling && this.pause()
-
-    if (this.$indicators.length) {
-      this.$indicators.find('.active').removeClass('active')
-      var $nextIndicator = $(this.$indicators.children()[this.getItemIndex($next)])
-      $nextIndicator && $nextIndicator.addClass('active')
-    }
-
-    var slidEvent = $.Event('slid.bs.carousel', { relatedTarget: relatedTarget, direction: direction }) // yes, "slid"
-    if ($.support.transition && this.$element.hasClass('slide')) {
-      $next.addClass(type)
-      $next[0].offsetWidth // force reflow
-      $active.addClass(direction)
-      $next.addClass(direction)
-      $active
-        .one('bsTransitionEnd', function () {
-          $next.removeClass([type, direction].join(' ')).addClass('active')
-          $active.removeClass(['active', direction].join(' '))
-          that.sliding = false
-          setTimeout(function () {
-            that.$element.trigger(slidEvent)
-          }, 0)
-        })
-        .emulateTransitionEnd(Carousel.TRANSITION_DURATION)
-    } else {
-      $active.removeClass('active')
-      $next.addClass('active')
-      this.sliding = false
-      this.$element.trigger(slidEvent)
-    }
-
-    isCycling && this.cycle()
-
-    return this
-  }
-
-
-  // CAROUSEL PLUGIN DEFINITION
-  // ==========================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.carousel')
-      var options = $.extend({}, Carousel.DEFAULTS, $this.data(), typeof option == 'object' && option)
-      var action  = typeof option == 'string' ? option : options.slide
-
-      if (!data) $this.data('bs.carousel', (data = new Carousel(this, options)))
-      if (typeof option == 'number') data.to(option)
-      else if (action) data[action]()
-      else if (options.interval) data.pause().cycle()
-    })
-  }
-
-  var old = $.fn.carousel
-
-  $.fn.carousel             = Plugin
-  $.fn.carousel.Constructor = Carousel
-
-
-  // CAROUSEL NO CONFLICT
-  // ====================
-
-  $.fn.carousel.noConflict = function () {
-    $.fn.carousel = old
-    return this
-  }
-
-
-  // CAROUSEL DATA-API
-  // =================
-
-  var clickHandler = function (e) {
-    var href
-    var $this   = $(this)
-    var $target = $($this.attr('data-target') || (href = $this.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '')) // strip for ie7
-    if (!$target.hasClass('carousel')) return
-    var options = $.extend({}, $target.data(), $this.data())
-    var slideIndex = $this.attr('data-slide-to')
-    if (slideIndex) options.interval = false
-
-    Plugin.call($target, options)
-
-    if (slideIndex) {
-      $target.data('bs.carousel').to(slideIndex)
-    }
-
-    e.preventDefault()
-  }
-
-  $(document)
-    .on('click.bs.carousel.data-api', '[data-slide]', clickHandler)
-    .on('click.bs.carousel.data-api', '[data-slide-to]', clickHandler)
-
-  $(window).on('load', function () {
-    $('[data-ride="carousel"]').each(function () {
-      var $carousel = $(this)
-      Plugin.call($carousel, $carousel.data())
-    })
-  })
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: collapse.js v3.3.7
- * http://getbootstrap.com/javascript/#collapse
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-/* jshint latedef: false */
-
-+function ($) {
-  'use strict';
-
-  // COLLAPSE PUBLIC CLASS DEFINITION
-  // ================================
-
-  var Collapse = function (element, options) {
-    this.$element      = $(element)
-    this.options       = $.extend({}, Collapse.DEFAULTS, options)
-    this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
-                           '[data-toggle="collapse"][data-target="#' + element.id + '"]')
-    this.transitioning = null
-
-    if (this.options.parent) {
-      this.$parent = this.getParent()
-    } else {
-      this.addAriaAndCollapsedClass(this.$element, this.$trigger)
-    }
-
-    if (this.options.toggle) this.toggle()
-  }
-
-  Collapse.VERSION  = '3.3.7'
-
-  Collapse.TRANSITION_DURATION = 350
-
-  Collapse.DEFAULTS = {
-    toggle: true
-  }
-
-  Collapse.prototype.dimension = function () {
-    var hasWidth = this.$element.hasClass('width')
-    return hasWidth ? 'width' : 'height'
-  }
-
-  Collapse.prototype.show = function () {
-    if (this.transitioning || this.$element.hasClass('in')) return
-
-    var activesData
-    var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
-
-    if (actives && actives.length) {
-      activesData = actives.data('bs.collapse')
-      if (activesData && activesData.transitioning) return
-    }
-
-    var startEvent = $.Event('show.bs.collapse')
-    this.$element.trigger(startEvent)
-    if (startEvent.isDefaultPrevented()) return
-
-    if (actives && actives.length) {
-      Plugin.call(actives, 'hide')
-      activesData || actives.data('bs.collapse', null)
-    }
-
-    var dimension = this.dimension()
-
-    this.$element
-      .removeClass('collapse')
-      .addClass('collapsing')[dimension](0)
-      .attr('aria-expanded', true)
-
-    this.$trigger
-      .removeClass('collapsed')
-      .attr('aria-expanded', true)
-
-    this.transitioning = 1
-
-    var complete = function () {
-      this.$element
-        .removeClass('collapsing')
-        .addClass('collapse in')[dimension]('')
-      this.transitioning = 0
-      this.$element
-        .trigger('shown.bs.collapse')
-    }
-
-    if (!$.support.transition) return complete.call(this)
-
-    var scrollSize = $.camelCase(['scroll', dimension].join('-'))
-
-    this.$element
-      .one('bsTransitionEnd', $.proxy(complete, this))
-      .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
-  }
-
-  Collapse.prototype.hide = function () {
-    if (this.transitioning || !this.$element.hasClass('in')) return
-
-    var startEvent = $.Event('hide.bs.collapse')
-    this.$element.trigger(startEvent)
-    if (startEvent.isDefaultPrevented()) return
-
-    var dimension = this.dimension()
-
-    this.$element[dimension](this.$element[dimension]())[0].offsetHeight
-
-    this.$element
-      .addClass('collapsing')
-      .removeClass('collapse in')
-      .attr('aria-expanded', false)
-
-    this.$trigger
-      .addClass('collapsed')
-      .attr('aria-expanded', false)
-
-    this.transitioning = 1
-
-    var complete = function () {
-      this.transitioning = 0
-      this.$element
-        .removeClass('collapsing')
-        .addClass('collapse')
-        .trigger('hidden.bs.collapse')
-    }
-
-    if (!$.support.transition) return complete.call(this)
-
-    this.$element
-      [dimension](0)
-      .one('bsTransitionEnd', $.proxy(complete, this))
-      .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
-  }
-
-  Collapse.prototype.toggle = function () {
-    this[this.$element.hasClass('in') ? 'hide' : 'show']()
-  }
-
-  Collapse.prototype.getParent = function () {
-    return $(this.options.parent)
-      .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
-      .each($.proxy(function (i, element) {
-        var $element = $(element)
-        this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
-      }, this))
-      .end()
-  }
-
-  Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
-    var isOpen = $element.hasClass('in')
-
-    $element.attr('aria-expanded', isOpen)
-    $trigger
-      .toggleClass('collapsed', !isOpen)
-      .attr('aria-expanded', isOpen)
-  }
-
-  function getTargetFromTrigger($trigger) {
-    var href
-    var target = $trigger.attr('data-target')
-      || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
-
-    return $(target)
-  }
-
-
-  // COLLAPSE PLUGIN DEFINITION
-  // ==========================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.collapse')
-      var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
-
-      if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
-      if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
-
-  var old = $.fn.collapse
-
-  $.fn.collapse             = Plugin
-  $.fn.collapse.Constructor = Collapse
-
-
-  // COLLAPSE NO CONFLICT
-  // ====================
-
-  $.fn.collapse.noConflict = function () {
-    $.fn.collapse = old
-    return this
-  }
-
-
-  // COLLAPSE DATA-API
-  // =================
-
-  $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
-    var $this   = $(this)
-
-    if (!$this.attr('data-target')) e.preventDefault()
-
-    var $target = getTargetFromTrigger($this)
-    var data    = $target.data('bs.collapse')
-    var option  = data ? 'toggle' : $this.data()
-
-    Plugin.call($target, option)
-  })
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: dropdown.js v3.3.7
- * http://getbootstrap.com/javascript/#dropdowns
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // DROPDOWN CLASS DEFINITION
-  // =========================
-
-  var backdrop = '.dropdown-backdrop'
-  var toggle   = '[data-toggle="dropdown"]'
-  var Dropdown = function (element) {
-    $(element).on('click.bs.dropdown', this.toggle)
-  }
-
-  Dropdown.VERSION = '3.3.7'
-
-  function getParent($this) {
-    var selector = $this.attr('data-target')
-
-    if (!selector) {
-      selector = $this.attr('href')
-      selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
-    }
-
-    var $parent = selector && $(selector)
-
-    return $parent && $parent.length ? $parent : $this.parent()
-  }
-
-  function clearMenus(e) {
-    if (e && e.which === 3) return
-    $(backdrop).remove()
-    $(toggle).each(function () {
-      var $this         = $(this)
-      var $parent       = getParent($this)
-      var relatedTarget = { relatedTarget: this }
-
-      if (!$parent.hasClass('open')) return
-
-      if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
-
-      $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
-
-      if (e.isDefaultPrevented()) return
-
-      $this.attr('aria-expanded', 'false')
-      $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
-    })
-  }
-
-  Dropdown.prototype.toggle = function (e) {
-    var $this = $(this)
-
-    if ($this.is('.disabled, :disabled')) return
-
-    var $parent  = getParent($this)
-    var isActive = $parent.hasClass('open')
-
-    clearMenus()
-
-    if (!isActive) {
-      if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
-        // if mobile we use a backdrop because click events don't delegate
-        $(document.createElement('div'))
-          .addClass('dropdown-backdrop')
-          .insertAfter($(this))
-          .on('click', clearMenus)
-      }
-
-      var relatedTarget = { relatedTarget: this }
-      $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
-
-      if (e.isDefaultPrevented()) return
-
-      $this
-        .trigger('focus')
-        .attr('aria-expanded', 'true')
-
-      $parent
-        .toggleClass('open')
-        .trigger($.Event('shown.bs.dropdown', relatedTarget))
-    }
-
-    return false
-  }
-
-  Dropdown.prototype.keydown = function (e) {
-    if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
-
-    var $this = $(this)
-
-    e.preventDefault()
-    e.stopPropagation()
-
-    if ($this.is('.disabled, :disabled')) return
-
-    var $parent  = getParent($this)
-    var isActive = $parent.hasClass('open')
-
-    if (!isActive && e.which != 27 || isActive && e.which == 27) {
-      if (e.which == 27) $parent.find(toggle).trigger('focus')
-      return $this.trigger('click')
-    }
-
-    var desc = ' li:not(.disabled):visible a'
-    var $items = $parent.find('.dropdown-menu' + desc)
-
-    if (!$items.length) return
-
-    var index = $items.index(e.target)
-
-    if (e.which == 38 && index > 0)                 index--         // up
-    if (e.which == 40 && index < $items.length - 1) index++         // down
-    if (!~index)                                    index = 0
-
-    $items.eq(index).trigger('focus')
-  }
-
-
-  // DROPDOWN PLUGIN DEFINITION
-  // ==========================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this = $(this)
-      var data  = $this.data('bs.dropdown')
-
-      if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
-      if (typeof option == 'string') data[option].call($this)
-    })
-  }
-
-  var old = $.fn.dropdown
-
-  $.fn.dropdown             = Plugin
-  $.fn.dropdown.Constructor = Dropdown
-
-
-  // DROPDOWN NO CONFLICT
-  // ====================
-
-  $.fn.dropdown.noConflict = function () {
-    $.fn.dropdown = old
-    return this
-  }
-
-
-  // APPLY TO STANDARD DROPDOWN ELEMENTS
-  // ===================================
-
-  $(document)
-    .on('click.bs.dropdown.data-api', clearMenus)
-    .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
-    .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
-    .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
-    .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: modal.js v3.3.7
- * http://getbootstrap.com/javascript/#modals
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // MODAL CLASS DEFINITION
-  // ======================
-
-  var Modal = function (element, options) {
-    this.options             = options
-    this.$body               = $(document.body)
-    this.$element            = $(element)
-    this.$dialog             = this.$element.find('.modal-dialog')
-    this.$backdrop           = null
-    this.isShown             = null
-    this.originalBodyPad     = null
-    this.scrollbarWidth      = 0
-    this.ignoreBackdropClick = false
-
-    if (this.options.remote) {
-      this.$element
-        .find('.modal-content')
-        .load(this.options.remote, $.proxy(function () {
-          this.$element.trigger('loaded.bs.modal')
-        }, this))
-    }
-  }
-
-  Modal.VERSION  = '3.3.7'
-
-  Modal.TRANSITION_DURATION = 300
-  Modal.BACKDROP_TRANSITION_DURATION = 150
-
-  Modal.DEFAULTS = {
-    backdrop: true,
-    keyboard: true,
-    show: true
-  }
-
-  Modal.prototype.toggle = function (_relatedTarget) {
-    return this.isShown ? this.hide() : this.show(_relatedTarget)
-  }
-
-  Modal.prototype.show = function (_relatedTarget) {
-    var that = this
-    var e    = $.Event('show.bs.modal', { relatedTarget: _relatedTarget })
-
-    this.$element.trigger(e)
-
-    if (this.isShown || e.isDefaultPrevented()) return
-
-    this.isShown = true
-
-    this.checkScrollbar()
-    this.setScrollbar()
-    this.$body.addClass('modal-open')
-
-    this.escape()
-    this.resize()
-
-    this.$element.on('click.dismiss.bs.modal', '[data-dismiss="modal"]', $.proxy(this.hide, this))
-
-    this.$dialog.on('mousedown.dismiss.bs.modal', function () {
-      that.$element.one('mouseup.dismiss.bs.modal', function (e) {
-        if ($(e.target).is(that.$element)) that.ignoreBackdropClick = true
-      })
-    })
-
-    this.backdrop(function () {
-      var transition = $.support.transition && that.$element.hasClass('fade')
-
-      if (!that.$element.parent().length) {
-        that.$element.appendTo(that.$body) // don't move modals dom position
-      }
-
-      that.$element
-        .show()
-        .scrollTop(0)
-
-      that.adjustDialog()
-
-      if (transition) {
-        that.$element[0].offsetWidth // force reflow
-      }
-
-      that.$element.addClass('in')
-
-      that.enforceFocus()
-
-      var e = $.Event('shown.bs.modal', { relatedTarget: _relatedTarget })
-
-      transition ?
-        that.$dialog // wait for modal to slide in
-          .one('bsTransitionEnd', function () {
-            that.$element.trigger('focus').trigger(e)
-          })
-          .emulateTransitionEnd(Modal.TRANSITION_DURATION) :
-        that.$element.trigger('focus').trigger(e)
-    })
-  }
-
-  Modal.prototype.hide = function (e) {
-    if (e) e.preventDefault()
-
-    e = $.Event('hide.bs.modal')
-
-    this.$element.trigger(e)
-
-    if (!this.isShown || e.isDefaultPrevented()) return
-
-    this.isShown = false
-
-    this.escape()
-    this.resize()
-
-    $(document).off('focusin.bs.modal')
-
-    this.$element
-      .removeClass('in')
-      .off('click.dismiss.bs.modal')
-      .off('mouseup.dismiss.bs.modal')
-
-    this.$dialog.off('mousedown.dismiss.bs.modal')
-
-    $.support.transition && this.$element.hasClass('fade') ?
-      this.$element
-        .one('bsTransitionEnd', $.proxy(this.hideModal, this))
-        .emulateTransitionEnd(Modal.TRANSITION_DURATION) :
-      this.hideModal()
-  }
-
-  Modal.prototype.enforceFocus = function () {
-    $(document)
-      .off('focusin.bs.modal') // guard against infinite focus loop
-      .on('focusin.bs.modal', $.proxy(function (e) {
-        if (document !== e.target &&
-            this.$element[0] !== e.target &&
-            !this.$element.has(e.target).length) {
-          this.$element.trigger('focus')
-        }
-      }, this))
-  }
-
-  Modal.prototype.escape = function () {
-    if (this.isShown && this.options.keyboard) {
-      this.$element.on('keydown.dismiss.bs.modal', $.proxy(function (e) {
-        e.which == 27 && this.hide()
-      }, this))
-    } else if (!this.isShown) {
-      this.$element.off('keydown.dismiss.bs.modal')
-    }
-  }
-
-  Modal.prototype.resize = function () {
-    if (this.isShown) {
-      $(window).on('resize.bs.modal', $.proxy(this.handleUpdate, this))
-    } else {
-      $(window).off('resize.bs.modal')
-    }
-  }
-
-  Modal.prototype.hideModal = function () {
-    var that = this
-    this.$element.hide()
-    this.backdrop(function () {
-      that.$body.removeClass('modal-open')
-      that.resetAdjustments()
-      that.resetScrollbar()
-      that.$element.trigger('hidden.bs.modal')
-    })
-  }
-
-  Modal.prototype.removeBackdrop = function () {
-    this.$backdrop && this.$backdrop.remove()
-    this.$backdrop = null
-  }
-
-  Modal.prototype.backdrop = function (callback) {
-    var that = this
-    var animate = this.$element.hasClass('fade') ? 'fade' : ''
-
-    if (this.isShown && this.options.backdrop) {
-      var doAnimate = $.support.transition && animate
-
-      this.$backdrop = $(document.createElement('div'))
-        .addClass('modal-backdrop ' + animate)
-        .appendTo(this.$body)
-
-      this.$element.on('click.dismiss.bs.modal', $.proxy(function (e) {
-        if (this.ignoreBackdropClick) {
-          this.ignoreBackdropClick = false
-          return
-        }
-        if (e.target !== e.currentTarget) return
-        this.options.backdrop == 'static'
-          ? this.$element[0].focus()
-          : this.hide()
-      }, this))
-
-      if (doAnimate) this.$backdrop[0].offsetWidth // force reflow
-
-      this.$backdrop.addClass('in')
-
-      if (!callback) return
-
-      doAnimate ?
-        this.$backdrop
-          .one('bsTransitionEnd', callback)
-          .emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION) :
-        callback()
-
-    } else if (!this.isShown && this.$backdrop) {
-      this.$backdrop.removeClass('in')
-
-      var callbackRemove = function () {
-        that.removeBackdrop()
-        callback && callback()
-      }
-      $.support.transition && this.$element.hasClass('fade') ?
-        this.$backdrop
-          .one('bsTransitionEnd', callbackRemove)
-          .emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION) :
-        callbackRemove()
-
-    } else if (callback) {
-      callback()
-    }
-  }
-
-  // these following methods are used to handle overflowing modals
-
-  Modal.prototype.handleUpdate = function () {
-    this.adjustDialog()
-  }
-
-  Modal.prototype.adjustDialog = function () {
-    var modalIsOverflowing = this.$element[0].scrollHeight > document.documentElement.clientHeight
-
-    this.$element.css({
-      paddingLeft:  !this.bodyIsOverflowing && modalIsOverflowing ? this.scrollbarWidth : '',
-      paddingRight: this.bodyIsOverflowing && !modalIsOverflowing ? this.scrollbarWidth : ''
-    })
-  }
-
-  Modal.prototype.resetAdjustments = function () {
-    this.$element.css({
-      paddingLeft: '',
-      paddingRight: ''
-    })
-  }
-
-  Modal.prototype.checkScrollbar = function () {
-    var fullWindowWidth = window.innerWidth
-    if (!fullWindowWidth) { // workaround for missing window.innerWidth in IE8
-      var documentElementRect = document.documentElement.getBoundingClientRect()
-      fullWindowWidth = documentElementRect.right - Math.abs(documentElementRect.left)
-    }
-    this.bodyIsOverflowing = document.body.clientWidth < fullWindowWidth
-    this.scrollbarWidth = this.measureScrollbar()
-  }
-
-  Modal.prototype.setScrollbar = function () {
-    var bodyPad = parseInt((this.$body.css('padding-right') || 0), 10)
-    this.originalBodyPad = document.body.style.paddingRight || ''
-    if (this.bodyIsOverflowing) this.$body.css('padding-right', bodyPad + this.scrollbarWidth)
-  }
-
-  Modal.prototype.resetScrollbar = function () {
-    this.$body.css('padding-right', this.originalBodyPad)
-  }
-
-  Modal.prototype.measureScrollbar = function () { // thx walsh
-    var scrollDiv = document.createElement('div')
-    scrollDiv.className = 'modal-scrollbar-measure'
-    this.$body.append(scrollDiv)
-    var scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth
-    this.$body[0].removeChild(scrollDiv)
-    return scrollbarWidth
-  }
-
-
-  // MODAL PLUGIN DEFINITION
-  // =======================
-
-  function Plugin(option, _relatedTarget) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.modal')
-      var options = $.extend({}, Modal.DEFAULTS, $this.data(), typeof option == 'object' && option)
-
-      if (!data) $this.data('bs.modal', (data = new Modal(this, options)))
-      if (typeof option == 'string') data[option](_relatedTarget)
-      else if (options.show) data.show(_relatedTarget)
-    })
-  }
-
-  var old = $.fn.modal
-
-  $.fn.modal             = Plugin
-  $.fn.modal.Constructor = Modal
-
-
-  // MODAL NO CONFLICT
-  // =================
-
-  $.fn.modal.noConflict = function () {
-    $.fn.modal = old
-    return this
-  }
-
-
-  // MODAL DATA-API
-  // ==============
-
-  $(document).on('click.bs.modal.data-api', '[data-toggle="modal"]', function (e) {
-    var $this   = $(this)
-    var href    = $this.attr('href')
-    var $target = $($this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, ''))) // strip for ie7
-    var option  = $target.data('bs.modal') ? 'toggle' : $.extend({ remote: !/#/.test(href) && href }, $target.data(), $this.data())
-
-    if ($this.is('a')) e.preventDefault()
-
-    $target.one('show.bs.modal', function (showEvent) {
-      if (showEvent.isDefaultPrevented()) return // only register focus restorer if modal will actually get shown
-      $target.one('hidden.bs.modal', function () {
-        $this.is(':visible') && $this.trigger('focus')
-      })
-    })
-    Plugin.call($target, option, this)
-  })
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: tooltip.js v3.3.7
- * http://getbootstrap.com/javascript/#tooltip
- * Inspired by the original jQuery.tipsy by Jason Frame
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // TOOLTIP PUBLIC CLASS DEFINITION
-  // ===============================
-
-  var Tooltip = function (element, options) {
-    this.type       = null
-    this.options    = null
-    this.enabled    = null
-    this.timeout    = null
-    this.hoverState = null
-    this.$element   = null
-    this.inState    = null
-
-    this.init('tooltip', element, options)
-  }
-
-  Tooltip.VERSION  = '3.3.7'
-
-  Tooltip.TRANSITION_DURATION = 150
-
-  Tooltip.DEFAULTS = {
-    animation: true,
-    placement: 'top',
-    selector: false,
-    template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',
-    trigger: 'hover focus',
-    title: '',
-    delay: 0,
-    html: false,
-    container: false,
-    viewport: {
-      selector: 'body',
-      padding: 0
-    }
-  }
-
-  Tooltip.prototype.init = function (type, element, options) {
-    this.enabled   = true
-    this.type      = type
-    this.$element  = $(element)
-    this.options   = this.getOptions(options)
-    this.$viewport = this.options.viewport && $($.isFunction(this.options.viewport) ? this.options.viewport.call(this, this.$element) : (this.options.viewport.selector || this.options.viewport))
-    this.inState   = { click: false, hover: false, focus: false }
-
-    if (this.$element[0] instanceof document.constructor && !this.options.selector) {
-      throw new Error('`selector` option must be specified when initializing ' + this.type + ' on the window.document object!')
-    }
-
-    var triggers = this.options.trigger.split(' ')
-
-    for (var i = triggers.length; i--;) {
-      var trigger = triggers[i]
-
-      if (trigger == 'click') {
-        this.$element.on('click.' + this.type, this.options.selector, $.proxy(this.toggle, this))
-      } else if (trigger != 'manual') {
-        var eventIn  = trigger == 'hover' ? 'mouseenter' : 'focusin'
-        var eventOut = trigger == 'hover' ? 'mouseleave' : 'focusout'
-
-        this.$element.on(eventIn  + '.' + this.type, this.options.selector, $.proxy(this.enter, this))
-        this.$element.on(eventOut + '.' + this.type, this.options.selector, $.proxy(this.leave, this))
-      }
-    }
-
-    this.options.selector ?
-      (this._options = $.extend({}, this.options, { trigger: 'manual', selector: '' })) :
-      this.fixTitle()
-  }
-
-  Tooltip.prototype.getDefaults = function () {
-    return Tooltip.DEFAULTS
-  }
-
-  Tooltip.prototype.getOptions = function (options) {
-    options = $.extend({}, this.getDefaults(), this.$element.data(), options)
-
-    if (options.delay && typeof options.delay == 'number') {
-      options.delay = {
-        show: options.delay,
-        hide: options.delay
-      }
-    }
-
-    return options
-  }
-
-  Tooltip.prototype.getDelegateOptions = function () {
-    var options  = {}
-    var defaults = this.getDefaults()
-
-    this._options && $.each(this._options, function (key, value) {
-      if (defaults[key] != value) options[key] = value
-    })
-
-    return options
-  }
-
-  Tooltip.prototype.enter = function (obj) {
-    var self = obj instanceof this.constructor ?
-      obj : $(obj.currentTarget).data('bs.' + this.type)
-
-    if (!self) {
-      self = new this.constructor(obj.currentTarget, this.getDelegateOptions())
-      $(obj.currentTarget).data('bs.' + this.type, self)
-    }
-
-    if (obj instanceof $.Event) {
-      self.inState[obj.type == 'focusin' ? 'focus' : 'hover'] = true
-    }
-
-    if (self.tip().hasClass('in') || self.hoverState == 'in') {
-      self.hoverState = 'in'
-      return
-    }
-
-    clearTimeout(self.timeout)
-
-    self.hoverState = 'in'
-
-    if (!self.options.delay || !self.options.delay.show) return self.show()
-
-    self.timeout = setTimeout(function () {
-      if (self.hoverState == 'in') self.show()
-    }, self.options.delay.show)
-  }
-
-  Tooltip.prototype.isInStateTrue = function () {
-    for (var key in this.inState) {
-      if (this.inState[key]) return true
-    }
-
-    return false
-  }
-
-  Tooltip.prototype.leave = function (obj) {
-    var self = obj instanceof this.constructor ?
-      obj : $(obj.currentTarget).data('bs.' + this.type)
-
-    if (!self) {
-      self = new this.constructor(obj.currentTarget, this.getDelegateOptions())
-      $(obj.currentTarget).data('bs.' + this.type, self)
-    }
-
-    if (obj instanceof $.Event) {
-      self.inState[obj.type == 'focusout' ? 'focus' : 'hover'] = false
-    }
-
-    if (self.isInStateTrue()) return
-
-    clearTimeout(self.timeout)
-
-    self.hoverState = 'out'
-
-    if (!self.options.delay || !self.options.delay.hide) return self.hide()
-
-    self.timeout = setTimeout(function () {
-      if (self.hoverState == 'out') self.hide()
-    }, self.options.delay.hide)
-  }
-
-  Tooltip.prototype.show = function () {
-    var e = $.Event('show.bs.' + this.type)
-
-    if (this.hasContent() && this.enabled) {
-      this.$element.trigger(e)
-
-      var inDom = $.contains(this.$element[0].ownerDocument.documentElement, this.$element[0])
-      if (e.isDefaultPrevented() || !inDom) return
-      var that = this
-
-      var $tip = this.tip()
-
-      var tipId = this.getUID(this.type)
-
-      this.setContent()
-      $tip.attr('id', tipId)
-      this.$element.attr('aria-describedby', tipId)
-
-      if (this.options.animation) $tip.addClass('fade')
-
-      var placement = typeof this.options.placement == 'function' ?
-        this.options.placement.call(this, $tip[0], this.$element[0]) :
-        this.options.placement
-
-      var autoToken = /\s?auto?\s?/i
-      var autoPlace = autoToken.test(placement)
-      if (autoPlace) placement = placement.replace(autoToken, '') || 'top'
-
-      $tip
-        .detach()
-        .css({ top: 0, left: 0, display: 'block' })
-        .addClass(placement)
-        .data('bs.' + this.type, this)
-
-      this.options.container ? $tip.appendTo(this.options.container) : $tip.insertAfter(this.$element)
-      this.$element.trigger('inserted.bs.' + this.type)
-
-      var pos          = this.getPosition()
-      var actualWidth  = $tip[0].offsetWidth
-      var actualHeight = $tip[0].offsetHeight
-
-      if (autoPlace) {
-        var orgPlacement = placement
-        var viewportDim = this.getPosition(this.$viewport)
-
-        placement = placement == 'bottom' && pos.bottom + actualHeight > viewportDim.bottom ? 'top'    :
-                    placement == 'top'    && pos.top    - actualHeight < viewportDim.top    ? 'bottom' :
-                    placement == 'right'  && pos.right  + actualWidth  > viewportDim.width  ? 'left'   :
-                    placement == 'left'   && pos.left   - actualWidth  < viewportDim.left   ? 'right'  :
-                    placement
-
-        $tip
-          .removeClass(orgPlacement)
-          .addClass(placement)
-      }
-
-      var calculatedOffset = this.getCalculatedOffset(placement, pos, actualWidth, actualHeight)
-
-      this.applyPlacement(calculatedOffset, placement)
-
-      var complete = function () {
-        var prevHoverState = that.hoverState
-        that.$element.trigger('shown.bs.' + that.type)
-        that.hoverState = null
-
-        if (prevHoverState == 'out') that.leave(that)
-      }
-
-      $.support.transition && this.$tip.hasClass('fade') ?
-        $tip
-          .one('bsTransitionEnd', complete)
-          .emulateTransitionEnd(Tooltip.TRANSITION_DURATION) :
-        complete()
-    }
-  }
-
-  Tooltip.prototype.applyPlacement = function (offset, placement) {
-    var $tip   = this.tip()
-    var width  = $tip[0].offsetWidth
-    var height = $tip[0].offsetHeight
-
-    // manually read margins because getBoundingClientRect includes difference
-    var marginTop = parseInt($tip.css('margin-top'), 10)
-    var marginLeft = parseInt($tip.css('margin-left'), 10)
-
-    // we must check for NaN for ie 8/9
-    if (isNaN(marginTop))  marginTop  = 0
-    if (isNaN(marginLeft)) marginLeft = 0
-
-    offset.top  += marginTop
-    offset.left += marginLeft
-
-    // $.fn.offset doesn't round pixel values
-    // so we use setOffset directly with our own function B-0
-    $.offset.setOffset($tip[0], $.extend({
-      using: function (props) {
-        $tip.css({
-          top: Math.round(props.top),
-          left: Math.round(props.left)
-        })
-      }
-    }, offset), 0)
-
-    $tip.addClass('in')
-
-    // check to see if placing tip in new offset caused the tip to resize itself
-    var actualWidth  = $tip[0].offsetWidth
-    var actualHeight = $tip[0].offsetHeight
-
-    if (placement == 'top' && actualHeight != height) {
-      offset.top = offset.top + height - actualHeight
-    }
-
-    var delta = this.getViewportAdjustedDelta(placement, offset, actualWidth, actualHeight)
-
-    if (delta.left) offset.left += delta.left
-    else offset.top += delta.top
-
-    var isVertical          = /top|bottom/.test(placement)
-    var arrowDelta          = isVertical ? delta.left * 2 - width + actualWidth : delta.top * 2 - height + actualHeight
-    var arrowOffsetPosition = isVertical ? 'offsetWidth' : 'offsetHeight'
-
-    $tip.offset(offset)
-    this.replaceArrow(arrowDelta, $tip[0][arrowOffsetPosition], isVertical)
-  }
-
-  Tooltip.prototype.replaceArrow = function (delta, dimension, isVertical) {
-    this.arrow()
-      .css(isVertical ? 'left' : 'top', 50 * (1 - delta / dimension) + '%')
-      .css(isVertical ? 'top' : 'left', '')
-  }
-
-  Tooltip.prototype.setContent = function () {
-    var $tip  = this.tip()
-    var title = this.getTitle()
-
-    $tip.find('.tooltip-inner')[this.options.html ? 'html' : 'text'](title)
-    $tip.removeClass('fade in top bottom left right')
-  }
-
-  Tooltip.prototype.hide = function (callback) {
-    var that = this
-    var $tip = $(this.$tip)
-    var e    = $.Event('hide.bs.' + this.type)
-
-    function complete() {
-      if (that.hoverState != 'in') $tip.detach()
-      if (that.$element) { // TODO: Check whether guarding this code with this `if` is really necessary.
-        that.$element
-          .removeAttr('aria-describedby')
-          .trigger('hidden.bs.' + that.type)
-      }
-      callback && callback()
-    }
-
-    this.$element.trigger(e)
-
-    if (e.isDefaultPrevented()) return
-
-    $tip.removeClass('in')
-
-    $.support.transition && $tip.hasClass('fade') ?
-      $tip
-        .one('bsTransitionEnd', complete)
-        .emulateTransitionEnd(Tooltip.TRANSITION_DURATION) :
-      complete()
-
-    this.hoverState = null
-
-    return this
-  }
-
-  Tooltip.prototype.fixTitle = function () {
-    var $e = this.$element
-    if ($e.attr('title') || typeof $e.attr('data-original-title') != 'string') {
-      $e.attr('data-original-title', $e.attr('title') || '').attr('title', '')
-    }
-  }
-
-  Tooltip.prototype.hasContent = function () {
-    return this.getTitle()
-  }
-
-  Tooltip.prototype.getPosition = function ($element) {
-    $element   = $element || this.$element
-
-    var el     = $element[0]
-    var isBody = el.tagName == 'BODY'
-
-    var elRect    = el.getBoundingClientRect()
-    if (elRect.width == null) {
-      // width and height are missing in IE8, so compute them manually; see https://github.com/twbs/bootstrap/issues/14093
-      elRect = $.extend({}, elRect, { width: elRect.right - elRect.left, height: elRect.bottom - elRect.top })
-    }
-    var isSvg = window.SVGElement && el instanceof window.SVGElement
-    // Avoid using $.offset() on SVGs since it gives incorrect results in jQuery 3.
-    // See https://github.com/twbs/bootstrap/issues/20280
-    var elOffset  = isBody ? { top: 0, left: 0 } : (isSvg ? null : $element.offset())
-    var scroll    = { scroll: isBody ? document.documentElement.scrollTop || document.body.scrollTop : $element.scrollTop() }
-    var outerDims = isBody ? { width: $(window).width(), height: $(window).height() } : null
-
-    return $.extend({}, elRect, scroll, outerDims, elOffset)
-  }
-
-  Tooltip.prototype.getCalculatedOffset = function (placement, pos, actualWidth, actualHeight) {
-    return placement == 'bottom' ? { top: pos.top + pos.height,   left: pos.left + pos.width / 2 - actualWidth / 2 } :
-           placement == 'top'    ? { top: pos.top - actualHeight, left: pos.left + pos.width / 2 - actualWidth / 2 } :
-           placement == 'left'   ? { top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left - actualWidth } :
-        /* placement == 'right' */ { top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left + pos.width }
-
-  }
-
-  Tooltip.prototype.getViewportAdjustedDelta = function (placement, pos, actualWidth, actualHeight) {
-    var delta = { top: 0, left: 0 }
-    if (!this.$viewport) return delta
-
-    var viewportPadding = this.options.viewport && this.options.viewport.padding || 0
-    var viewportDimensions = this.getPosition(this.$viewport)
-
-    if (/right|left/.test(placement)) {
-      var topEdgeOffset    = pos.top - viewportPadding - viewportDimensions.scroll
-      var bottomEdgeOffset = pos.top + viewportPadding - viewportDimensions.scroll + actualHeight
-      if (topEdgeOffset < viewportDimensions.top) { // top overflow
-        delta.top = viewportDimensions.top - topEdgeOffset
-      } else if (bottomEdgeOffset > viewportDimensions.top + viewportDimensions.height) { // bottom overflow
-        delta.top = viewportDimensions.top + viewportDimensions.height - bottomEdgeOffset
-      }
-    } else {
-      var leftEdgeOffset  = pos.left - viewportPadding
-      var rightEdgeOffset = pos.left + viewportPadding + actualWidth
-      if (leftEdgeOffset < viewportDimensions.left) { // left overflow
-        delta.left = viewportDimensions.left - leftEdgeOffset
-      } else if (rightEdgeOffset > viewportDimensions.right) { // right overflow
-        delta.left = viewportDimensions.left + viewportDimensions.width - rightEdgeOffset
-      }
-    }
-
-    return delta
-  }
-
-  Tooltip.prototype.getTitle = function () {
-    var title
-    var $e = this.$element
-    var o  = this.options
-
-    title = $e.attr('data-original-title')
-      || (typeof o.title == 'function' ? o.title.call($e[0]) :  o.title)
-
-    return title
-  }
-
-  Tooltip.prototype.getUID = function (prefix) {
-    do prefix += ~~(Math.random() * 1000000)
-    while (document.getElementById(prefix))
-    return prefix
-  }
-
-  Tooltip.prototype.tip = function () {
-    if (!this.$tip) {
-      this.$tip = $(this.options.template)
-      if (this.$tip.length != 1) {
-        throw new Error(this.type + ' `template` option must consist of exactly 1 top-level element!')
-      }
-    }
-    return this.$tip
-  }
-
-  Tooltip.prototype.arrow = function () {
-    return (this.$arrow = this.$arrow || this.tip().find('.tooltip-arrow'))
-  }
-
-  Tooltip.prototype.enable = function () {
-    this.enabled = true
-  }
-
-  Tooltip.prototype.disable = function () {
-    this.enabled = false
-  }
-
-  Tooltip.prototype.toggleEnabled = function () {
-    this.enabled = !this.enabled
-  }
-
-  Tooltip.prototype.toggle = function (e) {
-    var self = this
-    if (e) {
-      self = $(e.currentTarget).data('bs.' + this.type)
-      if (!self) {
-        self = new this.constructor(e.currentTarget, this.getDelegateOptions())
-        $(e.currentTarget).data('bs.' + this.type, self)
-      }
-    }
-
-    if (e) {
-      self.inState.click = !self.inState.click
-      if (self.isInStateTrue()) self.enter(self)
-      else self.leave(self)
-    } else {
-      self.tip().hasClass('in') ? self.leave(self) : self.enter(self)
-    }
-  }
-
-  Tooltip.prototype.destroy = function () {
-    var that = this
-    clearTimeout(this.timeout)
-    this.hide(function () {
-      that.$element.off('.' + that.type).removeData('bs.' + that.type)
-      if (that.$tip) {
-        that.$tip.detach()
-      }
-      that.$tip = null
-      that.$arrow = null
-      that.$viewport = null
-      that.$element = null
-    })
-  }
-
-
-  // TOOLTIP PLUGIN DEFINITION
-  // =========================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.tooltip')
-      var options = typeof option == 'object' && option
-
-      if (!data && /destroy|hide/.test(option)) return
-      if (!data) $this.data('bs.tooltip', (data = new Tooltip(this, options)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
-
-  var old = $.fn.tooltip
-
-  $.fn.tooltip             = Plugin
-  $.fn.tooltip.Constructor = Tooltip
-
-
-  // TOOLTIP NO CONFLICT
-  // ===================
-
-  $.fn.tooltip.noConflict = function () {
-    $.fn.tooltip = old
-    return this
-  }
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: popover.js v3.3.7
- * http://getbootstrap.com/javascript/#popovers
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // POPOVER PUBLIC CLASS DEFINITION
-  // ===============================
-
-  var Popover = function (element, options) {
-    this.init('popover', element, options)
-  }
-
-  if (!$.fn.tooltip) throw new Error('Popover requires tooltip.js')
-
-  Popover.VERSION  = '3.3.7'
-
-  Popover.DEFAULTS = $.extend({}, $.fn.tooltip.Constructor.DEFAULTS, {
-    placement: 'right',
-    trigger: 'click',
-    content: '',
-    template: '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>'
-  })
-
-
-  // NOTE: POPOVER EXTENDS tooltip.js
-  // ================================
-
-  Popover.prototype = $.extend({}, $.fn.tooltip.Constructor.prototype)
-
-  Popover.prototype.constructor = Popover
-
-  Popover.prototype.getDefaults = function () {
-    return Popover.DEFAULTS
-  }
-
-  Popover.prototype.setContent = function () {
-    var $tip    = this.tip()
-    var title   = this.getTitle()
-    var content = this.getContent()
-
-    $tip.find('.popover-title')[this.options.html ? 'html' : 'text'](title)
-    $tip.find('.popover-content').children().detach().end()[ // we use append for html objects to maintain js events
-      this.options.html ? (typeof content == 'string' ? 'html' : 'append') : 'text'
-    ](content)
-
-    $tip.removeClass('fade top bottom left right in')
-
-    // IE8 doesn't accept hiding via the `:empty` pseudo selector, we have to do
-    // this manually by checking the contents.
-    if (!$tip.find('.popover-title').html()) $tip.find('.popover-title').hide()
-  }
-
-  Popover.prototype.hasContent = function () {
-    return this.getTitle() || this.getContent()
-  }
-
-  Popover.prototype.getContent = function () {
-    var $e = this.$element
-    var o  = this.options
-
-    return $e.attr('data-content')
-      || (typeof o.content == 'function' ?
-            o.content.call($e[0]) :
-            o.content)
-  }
-
-  Popover.prototype.arrow = function () {
-    return (this.$arrow = this.$arrow || this.tip().find('.arrow'))
-  }
-
-
-  // POPOVER PLUGIN DEFINITION
-  // =========================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.popover')
-      var options = typeof option == 'object' && option
-
-      if (!data && /destroy|hide/.test(option)) return
-      if (!data) $this.data('bs.popover', (data = new Popover(this, options)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
-
-  var old = $.fn.popover
-
-  $.fn.popover             = Plugin
-  $.fn.popover.Constructor = Popover
-
-
-  // POPOVER NO CONFLICT
-  // ===================
-
-  $.fn.popover.noConflict = function () {
-    $.fn.popover = old
-    return this
-  }
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: scrollspy.js v3.3.7
- * http://getbootstrap.com/javascript/#scrollspy
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // SCROLLSPY CLASS DEFINITION
-  // ==========================
-
-  function ScrollSpy(element, options) {
-    this.$body          = $(document.body)
-    this.$scrollElement = $(element).is(document.body) ? $(window) : $(element)
-    this.options        = $.extend({}, ScrollSpy.DEFAULTS, options)
-    this.selector       = (this.options.target || '') + ' .nav li > a'
-    this.offsets        = []
-    this.targets        = []
-    this.activeTarget   = null
-    this.scrollHeight   = 0
-
-    this.$scrollElement.on('scroll.bs.scrollspy', $.proxy(this.process, this))
-    this.refresh()
-    this.process()
-  }
-
-  ScrollSpy.VERSION  = '3.3.7'
-
-  ScrollSpy.DEFAULTS = {
-    offset: 10
-  }
-
-  ScrollSpy.prototype.getScrollHeight = function () {
-    return this.$scrollElement[0].scrollHeight || Math.max(this.$body[0].scrollHeight, document.documentElement.scrollHeight)
-  }
-
-  ScrollSpy.prototype.refresh = function () {
-    var that          = this
-    var offsetMethod  = 'offset'
-    var offsetBase    = 0
-
-    this.offsets      = []
-    this.targets      = []
-    this.scrollHeight = this.getScrollHeight()
-
-    if (!$.isWindow(this.$scrollElement[0])) {
-      offsetMethod = 'position'
-      offsetBase   = this.$scrollElement.scrollTop()
-    }
-
-    this.$body
-      .find(this.selector)
-      .map(function () {
-        var $el   = $(this)
-        var href  = $el.data('target') || $el.attr('href')
-        var $href = /^#./.test(href) && $(href)
-
-        return ($href
-          && $href.length
-          && $href.is(':visible')
-          && [[$href[offsetMethod]().top + offsetBase, href]]) || null
-      })
-      .sort(function (a, b) { return a[0] - b[0] })
-      .each(function () {
-        that.offsets.push(this[0])
-        that.targets.push(this[1])
-      })
-  }
-
-  ScrollSpy.prototype.process = function () {
-    var scrollTop    = this.$scrollElement.scrollTop() + this.options.offset
-    var scrollHeight = this.getScrollHeight()
-    var maxScroll    = this.options.offset + scrollHeight - this.$scrollElement.height()
-    var offsets      = this.offsets
-    var targets      = this.targets
-    var activeTarget = this.activeTarget
-    var i
-
-    if (this.scrollHeight != scrollHeight) {
-      this.refresh()
-    }
-
-    if (scrollTop >= maxScroll) {
-      return activeTarget != (i = targets[targets.length - 1]) && this.activate(i)
-    }
-
-    if (activeTarget && scrollTop < offsets[0]) {
-      this.activeTarget = null
-      return this.clear()
-    }
-
-    for (i = offsets.length; i--;) {
-      activeTarget != targets[i]
-        && scrollTop >= offsets[i]
-        && (offsets[i + 1] === undefined || scrollTop < offsets[i + 1])
-        && this.activate(targets[i])
-    }
-  }
-
-  ScrollSpy.prototype.activate = function (target) {
-    this.activeTarget = target
-
-    this.clear()
-
-    var selector = this.selector +
-      '[data-target="' + target + '"],' +
-      this.selector + '[href="' + target + '"]'
-
-    var active = $(selector)
-      .parents('li')
-      .addClass('active')
-
-    if (active.parent('.dropdown-menu').length) {
-      active = active
-        .closest('li.dropdown')
-        .addClass('active')
-    }
-
-    active.trigger('activate.bs.scrollspy')
-  }
-
-  ScrollSpy.prototype.clear = function () {
-    $(this.selector)
-      .parentsUntil(this.options.target, '.active')
-      .removeClass('active')
-  }
-
-
-  // SCROLLSPY PLUGIN DEFINITION
-  // ===========================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.scrollspy')
-      var options = typeof option == 'object' && option
-
-      if (!data) $this.data('bs.scrollspy', (data = new ScrollSpy(this, options)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
-
-  var old = $.fn.scrollspy
-
-  $.fn.scrollspy             = Plugin
-  $.fn.scrollspy.Constructor = ScrollSpy
-
-
-  // SCROLLSPY NO CONFLICT
-  // =====================
-
-  $.fn.scrollspy.noConflict = function () {
-    $.fn.scrollspy = old
-    return this
-  }
-
-
-  // SCROLLSPY DATA-API
-  // ==================
-
-  $(window).on('load.bs.scrollspy.data-api', function () {
-    $('[data-spy="scroll"]').each(function () {
-      var $spy = $(this)
-      Plugin.call($spy, $spy.data())
-    })
-  })
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: tab.js v3.3.7
- * http://getbootstrap.com/javascript/#tabs
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // TAB CLASS DEFINITION
-  // ====================
-
-  var Tab = function (element) {
-    // jscs:disable requireDollarBeforejQueryAssignment
-    this.element = $(element)
-    // jscs:enable requireDollarBeforejQueryAssignment
-  }
-
-  Tab.VERSION = '3.3.7'
-
-  Tab.TRANSITION_DURATION = 150
-
-  Tab.prototype.show = function () {
-    var $this    = this.element
-    var $ul      = $this.closest('ul:not(.dropdown-menu)')
-    var selector = $this.data('target')
-
-    if (!selector) {
-      selector = $this.attr('href')
-      selector = selector && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
-    }
-
-    if ($this.parent('li').hasClass('active')) return
-
-    var $previous = $ul.find('.active:last a')
-    var hideEvent = $.Event('hide.bs.tab', {
-      relatedTarget: $this[0]
-    })
-    var showEvent = $.Event('show.bs.tab', {
-      relatedTarget: $previous[0]
-    })
-
-    $previous.trigger(hideEvent)
-    $this.trigger(showEvent)
-
-    if (showEvent.isDefaultPrevented() || hideEvent.isDefaultPrevented()) return
-
-    var $target = $(selector)
-
-    this.activate($this.closest('li'), $ul)
-    this.activate($target, $target.parent(), function () {
-      $previous.trigger({
-        type: 'hidden.bs.tab',
-        relatedTarget: $this[0]
-      })
-      $this.trigger({
-        type: 'shown.bs.tab',
-        relatedTarget: $previous[0]
-      })
-    })
-  }
-
-  Tab.prototype.activate = function (element, container, callback) {
-    var $active    = container.find('> .active')
-    var transition = callback
-      && $.support.transition
-      && ($active.length && $active.hasClass('fade') || !!container.find('> .fade').length)
-
-    function next() {
-      $active
-        .removeClass('active')
-        .find('> .dropdown-menu > .active')
-          .removeClass('active')
-        .end()
-        .find('[data-toggle="tab"]')
-          .attr('aria-expanded', false)
-
-      element
-        .addClass('active')
-        .find('[data-toggle="tab"]')
-          .attr('aria-expanded', true)
-
-      if (transition) {
-        element[0].offsetWidth // reflow for transition
-        element.addClass('in')
-      } else {
-        element.removeClass('fade')
-      }
-
-      if (element.parent('.dropdown-menu').length) {
-        element
-          .closest('li.dropdown')
-            .addClass('active')
-          .end()
-          .find('[data-toggle="tab"]')
-            .attr('aria-expanded', true)
-      }
-
-      callback && callback()
-    }
-
-    $active.length && transition ?
-      $active
-        .one('bsTransitionEnd', next)
-        .emulateTransitionEnd(Tab.TRANSITION_DURATION) :
-      next()
-
-    $active.removeClass('in')
-  }
-
-
-  // TAB PLUGIN DEFINITION
-  // =====================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this = $(this)
-      var data  = $this.data('bs.tab')
-
-      if (!data) $this.data('bs.tab', (data = new Tab(this)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
-
-  var old = $.fn.tab
-
-  $.fn.tab             = Plugin
-  $.fn.tab.Constructor = Tab
-
-
-  // TAB NO CONFLICT
-  // ===============
-
-  $.fn.tab.noConflict = function () {
-    $.fn.tab = old
-    return this
-  }
-
-
-  // TAB DATA-API
-  // ============
-
-  var clickHandler = function (e) {
-    e.preventDefault()
-    Plugin.call($(this), 'show')
-  }
-
-  $(document)
-    .on('click.bs.tab.data-api', '[data-toggle="tab"]', clickHandler)
-    .on('click.bs.tab.data-api', '[data-toggle="pill"]', clickHandler)
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: affix.js v3.3.7
- * http://getbootstrap.com/javascript/#affix
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // AFFIX CLASS DEFINITION
-  // ======================
-
-  var Affix = function (element, options) {
-    this.options = $.extend({}, Affix.DEFAULTS, options)
-
-    this.$target = $(this.options.target)
-      .on('scroll.bs.affix.data-api', $.proxy(this.checkPosition, this))
-      .on('click.bs.affix.data-api',  $.proxy(this.checkPositionWithEventLoop, this))
-
-    this.$element     = $(element)
-    this.affixed      = null
-    this.unpin        = null
-    this.pinnedOffset = null
-
-    this.checkPosition()
-  }
-
-  Affix.VERSION  = '3.3.7'
-
-  Affix.RESET    = 'affix affix-top affix-bottom'
-
-  Affix.DEFAULTS = {
-    offset: 0,
-    target: window
-  }
-
-  Affix.prototype.getState = function (scrollHeight, height, offsetTop, offsetBottom) {
-    var scrollTop    = this.$target.scrollTop()
-    var position     = this.$element.offset()
-    var targetHeight = this.$target.height()
-
-    if (offsetTop != null && this.affixed == 'top') return scrollTop < offsetTop ? 'top' : false
-
-    if (this.affixed == 'bottom') {
-      if (offsetTop != null) return (scrollTop + this.unpin <= position.top) ? false : 'bottom'
-      return (scrollTop + targetHeight <= scrollHeight - offsetBottom) ? false : 'bottom'
-    }
-
-    var initializing   = this.affixed == null
-    var colliderTop    = initializing ? scrollTop : position.top
-    var colliderHeight = initializing ? targetHeight : height
-
-    if (offsetTop != null && scrollTop <= offsetTop) return 'top'
-    if (offsetBottom != null && (colliderTop + colliderHeight >= scrollHeight - offsetBottom)) return 'bottom'
-
-    return false
-  }
-
-  Affix.prototype.getPinnedOffset = function () {
-    if (this.pinnedOffset) return this.pinnedOffset
-    this.$element.removeClass(Affix.RESET).addClass('affix')
-    var scrollTop = this.$target.scrollTop()
-    var position  = this.$element.offset()
-    return (this.pinnedOffset = position.top - scrollTop)
-  }
-
-  Affix.prototype.checkPositionWithEventLoop = function () {
-    setTimeout($.proxy(this.checkPosition, this), 1)
-  }
-
-  Affix.prototype.checkPosition = function () {
-    if (!this.$element.is(':visible')) return
-
-    var height       = this.$element.height()
-    var offset       = this.options.offset
-    var offsetTop    = offset.top
-    var offsetBottom = offset.bottom
-    var scrollHeight = Math.max($(document).height(), $(document.body).height())
-
-    if (typeof offset != 'object')         offsetBottom = offsetTop = offset
-    if (typeof offsetTop == 'function')    offsetTop    = offset.top(this.$element)
-    if (typeof offsetBottom == 'function') offsetBottom = offset.bottom(this.$element)
-
-    var affix = this.getState(scrollHeight, height, offsetTop, offsetBottom)
-
-    if (this.affixed != affix) {
-      if (this.unpin != null) this.$element.css('top', '')
-
-      var affixType = 'affix' + (affix ? '-' + affix : '')
-      var e         = $.Event(affixType + '.bs.affix')
-
-      this.$element.trigger(e)
-
-      if (e.isDefaultPrevented()) return
-
-      this.affixed = affix
-      this.unpin = affix == 'bottom' ? this.getPinnedOffset() : null
-
-      this.$element
-        .removeClass(Affix.RESET)
-        .addClass(affixType)
-        .trigger(affixType.replace('affix', 'affixed') + '.bs.affix')
-    }
-
-    if (affix == 'bottom') {
-      this.$element.offset({
-        top: scrollHeight - height - offsetBottom
-      })
-    }
-  }
-
-
-  // AFFIX PLUGIN DEFINITION
-  // =======================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.affix')
-      var options = typeof option == 'object' && option
-
-      if (!data) $this.data('bs.affix', (data = new Affix(this, options)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
-
-  var old = $.fn.affix
-
-  $.fn.affix             = Plugin
-  $.fn.affix.Constructor = Affix
-
-
-  // AFFIX NO CONFLICT
-  // =================
-
-  $.fn.affix.noConflict = function () {
-    $.fn.affix = old
-    return this
-  }
-
-
-  // AFFIX DATA-API
-  // ==============
-
-  $(window).on('load', function () {
-    $('[data-spy="affix"]').each(function () {
-      var $spy = $(this)
-      var data = $spy.data()
-
-      data.offset = data.offset || {}
-
-      if (data.offsetBottom != null) data.offset.bottom = data.offsetBottom
-      if (data.offsetTop    != null) data.offset.top    = data.offsetTop
-
-      Plugin.call($spy, data)
-    })
-  })
-
-}(jQuery);
-
-/*!
- * Bootstrap v3.3.7 (http://getbootstrap.com)
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under the MIT license
- */
-if("undefined"==typeof jQuery)throw new Error("Bootstrap's JavaScript requires jQuery");+function(a){"use strict";var b=a.fn.jquery.split(" ")[0].split(".");if(b[0]<2&&b[1]<9||1==b[0]&&9==b[1]&&b[2]<1||b[0]>3)throw new Error("Bootstrap's JavaScript requires jQuery version 1.9.1 or higher, but lower than version 4")}(jQuery),+function(a){"use strict";function b(){var a=document.createElement("bootstrap"),b={WebkitTransition:"webkitTransitionEnd",MozTransition:"transitionend",OTransition:"oTransitionEnd otransitionend",transition:"transitionend"};for(var c in b)if(void 0!==a.style[c])return{end:b[c]};return!1}a.fn.emulateTransitionEnd=function(b){var c=!1,d=this;a(this).one("bsTransitionEnd",function(){c=!0});var e=function(){c||a(d).trigger(a.support.transition.end)};return setTimeout(e,b),this},a(function(){a.support.transition=b(),a.support.transition&&(a.event.special.bsTransitionEnd={bindType:a.support.transition.end,delegateType:a.support.transition.end,handle:function(b){if(a(b.target).is(this))return b.handleObj.handler.apply(this,arguments)}})})}(jQuery),+function(a){"use strict";function b(b){return this.each(function(){var c=a(this),e=c.data("bs.alert");e||c.data("bs.alert",e=new d(this)),"string"==typeof b&&e[b].call(c)})}var c='[data-dismiss="alert"]',d=function(b){a(b).on("click",c,this.close)};d.VERSION="3.3.7",d.TRANSITION_DURATION=150,d.prototype.close=function(b){function c(){g.detach().trigger("closed.bs.alert").remove()}var e=a(this),f=e.attr("data-target");f||(f=e.attr("href"),f=f&&f.replace(/.*(?=#[^\s]*$)/,""));var g=a("#"===f?[]:f);b&&b.preventDefault(),g.length||(g=e.closest(".alert")),g.trigger(b=a.Event("close.bs.alert")),b.isDefaultPrevented()||(g.removeClass("in"),a.support.transition&&g.hasClass("fade")?g.one("bsTransitionEnd",c).emulateTransitionEnd(d.TRANSITION_DURATION):c())};var e=a.fn.alert;a.fn.alert=b,a.fn.alert.Constructor=d,a.fn.alert.noConflict=function(){return a.fn.alert=e,this},a(document).on("click.bs.alert.data-api",c,d.prototype.close)}(jQuery),+function(a){"use strict";function b(b){return this.each(function(){var d=a(this),e=d.data("bs.button"),f="object"==typeof b&&b;e||d.data("bs.button",e=new c(this,f)),"toggle"==b?e.toggle():b&&e.setState(b)})}var c=function(b,d){this.$element=a(b),this.options=a.extend({},c.DEFAULTS,d),this.isLoading=!1};c.VERSION="3.3.7",c.DEFAULTS={loadingText:"loading..."},c.prototype.setState=function(b){var c="disabled",d=this.$element,e=d.is("input")?"val":"html",f=d.data();b+="Text",null==f.resetText&&d.data("resetText",d[e]()),setTimeout(a.proxy(function(){d[e](null==f[b]?this.options[b]:f[b]),"loadingText"==b?(this.isLoading=!0,d.addClass(c).attr(c,c).prop(c,!0)):this.isLoading&&(this.isLoading=!1,d.removeClass(c).removeAttr(c).prop(c,!1))},this),0)},c.prototype.toggle=function(){var a=!0,b=this.$element.closest('[data-toggle="buttons"]');if(b.length){var c=this.$element.find("input");"radio"==c.prop("type")?(c.prop("checked")&&(a=!1),b.find(".active").removeClass("active"),this.$element.addClass("active")):"checkbox"==c.prop("type")&&(c.prop("checked")!==this.$element.hasClass("active")&&(a=!1),this.$element.toggleClass("active")),c.prop("checked",this.$element.hasClass("active")),a&&c.trigger("change")}else this.$element.attr("aria-pressed",!this.$element.hasClass("active")),this.$element.toggleClass("active")};var d=a.fn.button;a.fn.button=b,a.fn.button.Constructor=c,a.fn.button.noConflict=function(){return a.fn.button=d,this},a(document).on("click.bs.button.data-api",'[data-toggle^="button"]',function(c){var d=a(c.target).closest(".btn");b.call(d,"toggle"),a(c.target).is('input[type="radio"], input[type="checkbox"]')||(c.preventDefault(),d.is("input,button")?d.trigger("focus"):d.find("input:visible,button:visible").first().trigger("focus"))}).on("focus.bs.button.data-api blur.bs.button.data-api",'[data-toggle^="button"]',function(b){a(b.target).closest(".btn").toggleClass("focus",/^focus(in)?$/.test(b.type))})}(jQuery),+function(a){"use strict";function b(b){return this.each(function(){var d=a(this),e=d.data("bs.carousel"),f=a.extend({},c.DEFAULTS,d.data(),"object"==typeof b&&b),g="string"==typeof b?b:f.slide;e||d.data("bs.carousel",e=new c(this,f)),"number"==typeof b?e.to(b):g?e[g]():f.interval&&e.pause().cycle()})}var c=function(b,c){this.$element=a(b),this.$indicators=this.$element.find(".carousel-indicators"),this.options=c,this.paused=null,this.sliding=null,this.interval=null,this.$active=null,this.$items=null,this.options.keyboard&&this.$element.on("keydown.bs.carousel",a.proxy(this.keydown,this)),"hover"==this.options.pause&&!("ontouchstart"in document.documentElement)&&this.$element.on("mouseenter.bs.carousel",a.proxy(this.pause,this)).on("mouseleave.bs.carousel",a.proxy(this.cycle,this))};c.VERSION="3.3.7",c.TRANSITION_DURATION=600,c.DEFAULTS={interval:5e3,pause:"hover",wrap:!0,keyboard:!0},c.prototype.keydown=function(a){if(!/input|textarea/i.test(a.target.tagName)){switch(a.which){case 37:this.prev();break;case 39:this.next();break;default:return}a.preventDefault()}},c.prototype.cycle=function(b){return b||(this.paused=!1),this.interval&&clearInterval(this.interval),this.options.interval&&!this.paused&&(this.interval=setInterval(a.proxy(this.next,this),this.options.interval)),this},c.prototype.getItemIndex=function(a){return this.$items=a.parent().children(".item"),this.$items.index(a||this.$active)},c.prototype.getItemForDirection=function(a,b){var c=this.getItemIndex(b),d="prev"==a&&0===c||"next"==a&&c==this.$items.length-1;if(d&&!this.options.wrap)return b;var e="prev"==a?-1:1,f=(c+e)%this.$items.length;return this.$items.eq(f)},c.prototype.to=function(a){var b=this,c=this.getItemIndex(this.$active=this.$element.find(".item.active"));if(!(a>this.$items.length-1||a<0))return this.sliding?this.$element.one("slid.bs.carousel",function(){b.to(a)}):c==a?this.pause().cycle():this.slide(a>c?"next":"prev",this.$items.eq(a))},c.prototype.pause=function(b){return b||(this.paused=!0),this.$element.find(".next, .prev").length&&a.support.transition&&(this.$element.trigger(a.support.transition.end),this.cycle(!0)),this.interval=clearInterval(this.interval),this},c.prototype.next=function(){if(!this.sliding)return this.slide("next")},c.prototype.prev=function(){if(!this.sliding)return this.slide("prev")},c.prototype.slide=function(b,d){var e=this.$element.find(".item.active"),f=d||this.getItemForDirection(b,e),g=this.interval,h="next"==b?"left":"right",i=this;if(f.hasClass("active"))return this.sliding=!1;var j=f[0],k=a.Event("slide.bs.carousel",{relatedTarget:j,direction:h});if(this.$element.trigger(k),!k.isDefaultPrevented()){if(this.sliding=!0,g&&this.pause(),this.$indicators.length){this.$indicators.find(".active").removeClass("active");var l=a(this.$indicators.children()[this.getItemIndex(f)]);l&&l.addClass("active")}var m=a.Event("slid.bs.carousel",{relatedTarget:j,direction:h});return a.support.transition&&this.$element.hasClass("slide")?(f.addClass(b),f[0].offsetWidth,e.addClass(h),f.addClass(h),e.one("bsTransitionEnd",function(){f.removeClass([b,h].join(" ")).addClass("active"),e.removeClass(["active",h].join(" ")),i.sliding=!1,setTimeout(function(){i.$element.trigger(m)},0)}).emulateTransitionEnd(c.TRANSITION_DURATION)):(e.removeClass("active"),f.addClass("active"),this.sliding=!1,this.$element.trigger(m)),g&&this.cycle(),this}};var d=a.fn.carousel;a.fn.carousel=b,a.fn.carousel.Constructor=c,a.fn.carousel.noConflict=function(){return a.fn.carousel=d,this};var e=function(c){var d,e=a(this),f=a(e.attr("data-target")||(d=e.attr("href"))&&d.replace(/.*(?=#[^\s]+$)/,""));if(f.hasClass("carousel")){var g=a.extend({},f.data(),e.data()),h=e.attr("data-slide-to");h&&(g.interval=!1),b.call(f,g),h&&f.data("bs.carousel").to(h),c.preventDefault()}};a(document).on("click.bs.carousel.data-api","[data-slide]",e).on("click.bs.carousel.data-api","[data-slide-to]",e),a(window).on("load",function(){a('[data-ride="carousel"]').each(function(){var c=a(this);b.call(c,c.data())})})}(jQuery),+function(a){"use strict";function b(b){var c,d=b.attr("data-target")||(c=b.attr("href"))&&c.replace(/.*(?=#[^\s]+$)/,"");return a(d)}function c(b){return this.each(function(){var c=a(this),e=c.data("bs.collapse"),f=a.extend({},d.DEFAULTS,c.data(),"object"==typeof b&&b);!e&&f.toggle&&/show|hide/.test(b)&&(f.toggle=!1),e||c.data("bs.collapse",e=new d(this,f)),"string"==typeof b&&e[b]()})}var d=function(b,c){this.$element=a(b),this.options=a.extend({},d.DEFAULTS,c),this.$trigger=a('[data-toggle="collapse"][href="#'+b.id+'"],[data-toggle="collapse"][data-target="#'+b.id+'"]'),this.transitioning=null,this.options.parent?this.$parent=this.getParent():this.addAriaAndCollapsedClass(this.$element,this.$trigger),this.options.toggle&&this.toggle()};d.VERSION="3.3.7",d.TRANSITION_DURATION=350,d.DEFAULTS={toggle:!0},d.prototype.dimension=function(){var a=this.$element.hasClass("width");return a?"width":"height"},d.prototype.show=function(){if(!this.transitioning&&!this.$element.hasClass("in")){var b,e=this.$parent&&this.$parent.children(".panel").children(".in, .collapsing");if(!(e&&e.length&&(b=e.data("bs.collapse"),b&&b.transitioning))){var f=a.Event("show.bs.collapse");if(this.$element.trigger(f),!f.isDefaultPrevented()){e&&e.length&&(c.call(e,"hide"),b||e.data("bs.collapse",null));var g=this.dimension();this.$element.removeClass("collapse").addClass("collapsing")[g](0).attr("aria-expanded",!0),this.$trigger.removeClass("collapsed").attr("aria-expanded",!0),this.transitioning=1;var h=function(){this.$element.removeClass("collapsing").addClass("collapse in")[g](""),this.transitioning=0,this.$element.trigger("shown.bs.collapse")};if(!a.support.transition)return h.call(this);var i=a.camelCase(["scroll",g].join("-"));this.$element.one("bsTransitionEnd",a.proxy(h,this)).emulateTransitionEnd(d.TRANSITION_DURATION)[g](this.$element[0][i])}}}},d.prototype.hide=function(){if(!this.transitioning&&this.$element.hasClass("in")){var b=a.Event("hide.bs.collapse");if(this.$element.trigger(b),!b.isDefaultPrevented()){var c=this.dimension();this.$element[c](this.$element[c]())[0].offsetHeight,this.$element.addClass("collapsing").removeClass("collapse in").attr("aria-expanded",!1),this.$trigger.addClass("collapsed").attr("aria-expanded",!1),this.transitioning=1;var e=function(){this.transitioning=0,this.$element.removeClass("collapsing").addClass("collapse").trigger("hidden.bs.collapse")};return a.support.transition?void this.$element[c](0).one("bsTransitionEnd",a.proxy(e,this)).emulateTransitionEnd(d.TRANSITION_DURATION):e.call(this)}}},d.prototype.toggle=function(){this[this.$element.hasClass("in")?"hide":"show"]()},d.prototype.getParent=function(){return a(this.options.parent).find('[data-toggle="collapse"][data-parent="'+this.options.parent+'"]').each(a.proxy(function(c,d){var e=a(d);this.addAriaAndCollapsedClass(b(e),e)},this)).end()},d.prototype.addAriaAndCollapsedClass=function(a,b){var c=a.hasClass("in");a.attr("aria-expanded",c),b.toggleClass("collapsed",!c).attr("aria-expanded",c)};var e=a.fn.collapse;a.fn.collapse=c,a.fn.collapse.Constructor=d,a.fn.collapse.noConflict=function(){return a.fn.collapse=e,this},a(document).on("click.bs.collapse.data-api",'[data-toggle="collapse"]',function(d){var e=a(this);e.attr("data-target")||d.preventDefault();var f=b(e),g=f.data("bs.collapse"),h=g?"toggle":e.data();c.call(f,h)})}(jQuery),+function(a){"use strict";function b(b){var c=b.attr("data-target");c||(c=b.attr("href"),c=c&&/#[A-Za-z]/.test(c)&&c.replace(/.*(?=#[^\s]*$)/,""));var d=c&&a(c);return d&&d.length?d:b.parent()}function c(c){c&&3===c.which||(a(e).remove(),a(f).each(function(){var d=a(this),e=b(d),f={relatedTarget:this};e.hasClass("open")&&(c&&"click"==c.type&&/input|textarea/i.test(c.target.tagName)&&a.contains(e[0],c.target)||(e.trigger(c=a.Event("hide.bs.dropdown",f)),c.isDefaultPrevented()||(d.attr("aria-expanded","false"),e.removeClass("open").trigger(a.Event("hidden.bs.dropdown",f)))))}))}function d(b){return this.each(function(){var c=a(this),d=c.data("bs.dropdown");d||c.data("bs.dropdown",d=new g(this)),"string"==typeof b&&d[b].call(c)})}var e=".dropdown-backdrop",f='[data-toggle="dropdown"]',g=function(b){a(b).on("click.bs.dropdown",this.toggle)};g.VERSION="3.3.7",g.prototype.toggle=function(d){var e=a(this);if(!e.is(".disabled, :disabled")){var f=b(e),g=f.hasClass("open");if(c(),!g){"ontouchstart"in document.documentElement&&!f.closest(".navbar-nav").length&&a(document.createElement("div")).addClass("dropdown-backdrop").insertAfter(a(this)).on("click",c);var h={relatedTarget:this};if(f.trigger(d=a.Event("show.bs.dropdown",h)),d.isDefaultPrevented())return;e.trigger("focus").attr("aria-expanded","true"),f.toggleClass("open").trigger(a.Event("shown.bs.dropdown",h))}return!1}},g.prototype.keydown=function(c){if(/(38|40|27|32)/.test(c.which)&&!/input|textarea/i.test(c.target.tagName)){var d=a(this);if(c.preventDefault(),c.stopPropagation(),!d.is(".disabled, :disabled")){var e=b(d),g=e.hasClass("open");if(!g&&27!=c.which||g&&27==c.which)return 27==c.which&&e.find(f).trigger("focus"),d.trigger("click");var h=" li:not(.disabled):visible a",i=e.find(".dropdown-menu"+h);if(i.length){var j=i.index(c.target);38==c.which&&j>0&&j--,40==c.which&&j<i.length-1&&j++,~j||(j=0),i.eq(j).trigger("focus")}}}};var h=a.fn.dropdown;a.fn.dropdown=d,a.fn.dropdown.Constructor=g,a.fn.dropdown.noConflict=function(){return a.fn.dropdown=h,this},a(document).on("click.bs.dropdown.data-api",c).on("click.bs.dropdown.data-api",".dropdown form",function(a){a.stopPropagation()}).on("click.bs.dropdown.data-api",f,g.prototype.toggle).on("keydown.bs.dropdown.data-api",f,g.prototype.keydown).on("keydown.bs.dropdown.data-api",".dropdown-menu",g.prototype.keydown)}(jQuery),+function(a){"use strict";function b(b,d){return this.each(function(){var e=a(this),f=e.data("bs.modal"),g=a.extend({},c.DEFAULTS,e.data(),"object"==typeof b&&b);f||e.data("bs.modal",f=new c(this,g)),"string"==typeof b?f[b](d):g.show&&f.show(d)})}var c=function(b,c){this.options=c,this.$body=a(document.body),this.$element=a(b),this.$dialog=this.$element.find(".modal-dialog"),this.$backdrop=null,this.isShown=null,this.originalBodyPad=null,this.scrollbarWidth=0,this.ignoreBackdropClick=!1,this.options.remote&&this.$element.find(".modal-content").load(this.options.remote,a.proxy(function(){this.$element.trigger("loaded.bs.modal")},this))};c.VERSION="3.3.7",c.TRANSITION_DURATION=300,c.BACKDROP_TRANSITION_DURATION=150,c.DEFAULTS={backdrop:!0,keyboard:!0,show:!0},c.prototype.toggle=function(a){return this.isShown?this.hide():this.show(a)},c.prototype.show=function(b){var d=this,e=a.Event("show.bs.modal",{relatedTarget:b});this.$element.trigger(e),this.isShown||e.isDefaultPrevented()||(this.isShown=!0,this.checkScrollbar(),this.setScrollbar(),this.$body.addClass("modal-open"),this.escape(),this.resize(),this.$element.on("click.dismiss.bs.modal",'[data-dismiss="modal"]',a.proxy(this.hide,this)),this.$dialog.on("mousedown.dismiss.bs.modal",function(){d.$element.one("mouseup.dismiss.bs.modal",function(b){a(b.target).is(d.$element)&&(d.ignoreBackdropClick=!0)})}),this.backdrop(function(){var e=a.support.transition&&d.$element.hasClass("fade");d.$element.parent().length||d.$element.appendTo(d.$body),d.$element.show().scrollTop(0),d.adjustDialog(),e&&d.$element[0].offsetWidth,d.$element.addClass("in"),d.enforceFocus();var f=a.Event("shown.bs.modal",{relatedTarget:b});e?d.$dialog.one("bsTransitionEnd",function(){d.$element.trigger("focus").trigger(f)}).emulateTransitionEnd(c.TRANSITION_DURATION):d.$element.trigger("focus").trigger(f)}))},c.prototype.hide=function(b){b&&b.preventDefault(),b=a.Event("hide.bs.modal"),this.$element.trigger(b),this.isShown&&!b.isDefaultPrevented()&&(this.isShown=!1,this.escape(),this.resize(),a(document).off("focusin.bs.modal"),this.$element.removeClass("in").off("click.dismiss.bs.modal").off("mouseup.dismiss.bs.modal"),this.$dialog.off("mousedown.dismiss.bs.modal"),a.support.transition&&this.$element.hasClass("fade")?this.$element.one("bsTransitionEnd",a.proxy(this.hideModal,this)).emulateTransitionEnd(c.TRANSITION_DURATION):this.hideModal())},c.prototype.enforceFocus=function(){a(document).off("focusin.bs.modal").on("focusin.bs.modal",a.proxy(function(a){document===a.target||this.$element[0]===a.target||this.$element.has(a.target).length||this.$element.trigger("focus")},this))},c.prototype.escape=function(){this.isShown&&this.options.keyboard?this.$element.on("keydown.dismiss.bs.modal",a.proxy(function(a){27==a.which&&this.hide()},this)):this.isShown||this.$element.off("keydown.dismiss.bs.modal")},c.prototype.resize=function(){this.isShown?a(window).on("resize.bs.modal",a.proxy(this.handleUpdate,this)):a(window).off("resize.bs.modal")},c.prototype.hideModal=function(){var a=this;this.$element.hide(),this.backdrop(function(){a.$body.removeClass("modal-open"),a.resetAdjustments(),a.resetScrollbar(),a.$element.trigger("hidden.bs.modal")})},c.prototype.removeBackdrop=function(){this.$backdrop&&this.$backdrop.remove(),this.$backdrop=null},c.prototype.backdrop=function(b){var d=this,e=this.$element.hasClass("fade")?"fade":"";if(this.isShown&&this.options.backdrop){var f=a.support.transition&&e;if(this.$backdrop=a(document.createElement("div")).addClass("modal-backdrop "+e).appendTo(this.$body),this.$element.on("click.dismiss.bs.modal",a.proxy(function(a){return this.ignoreBackdropClick?void(this.ignoreBackdropClick=!1):void(a.target===a.currentTarget&&("static"==this.options.backdrop?this.$element[0].focus():this.hide()))},this)),f&&this.$backdrop[0].offsetWidth,this.$backdrop.addClass("in"),!b)return;f?this.$backdrop.one("bsTransitionEnd",b).emulateTransitionEnd(c.BACKDROP_TRANSITION_DURATION):b()}else if(!this.isShown&&this.$backdrop){this.$backdrop.removeClass("in");var g=function(){d.removeBackdrop(),b&&b()};a.support.transition&&this.$element.hasClass("fade")?this.$backdrop.one("bsTransitionEnd",g).emulateTransitionEnd(c.BACKDROP_TRANSITION_DURATION):g()}else b&&b()},c.prototype.handleUpdate=function(){this.adjustDialog()},c.prototype.adjustDialog=function(){var a=this.$element[0].scrollHeight>document.documentElement.clientHeight;this.$element.css({paddingLeft:!this.bodyIsOverflowing&&a?this.scrollbarWidth:"",paddingRight:this.bodyIsOverflowing&&!a?this.scrollbarWidth:""})},c.prototype.resetAdjustments=function(){this.$element.css({paddingLeft:"",paddingRight:""})},c.prototype.checkScrollbar=function(){var a=window.innerWidth;if(!a){var b=document.documentElement.getBoundingClientRect();a=b.right-Math.abs(b.left)}this.bodyIsOverflowing=document.body.clientWidth<a,this.scrollbarWidth=this.measureScrollbar()},c.prototype.setScrollbar=function(){var a=parseInt(this.$body.css("padding-right")||0,10);this.originalBodyPad=document.body.style.paddingRight||"",this.bodyIsOverflowing&&this.$body.css("padding-right",a+this.scrollbarWidth)},c.prototype.resetScrollbar=function(){this.$body.css("padding-right",this.originalBodyPad)},c.prototype.measureScrollbar=function(){var a=document.createElement("div");a.className="modal-scrollbar-measure",this.$body.append(a);var b=a.offsetWidth-a.clientWidth;return this.$body[0].removeChild(a),b};var d=a.fn.modal;a.fn.modal=b,a.fn.modal.Constructor=c,a.fn.modal.noConflict=function(){return a.fn.modal=d,this},a(document).on("click.bs.modal.data-api",'[data-toggle="modal"]',function(c){var d=a(this),e=d.attr("href"),f=a(d.attr("data-target")||e&&e.replace(/.*(?=#[^\s]+$)/,"")),g=f.data("bs.modal")?"toggle":a.extend({remote:!/#/.test(e)&&e},f.data(),d.data());d.is("a")&&c.preventDefault(),f.one("show.bs.modal",function(a){a.isDefaultPrevented()||f.one("hidden.bs.modal",function(){d.is(":visible")&&d.trigger("focus")})}),b.call(f,g,this)})}(jQuery),+function(a){"use strict";function b(b){return this.each(function(){var d=a(this),e=d.data("bs.tooltip"),f="object"==typeof b&&b;!e&&/destroy|hide/.test(b)||(e||d.data("bs.tooltip",e=new c(this,f)),"string"==typeof b&&e[b]())})}var c=function(a,b){this.type=null,this.options=null,this.enabled=null,this.timeout=null,this.hoverState=null,this.$element=null,this.inState=null,this.init("tooltip",a,b)};c.VERSION="3.3.7",c.TRANSITION_DURATION=150,c.DEFAULTS={animation:!0,placement:"top",selector:!1,template:'<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',trigger:"hover focus",title:"",delay:0,html:!1,container:!1,viewport:{selector:"body",padding:0}},c.prototype.init=function(b,c,d){if(this.enabled=!0,this.type=b,this.$element=a(c),this.options=this.getOptions(d),this.$viewport=this.options.viewport&&a(a.isFunction(this.options.viewport)?this.options.viewport.call(this,this.$element):this.options.viewport.selector||this.options.viewport),this.inState={click:!1,hover:!1,focus:!1},this.$element[0]instanceof document.constructor&&!this.options.selector)throw new Error("`selector` option must be specified when initializing "+this.type+" on the window.document object!");for(var e=this.options.trigger.split(" "),f=e.length;f--;){var g=e[f];if("click"==g)this.$element.on("click."+this.type,this.options.selector,a.proxy(this.toggle,this));else if("manual"!=g){var h="hover"==g?"mouseenter":"focusin",i="hover"==g?"mouseleave":"focusout";this.$element.on(h+"."+this.type,this.options.selector,a.proxy(this.enter,this)),this.$element.on(i+"."+this.type,this.options.selector,a.proxy(this.leave,this))}}this.options.selector?this._options=a.extend({},this.options,{trigger:"manual",selector:""}):this.fixTitle()},c.prototype.getDefaults=function(){return c.DEFAULTS},c.prototype.getOptions=function(b){return b=a.extend({},this.getDefaults(),this.$element.data(),b),b.delay&&"number"==typeof b.delay&&(b.delay={show:b.delay,hide:b.delay}),b},c.prototype.getDelegateOptions=function(){var b={},c=this.getDefaults();return this._options&&a.each(this._options,function(a,d){c[a]!=d&&(b[a]=d)}),b},c.prototype.enter=function(b){var c=b instanceof this.constructor?b:a(b.currentTarget).data("bs."+this.type);return c||(c=new this.constructor(b.currentTarget,this.getDelegateOptions()),a(b.currentTarget).data("bs."+this.type,c)),b instanceof a.Event&&(c.inState["focusin"==b.type?"focus":"hover"]=!0),c.tip().hasClass("in")||"in"==c.hoverState?void(c.hoverState="in"):(clearTimeout(c.timeout),c.hoverState="in",c.options.delay&&c.options.delay.show?void(c.timeout=setTimeout(function(){"in"==c.hoverState&&c.show()},c.options.delay.show)):c.show())},c.prototype.isInStateTrue=function(){for(var a in this.inState)if(this.inState[a])return!0;return!1},c.prototype.leave=function(b){var c=b instanceof this.constructor?b:a(b.currentTarget).data("bs."+this.type);if(c||(c=new this.constructor(b.currentTarget,this.getDelegateOptions()),a(b.currentTarget).data("bs."+this.type,c)),b instanceof a.Event&&(c.inState["focusout"==b.type?"focus":"hover"]=!1),!c.isInStateTrue())return clearTimeout(c.timeout),c.hoverState="out",c.options.delay&&c.options.delay.hide?void(c.timeout=setTimeout(function(){"out"==c.hoverState&&c.hide()},c.options.delay.hide)):c.hide()},c.prototype.show=function(){var b=a.Event("show.bs."+this.type);if(this.hasContent()&&this.enabled){this.$element.trigger(b);var d=a.contains(this.$element[0].ownerDocument.documentElement,this.$element[0]);if(b.isDefaultPrevented()||!d)return;var e=this,f=this.tip(),g=this.getUID(this.type);this.setContent(),f.attr("id",g),this.$element.attr("aria-describedby",g),this.options.animation&&f.addClass("fade");var h="function"==typeof this.options.placement?this.options.placement.call(this,f[0],this.$element[0]):this.options.placement,i=/\s?auto?\s?/i,j=i.test(h);j&&(h=h.replace(i,"")||"top"),f.detach().css({top:0,left:0,display:"block"}).addClass(h).data("bs."+this.type,this),this.options.container?f.appendTo(this.options.container):f.insertAfter(this.$element),this.$element.trigger("inserted.bs."+this.type);var k=this.getPosition(),l=f[0].offsetWidth,m=f[0].offsetHeight;if(j){var n=h,o=this.getPosition(this.$viewport);h="bottom"==h&&k.bottom+m>o.bottom?"top":"top"==h&&k.top-m<o.top?"bottom":"right"==h&&k.right+l>o.width?"left":"left"==h&&k.left-l<o.left?"right":h,f.removeClass(n).addClass(h)}var p=this.getCalculatedOffset(h,k,l,m);this.applyPlacement(p,h);var q=function(){var a=e.hoverState;e.$element.trigger("shown.bs."+e.type),e.hoverState=null,"out"==a&&e.leave(e)};a.support.transition&&this.$tip.hasClass("fade")?f.one("bsTransitionEnd",q).emulateTransitionEnd(c.TRANSITION_DURATION):q()}},c.prototype.applyPlacement=function(b,c){var d=this.tip(),e=d[0].offsetWidth,f=d[0].offsetHeight,g=parseInt(d.css("margin-top"),10),h=parseInt(d.css("margin-left"),10);isNaN(g)&&(g=0),isNaN(h)&&(h=0),b.top+=g,b.left+=h,a.offset.setOffset(d[0],a.extend({using:function(a){d.css({top:Math.round(a.top),left:Math.round(a.left)})}},b),0),d.addClass("in");var i=d[0].offsetWidth,j=d[0].offsetHeight;"top"==c&&j!=f&&(b.top=b.top+f-j);var k=this.getViewportAdjustedDelta(c,b,i,j);k.left?b.left+=k.left:b.top+=k.top;var l=/top|bottom/.test(c),m=l?2*k.left-e+i:2*k.top-f+j,n=l?"offsetWidth":"offsetHeight";d.offset(b),this.replaceArrow(m,d[0][n],l)},c.prototype.replaceArrow=function(a,b,c){this.arrow().css(c?"left":"top",50*(1-a/b)+"%").css(c?"top":"left","")},c.prototype.setContent=function(){var a=this.tip(),b=this.getTitle();a.find(".tooltip-inner")[this.options.html?"html":"text"](b),a.removeClass("fade in top bottom left right")},c.prototype.hide=function(b){function d(){"in"!=e.hoverState&&f.detach(),e.$element&&e.$element.removeAttr("aria-describedby").trigger("hidden.bs."+e.type),b&&b()}var e=this,f=a(this.$tip),g=a.Event("hide.bs."+this.type);if(this.$element.trigger(g),!g.isDefaultPrevented())return f.removeClass("in"),a.support.transition&&f.hasClass("fade")?f.one("bsTransitionEnd",d).emulateTransitionEnd(c.TRANSITION_DURATION):d(),this.hoverState=null,this},c.prototype.fixTitle=function(){var a=this.$element;(a.attr("title")||"string"!=typeof a.attr("data-original-title"))&&a.attr("data-original-title",a.attr("title")||"").attr("title","")},c.prototype.hasContent=function(){return this.getTitle()},c.prototype.getPosition=function(b){b=b||this.$element;var c=b[0],d="BODY"==c.tagName,e=c.getBoundingClientRect();null==e.width&&(e=a.extend({},e,{width:e.right-e.left,height:e.bottom-e.top}));var f=window.SVGElement&&c instanceof window.SVGElement,g=d?{top:0,left:0}:f?null:b.offset(),h={scroll:d?document.documentElement.scrollTop||document.body.scrollTop:b.scrollTop()},i=d?{width:a(window).width(),height:a(window).height()}:null;return a.extend({},e,h,i,g)},c.prototype.getCalculatedOffset=function(a,b,c,d){return"bottom"==a?{top:b.top+b.height,left:b.left+b.width/2-c/2}:"top"==a?{top:b.top-d,left:b.left+b.width/2-c/2}:"left"==a?{top:b.top+b.height/2-d/2,left:b.left-c}:{top:b.top+b.height/2-d/2,left:b.left+b.width}},c.prototype.getViewportAdjustedDelta=function(a,b,c,d){var e={top:0,left:0};if(!this.$viewport)return e;var f=this.options.viewport&&this.options.viewport.padding||0,g=this.getPosition(this.$viewport);if(/right|left/.test(a)){var h=b.top-f-g.scroll,i=b.top+f-g.scroll+d;h<g.top?e.top=g.top-h:i>g.top+g.height&&(e.top=g.top+g.height-i)}else{var j=b.left-f,k=b.left+f+c;j<g.left?e.left=g.left-j:k>g.right&&(e.left=g.left+g.width-k)}return e},c.prototype.getTitle=function(){var a,b=this.$element,c=this.options;return a=b.attr("data-original-title")||("function"==typeof c.title?c.title.call(b[0]):c.title)},c.prototype.getUID=function(a){do a+=~~(1e6*Math.random());while(document.getElementById(a));return a},c.prototype.tip=function(){if(!this.$tip&&(this.$tip=a(this.options.template),1!=this.$tip.length))throw new Error(this.type+" `template` option must consist of exactly 1 top-level element!");return this.$tip},c.prototype.arrow=function(){return this.$arrow=this.$arrow||this.tip().find(".tooltip-arrow")},c.prototype.enable=function(){this.enabled=!0},c.prototype.disable=function(){this.enabled=!1},c.prototype.toggleEnabled=function(){this.enabled=!this.enabled},c.prototype.toggle=function(b){var c=this;b&&(c=a(b.currentTarget).data("bs."+this.type),c||(c=new this.constructor(b.currentTarget,this.getDelegateOptions()),a(b.currentTarget).data("bs."+this.type,c))),b?(c.inState.click=!c.inState.click,c.isInStateTrue()?c.enter(c):c.leave(c)):c.tip().hasClass("in")?c.leave(c):c.enter(c)},c.prototype.destroy=function(){var a=this;clearTimeout(this.timeout),this.hide(function(){a.$element.off("."+a.type).removeData("bs."+a.type),a.$tip&&a.$tip.detach(),a.$tip=null,a.$arrow=null,a.$viewport=null,a.$element=null})};var d=a.fn.tooltip;a.fn.tooltip=b,a.fn.tooltip.Constructor=c,a.fn.tooltip.noConflict=function(){return a.fn.tooltip=d,this}}(jQuery),+function(a){"use strict";function b(b){return this.each(function(){var d=a(this),e=d.data("bs.popover"),f="object"==typeof b&&b;!e&&/destroy|hide/.test(b)||(e||d.data("bs.popover",e=new c(this,f)),"string"==typeof b&&e[b]())})}var c=function(a,b){this.init("popover",a,b)};if(!a.fn.tooltip)throw new Error("Popover requires tooltip.js");c.VERSION="3.3.7",c.DEFAULTS=a.extend({},a.fn.tooltip.Constructor.DEFAULTS,{placement:"right",trigger:"click",content:"",template:'<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>'}),c.prototype=a.extend({},a.fn.tooltip.Constructor.prototype),c.prototype.constructor=c,c.prototype.getDefaults=function(){return c.DEFAULTS},c.prototype.setContent=function(){var a=this.tip(),b=this.getTitle(),c=this.getContent();a.find(".popover-title")[this.options.html?"html":"text"](b),a.find(".popover-content").children().detach().end()[this.options.html?"string"==typeof c?"html":"append":"text"](c),a.removeClass("fade top bottom left right in"),a.find(".popover-title").html()||a.find(".popover-title").hide()},c.prototype.hasContent=function(){return this.getTitle()||this.getContent()},c.prototype.getContent=function(){var a=this.$element,b=this.options;return a.attr("data-content")||("function"==typeof b.content?b.content.call(a[0]):b.content)},c.prototype.arrow=function(){return this.$arrow=this.$arrow||this.tip().find(".arrow")};var d=a.fn.popover;a.fn.popover=b,a.fn.popover.Constructor=c,a.fn.popover.noConflict=function(){return a.fn.popover=d,this}}(jQuery),+function(a){"use strict";function b(c,d){this.$body=a(document.body),this.$scrollElement=a(a(c).is(document.body)?window:c),this.options=a.extend({},b.DEFAULTS,d),this.selector=(this.options.target||"")+" .nav li > a",this.offsets=[],this.targets=[],this.activeTarget=null,this.scrollHeight=0,this.$scrollElement.on("scroll.bs.scrollspy",a.proxy(this.process,this)),this.refresh(),this.process()}function c(c){return this.each(function(){var d=a(this),e=d.data("bs.scrollspy"),f="object"==typeof c&&c;e||d.data("bs.scrollspy",e=new b(this,f)),"string"==typeof c&&e[c]()})}b.VERSION="3.3.7",b.DEFAULTS={offset:10},b.prototype.getScrollHeight=function(){return this.$scrollElement[0].scrollHeight||Math.max(this.$body[0].scrollHeight,document.documentElement.scrollHeight)},b.prototype.refresh=function(){var b=this,c="offset",d=0;this.offsets=[],this.targets=[],this.scrollHeight=this.getScrollHeight(),a.isWindow(this.$scrollElement[0])||(c="position",d=this.$scrollElement.scrollTop()),this.$body.find(this.selector).map(function(){var b=a(this),e=b.data("target")||b.attr("href"),f=/^#./.test(e)&&a(e);return f&&f.length&&f.is(":visible")&&[[f[c]().top+d,e]]||null}).sort(function(a,b){return a[0]-b[0]}).each(function(){b.offsets.push(this[0]),b.targets.push(this[1])})},b.prototype.process=function(){var a,b=this.$scrollElement.scrollTop()+this.options.offset,c=this.getScrollHeight(),d=this.options.offset+c-this.$scrollElement.height(),e=this.offsets,f=this.targets,g=this.activeTarget;if(this.scrollHeight!=c&&this.refresh(),b>=d)return g!=(a=f[f.length-1])&&this.activate(a);if(g&&b<e[0])return this.activeTarget=null,this.clear();for(a=e.length;a--;)g!=f[a]&&b>=e[a]&&(void 0===e[a+1]||b<e[a+1])&&this.activate(f[a])},b.prototype.activate=function(b){
-this.activeTarget=b,this.clear();var c=this.selector+'[data-target="'+b+'"],'+this.selector+'[href="'+b+'"]',d=a(c).parents("li").addClass("active");d.parent(".dropdown-menu").length&&(d=d.closest("li.dropdown").addClass("active")),d.trigger("activate.bs.scrollspy")},b.prototype.clear=function(){a(this.selector).parentsUntil(this.options.target,".active").removeClass("active")};var d=a.fn.scrollspy;a.fn.scrollspy=c,a.fn.scrollspy.Constructor=b,a.fn.scrollspy.noConflict=function(){return a.fn.scrollspy=d,this},a(window).on("load.bs.scrollspy.data-api",function(){a('[data-spy="scroll"]').each(function(){var b=a(this);c.call(b,b.data())})})}(jQuery),+function(a){"use strict";function b(b){return this.each(function(){var d=a(this),e=d.data("bs.tab");e||d.data("bs.tab",e=new c(this)),"string"==typeof b&&e[b]()})}var c=function(b){this.element=a(b)};c.VERSION="3.3.7",c.TRANSITION_DURATION=150,c.prototype.show=function(){var b=this.element,c=b.closest("ul:not(.dropdown-menu)"),d=b.data("target");if(d||(d=b.attr("href"),d=d&&d.replace(/.*(?=#[^\s]*$)/,"")),!b.parent("li").hasClass("active")){var e=c.find(".active:last a"),f=a.Event("hide.bs.tab",{relatedTarget:b[0]}),g=a.Event("show.bs.tab",{relatedTarget:e[0]});if(e.trigger(f),b.trigger(g),!g.isDefaultPrevented()&&!f.isDefaultPrevented()){var h=a(d);this.activate(b.closest("li"),c),this.activate(h,h.parent(),function(){e.trigger({type:"hidden.bs.tab",relatedTarget:b[0]}),b.trigger({type:"shown.bs.tab",relatedTarget:e[0]})})}}},c.prototype.activate=function(b,d,e){function f(){g.removeClass("active").find("> .dropdown-menu > .active").removeClass("active").end().find('[data-toggle="tab"]').attr("aria-expanded",!1),b.addClass("active").find('[data-toggle="tab"]').attr("aria-expanded",!0),h?(b[0].offsetWidth,b.addClass("in")):b.removeClass("fade"),b.parent(".dropdown-menu").length&&b.closest("li.dropdown").addClass("active").end().find('[data-toggle="tab"]').attr("aria-expanded",!0),e&&e()}var g=d.find("> .active"),h=e&&a.support.transition&&(g.length&&g.hasClass("fade")||!!d.find("> .fade").length);g.length&&h?g.one("bsTransitionEnd",f).emulateTransitionEnd(c.TRANSITION_DURATION):f(),g.removeClass("in")};var d=a.fn.tab;a.fn.tab=b,a.fn.tab.Constructor=c,a.fn.tab.noConflict=function(){return a.fn.tab=d,this};var e=function(c){c.preventDefault(),b.call(a(this),"show")};a(document).on("click.bs.tab.data-api",'[data-toggle="tab"]',e).on("click.bs.tab.data-api",'[data-toggle="pill"]',e)}(jQuery),+function(a){"use strict";function b(b){return this.each(function(){var d=a(this),e=d.data("bs.affix"),f="object"==typeof b&&b;e||d.data("bs.affix",e=new c(this,f)),"string"==typeof b&&e[b]()})}var c=function(b,d){this.options=a.extend({},c.DEFAULTS,d),this.$target=a(this.options.target).on("scroll.bs.affix.data-api",a.proxy(this.checkPosition,this)).on("click.bs.affix.data-api",a.proxy(this.checkPositionWithEventLoop,this)),this.$element=a(b),this.affixed=null,this.unpin=null,this.pinnedOffset=null,this.checkPosition()};c.VERSION="3.3.7",c.RESET="affix affix-top affix-bottom",c.DEFAULTS={offset:0,target:window},c.prototype.getState=function(a,b,c,d){var e=this.$target.scrollTop(),f=this.$element.offset(),g=this.$target.height();if(null!=c&&"top"==this.affixed)return e<c&&"top";if("bottom"==this.affixed)return null!=c?!(e+this.unpin<=f.top)&&"bottom":!(e+g<=a-d)&&"bottom";var h=null==this.affixed,i=h?e:f.top,j=h?g:b;return null!=c&&e<=c?"top":null!=d&&i+j>=a-d&&"bottom"},c.prototype.getPinnedOffset=function(){if(this.pinnedOffset)return this.pinnedOffset;this.$element.removeClass(c.RESET).addClass("affix");var a=this.$target.scrollTop(),b=this.$element.offset();return this.pinnedOffset=b.top-a},c.prototype.checkPositionWithEventLoop=function(){setTimeout(a.proxy(this.checkPosition,this),1)},c.prototype.checkPosition=function(){if(this.$element.is(":visible")){var b=this.$element.height(),d=this.options.offset,e=d.top,f=d.bottom,g=Math.max(a(document).height(),a(document.body).height());"object"!=typeof d&&(f=e=d),"function"==typeof e&&(e=d.top(this.$element)),"function"==typeof f&&(f=d.bottom(this.$element));var h=this.getState(g,b,e,f);if(this.affixed!=h){null!=this.unpin&&this.$element.css("top","");var i="affix"+(h?"-"+h:""),j=a.Event(i+".bs.affix");if(this.$element.trigger(j),j.isDefaultPrevented())return;this.affixed=h,this.unpin="bottom"==h?this.getPinnedOffset():null,this.$element.removeClass(c.RESET).addClass(i).trigger(i.replace("affix","affixed")+".bs.affix")}"bottom"==h&&this.$element.offset({top:g-b-f})}};var d=a.fn.affix;a.fn.affix=b,a.fn.affix.Constructor=c,a.fn.affix.noConflict=function(){return a.fn.affix=d,this},a(window).on("load",function(){a('[data-spy="affix"]').each(function(){var c=a(this),d=c.data();d.offset=d.offset||{},null!=d.offsetBottom&&(d.offset.bottom=d.offsetBottom),null!=d.offsetTop&&(d.offset.top=d.offsetTop),b.call(c,d)})})}(jQuery);
-// This file is autogenerated via the `commonjs` Grunt task. You can require() this file in a CommonJS environment.
-require('../../js/transition.js')
-require('../../js/alert.js')
-require('../../js/button.js')
-require('../../js/carousel.js')
-require('../../js/collapse.js')
-require('../../js/dropdown.js')
-require('../../js/modal.js')
-require('../../js/tooltip.js')
-require('../../js/popover.js')
-require('../../js/scrollspy.js')
-require('../../js/tab.js')
-require('../../js/affix.js')
 /*!
  * Bootstrap Grunt task for the CommonJS module generation
  * http://getbootstrap.com
@@ -66021,6 +66021,2196 @@ return support;
 
 } );
 
+/*!
+ * FileInput <_LANG_> Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['_LANG_'] = {
+        fileSingle: 'file',
+        filePlural: 'files',
+        browseLabel: 'Browse &hellip;',
+        removeLabel: 'Remove',
+        removeTitle: 'Clear selected files',
+        cancelLabel: 'Cancel',
+        cancelTitle: 'Abort ongoing upload',
+        uploadLabel: 'Upload',
+        uploadTitle: 'Upload selected files',
+        msgNo: 'No',
+        msgNoFilesSelected: 'No files selected',
+        msgCancelled: 'Cancelled',
+        msgZoomModalHeading: 'Detailed Preview',
+        msgSizeTooLarge: 'File "{name}" (<b>{size} KB</b>) exceeds maximum allowed upload size of <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'You must select at least <b>{n}</b> {files} to upload.',
+        msgFilesTooMany: 'Number of files selected for upload <b>({n})</b> exceeds maximum allowed limit of <b>{m}</b>.',
+        msgFileNotFound: 'File "{name}" not found!',
+        msgFileSecured: 'Security restrictions prevent reading the file "{name}".',
+        msgFileNotReadable: 'File "{name}" is not readable.',
+        msgFilePreviewAborted: 'File preview aborted for "{name}".',
+        msgFilePreviewError: 'An error occurred while reading the file "{name}".',
+        msgInvalidFileType: 'Invalid type for file "{name}". Only "{types}" files are supported.',
+        msgInvalidFileExtension: 'Invalid extension for file "{name}". Only "{extensions}" files are supported.',
+        msgUploadAborted: 'The file upload was aborted',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Validation Error',
+        msgLoading: 'Loading file {index} of {files} &hellip;',
+        msgProgress: 'Loading file {index} of {files} - {name} - {percent}% completed.',
+        msgSelected: '{n} {files} selected',
+        msgFoldersNotAllowed: 'Drag & drop files only! Skipped {n} dropped folder(s).',
+        msgImageWidthSmall: 'Width of image file "{name}" must be at least {size} px.',
+        msgImageHeightSmall: 'Height of image file "{name}" must be at least {size} px.',
+        msgImageWidthLarge: 'Width of image file "{name}" cannot exceed {size} px.',
+        msgImageHeightLarge: 'Height of image file "{name}" cannot exceed {size} px.',
+        msgImageResizeError: 'Could not get the image dimensions to resize.',
+        msgImageResizeException: 'Error while resizing the image.<pre>{errors}</pre>',
+        dropZoneTitle: 'Drag & drop files here &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Remove file',
+            uploadTitle: 'Upload file',
+            zoomTitle: 'View details',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Not uploaded yet',
+            indicatorSuccessTitle: 'Uploaded',
+            indicatorErrorTitle: 'Upload Error',
+            indicatorLoadingTitle: 'Uploading ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+/*!
+ * FileInput Arabic Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ * @author Yasser Lotfy <y_l@live.com>
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['ar'] = {
+        fileSingle: 'ملف',
+        filePlural: 'ملفات',
+        browseLabel: 'تصفح &hellip;',
+        removeLabel: 'إزالة',
+        removeTitle: 'إزالة الملفات المختارة',
+        cancelLabel: 'إلغاء',
+        cancelTitle: 'إنهاء الرفع الحالي',
+        uploadLabel: 'رفع',
+        uploadTitle: 'رفع الملفات المختارة',
+        msgNo: 'لا',
+        msgNoFilesSelected: '',
+        msgCancelled: 'ألغيت',
+        msgZoomModalHeading: 'معاينة تفصيلية',
+        msgSizeTooLarge: 'الملف "{name}" (<b>{size} ك.ب</b>) تعدى الحد الأقصى المسموح للرفع <b>{maxSize} ك.ب</b>.',
+        msgFilesTooLess: 'يجب عليك اختيار <b>{n}</b> {files} على الأقل للرفع.',
+        msgFilesTooMany: 'عدد الملفات المختارة للرفع <b>({n})</b> تعدت الحد الأقصى المسموح به لعدد <b>{m}</b>.',
+        msgFileNotFound: 'الملف "{name}" غير موجود!',
+        msgFileSecured: 'قيود أمنية تمنع قراءة الملف "{name}".',
+        msgFileNotReadable: 'الملف "{name}" غير قابل للقراءة.',
+        msgFilePreviewAborted: 'تم إلغاء معاينة الملف "{name}".',
+        msgFilePreviewError: 'حدث خطأ أثناء قراءة الملف "{name}".',
+        msgInvalidFileType: 'نوعية غير صالحة للملف "{name}". فقط هذه النوعيات مدعومة "{types}".',
+        msgInvalidFileExtension: 'امتداد غير صالح للملف "{name}". فقط هذه الملفات مدعومة "{extensions}".',
+        msgUploadAborted: 'تم إلغاء رفع الملف',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'خطأ التحقق من صحة',
+        msgLoading: 'تحميل ملف {index} من {files} &hellip;',
+        msgProgress: 'تحميل ملف {index} من {files} - {name} - {percent}% منتهي.',
+        msgSelected: '{n} {files} مختار(ة)',
+        msgFoldersNotAllowed: 'اسحب وأفلت الملفات فقط! تم تخطي {n} مجلد(ات).',
+        msgImageWidthSmall: 'عرض ملف الصورة "{name}" يجب أن يكون على الأقل {size} px.',
+        msgImageHeightSmall: 'طول ملف الصورة "{name}" يجب أن يكون على الأقل {size} px.',
+        msgImageWidthLarge: 'عرض ملف الصورة "{name}" لا يمكن أن يتعدى {size} px.',
+        msgImageHeightLarge: 'طول ملف الصورة "{name}" لا يمكن أن يتعدى {size} px.',
+        msgImageResizeError: 'لم يتمكن من معرفة أبعاد الصورة لتغييرها.',
+        msgImageResizeException: 'حدث خطأ أثناء تغيير أبعاد الصورة.<pre>{errors}</pre>',
+        dropZoneTitle: 'اسحب وأفلت الملفات هنا &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'إزالة الملف',
+            uploadTitle: 'رفع الملف',
+            zoomTitle: 'مشاهدة التفاصيل',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'لم يتم الرفع بعد',
+            indicatorSuccessTitle: 'تم الرفع',
+            indicatorErrorTitle: 'خطأ بالرفع',
+            indicatorLoadingTitle: 'جارٍ الرفع ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Bulgarian Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['bg'] = {
+        fileSingle: 'файл',
+        filePlural: 'файла',
+        browseLabel: 'Избери &hellip;',
+        removeLabel: 'Премахни',
+        removeTitle: 'Изчисти избраните',
+        cancelLabel: 'Откажи',
+        cancelTitle: 'Откажи качването',
+        uploadLabel: 'Качи',
+        uploadTitle: 'Качи избраните файлове',
+        msgNo: 'Не',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Отменен',
+        msgZoomModalHeading: 'Детайлен преглед',
+        msgSizeTooLarge: 'Файла "{name}" (<b>{size} KB</b>) надвишава максималните разрешени <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Трябва да изберете поне <b>{n}</b> {files} файла.',
+        msgFilesTooMany: 'Броя файлове избрани за качване <b>({n})</b> надвишава ограниченито от максимум <b>{m}</b>.',
+        msgFileNotFound: 'Файлът "{name}" не може да бъде намерен!',
+        msgFileSecured: 'От съображения за сигурност не може да прочетем файла "{name}".',
+        msgFileNotReadable: 'Файлът "{name}" не е четим.',
+        msgFilePreviewAborted: 'Прегледа на файла е прекратен за "{name}".',
+        msgFilePreviewError: 'Грешка при опит за четене на файла "{name}".',
+        msgInvalidFileType: 'Невалиден тип на файла "{name}". Разрешени са само "{types}".',
+        msgInvalidFileExtension: 'Невалидно разрешение на "{name}". Разрешени са само "{extensions}".',
+        msgUploadAborted: 'Качите файла, бе прекратена',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'утвърждаване грешка',
+        msgLoading: 'Зареждане на файл {index} от общо {files} &hellip;',
+        msgProgress: 'Зареждане на файл {index} от общо {files} - {name} - {percent}% завършени.',
+        msgSelected: '{n} {files} избрани',
+        msgFoldersNotAllowed: 'Само пуснати файлове! Пропуснати {n} пуснати папки.',
+        msgImageWidthSmall: 'Широчината на изображението "{name}" трябва да е поне {size} px.',
+        msgImageHeightSmall: 'Височината на изображението "{name}" трябва да е поне {size} px.',
+        msgImageWidthLarge: 'Широчината на изображението "{name}" не може да е по-голяма от {size} px.',
+        msgImageHeightLarge: 'Височината на изображението "{name}" нее може да е по-голяма от {size} px.',
+        msgImageResizeError: 'Не може да размерите на изображението, за да промените размера.',
+        msgImageResizeException: 'Грешка при промяна на размера на изображението.<pre>{errors}</pre>',
+        dropZoneTitle: 'Пуснете файловете тук &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Махни файл',
+            uploadTitle: 'Качване на файл',
+            zoomTitle: 'Вижте детайли',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Все още не е качил',
+            indicatorSuccessTitle: 'Качено',
+            indicatorErrorTitle: 'Качи Error',
+            indicatorLoadingTitle: 'Качва се ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Català Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['ca'] = {
+        fileSingle: 'arxiu',
+        filePlural: 'arxius',
+        browseLabel: 'Examinar &hellip;',
+        removeLabel: 'Treure',
+        removeTitle: 'Treure arxius seleccionats',
+        cancelLabel: 'Cancel',
+        cancelTitle: 'Avortar la pujada en curs',
+        uploadLabel: 'Pujar arxiu',
+        uploadTitle: 'Pujar arxius seleccionats',
+        msgNo: 'No',
+        msgNoFilesSelected: '',
+        msgCancelled: 'cancel·lat',
+        msgZoomModalHeading: 'Vista prèvia detallada',
+        msgSizeTooLarge: 'Arxiu "{name}" (<b>{size} KB</b>) excedeix la mida màxima permès de <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Heu de seleccionar almenys <b>{n}</b> {files} a carregar.',
+        msgFilesTooMany: 'El nombre d\'arxius seleccionats a carregar <b>({n})</b> excedeix el límit màxim permès de <b>{m}</b>.',
+        msgFileNotFound: 'Arxiu "{name}" no trobat.',
+        msgFileSecured: 'No es pot accedir a l\'arxiu "{name}" perquè estarà sent usat per una altra aplicació o no tinguem permisos de lectura.',
+        msgFileNotReadable: 'No es pot accedir a l\'arxiu "{name}".',
+        msgFilePreviewAborted: 'Previsualització de l\'arxiu "{name}" cancel·lada.',
+        msgFilePreviewError: 'S\'ha produït un error mentre es llegia el fitxer "{name}".',
+        msgInvalidFileType: 'Tipus de fitxer no vàlid per a "{name}". Només arxius "{types}" són permesos.',
+        msgInvalidFileExtension: 'Extensió de fitxer no vàlid per a "{name}". Només arxius "{extensions}" són permesos.',
+        msgUploadAborted: 'La càrrega d\'arxius s\'ha cancel·lat',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Error de validació',
+        msgLoading: 'Pujant fitxer {index} de {files} &hellip;',
+        msgProgress: 'Pujant fitxer {index} de {files} - {name} - {percent}% completat.',
+        msgSelected: '{n} {files} seleccionat(s)',
+        msgFoldersNotAllowed: 'Arrossegueu i deixeu anar únicament arxius. Omesa(es) {n} carpeta(es).',
+        msgImageWidthSmall: 'L\'ample de la imatge "{name}" ha de ser almenys {size} px.',
+        msgImageHeightSmall: 'L\'alçada de la imatge "{name}" ha de ser almenys {size} px.',
+        msgImageWidthLarge: 'L\'ample de la imatge "{name}" no pot excedir de {size} px.',
+        msgImageHeightLarge: 'L\'alçada de la imatge "{name}" no pot excedir de {size} px.',
+        msgImageResizeError: 'No s\'ha pogut obtenir les dimensions d\'imatge per canviar la mida.',
+        msgImageResizeException: 'Error en canviar la mida de la imatge.<pre>{errors}</pre>',
+        dropZoneTitle: 'Arrossegueu i deixeu anar aquí els arxius &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Eliminar arxiu',
+            uploadTitle: 'Pujar arxiu',
+            zoomTitle: 'Veure detalls',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'No pujat encara',
+            indicatorSuccessTitle: 'Subido',
+            indicatorErrorTitle: 'Pujar Error',
+            indicatorLoadingTitle: 'Pujant ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Croatian Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ * @author Milos Stojanovic <stojanovic.loshmi@gmail.com>
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['cr'] = {
+        fileSingle: 'datoteka',
+        filePlural: 'datoteke',
+        browseLabel: 'Izaberi &hellip;',
+        removeLabel: 'Ukloni',
+        removeTitle: 'Ukloni označene datoteke',
+        cancelLabel: 'Odustani',
+        cancelTitle: 'Prekini trenutno otpremanje',
+        uploadLabel: 'Otpremi',
+        uploadTitle: 'Otpremi označene datoteke',
+        msgNo: 'Ne',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Otkazan',
+        msgZoomModalHeading: 'Detaljni pregled',
+        msgSizeTooLarge: 'Datoteka "{name}" (<b>{size} KB</b>) prekoračuje maksimalnu dozvoljenu veličinu datoteke od <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Morate odabrati najmanje <b>{n}</b> {files} za otpremanje.',
+        msgFilesTooMany: 'Broj datoteka označenih za otpremanje <b>({n})</b> prekoračuje maksimalni dozvoljeni limit od <b>{m}</b>.',
+        msgFileNotFound: 'Datoteka "{name}" nije pronađena!',
+        msgFileSecured: 'Datoteku "{name}" nije moguće pročitati zbog bezbednosnih ograničenja.',
+        msgFileNotReadable: 'Datoteku "{name}" nije moguće pročitati.',
+        msgFilePreviewAborted: 'Generisanje prikaza nije moguće za "{name}".',
+        msgFilePreviewError: 'Došlo je do greške prilikom čitanja datoteke "{name}".',
+        msgInvalidFileType: 'Datoteka "{name}" je pogrešnog formata. Dozvoljeni formati su "{types}".',
+        msgInvalidFileExtension: 'Ekstenzija datoteke "{name}" nije dozvoljena. Dozvoljene ekstenzije su "{extensions}".',
+        msgUploadAborted: 'Prijenos datoteka je prekinut',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Provjera pogrešaka',
+        msgLoading: 'Učitavanje datoteke {index} od {files} &hellip;',
+        msgProgress: 'Učitavanje datoteke {index} od {files} - {name} - {percent}% završeno.',
+        msgSelected: '{n} {files} je označeno',
+        msgFoldersNotAllowed: 'Moguće je prevlačiti samo datoteke! Preskočeno je {n} fascikla.',
+        msgImageWidthSmall: 'Širina slikovnu datoteku "{name}" moraju biti najmanje {size} px.',
+        msgImageHeightSmall: 'Visina slikovnu datoteku "{name}" moraju biti najmanje {size} px.',
+        msgImageWidthLarge: 'Širina slikovnu datoteku "{name}" ne može prelaziti {size} px.',
+        msgImageHeightLarge: 'Visina slikovnu datoteku "{name}" ne može prelaziti {size} px.',
+        msgImageResizeError: 'Nije mogao dobiti dimenzije slike na veličinu.',
+        msgImageResizeException: 'Greška prilikom promjene veličine slike.<pre>{errors}</pre>',
+        dropZoneTitle: 'Prevucite datoteke ovde &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Uklonite datoteku',
+            uploadTitle: 'Postavi datoteku',
+            zoomTitle: 'Pregledavati pojedinosti',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Još nije učitao',
+            indicatorSuccessTitle: 'Preneseno',
+            indicatorErrorTitle: 'Postavi Greška',
+            indicatorLoadingTitle: 'Prijenos ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Czech Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['cz'] = {
+        fileSingle: 'soubor',
+        filePlural: 'soubory',
+        browseLabel: 'Vybrat &hellip;',
+        removeLabel: 'Odstranit',
+        removeTitle: 'Vyčistit vybrané soubory',
+        cancelLabel: 'Storno',
+        cancelTitle: 'Přerušit  nahrávání',
+        uploadLabel: 'Nahrát',
+        uploadTitle: 'Nahrát vybrané soubory',
+        msgNo: 'Ne',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Zrušeno',
+        msgZoomModalHeading: 'Detailní náhled',
+        msgSizeTooLarge: 'Soubor "{name}" (<b>{size} KB</b>): překročení - maximální povolená velikost <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Musíte vybrat nejméně <b>{n}</b> {files} pro nahrání.',
+        msgFilesTooMany: 'Počet vybraných souborů pro nahrání <b>({n})</b>: překročení - maximální povolený limit <b>{m}</b>.',
+        msgFileNotFound: 'Soubor "{name}" nebyl nalezen!',
+        msgFileSecured: 'Zabezpečení souboru znemožnilo číst soubor "{name}".',
+        msgFileNotReadable: 'Soubor "{name}" není čitelný.',
+        msgFilePreviewAborted: 'Náhled souboru byl přerušen pro "{name}".',
+        msgFilePreviewError: 'Nastala chyba při načtení souboru "{name}".',
+        msgInvalidFileType: 'Neplatný typ souboru "{name}". Pouze "{types}" souborů jsou podporovány.',
+        msgInvalidFileExtension: 'Neplatná extenze souboru "{name}". Pouze "{extensions}" souborů jsou podporovány.',
+        msgUploadAborted: 'Soubor nahrávání byl přerušen',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Chyba ověření',
+        msgLoading: 'Nahrávání souboru {index} z {files} &hellip;',
+        msgProgress: 'Nahrávání souboru {index} z {files} - {name} - {percent}% dokončeno.',
+        msgSelected: '{n} {files} vybrano',
+        msgFoldersNotAllowed: 'Táhni a pusť pouze soubory! Vynechané {n} pustěné složk(y).',
+        msgImageWidthSmall: 'Šířka image soubor "{name}", musí být alespoň {size} px.',
+        msgImageHeightSmall: 'Výška image soubor "{name}", musí být alespoň {size} px.',
+        msgImageWidthLarge: 'Šířka obrazového souboru "{name}" nelze překročit {size} px.',
+        msgImageHeightLarge: 'Výška obrazového souboru "{name}" nelze překročit {size} px.',
+        msgImageResizeError: 'Nelze získat rozměry obrázku změnit velikost.',
+        msgImageResizeException: 'Chyba při změně velikosti obrázku.<pre>{errors}</pre>',
+        dropZoneTitle: 'Táhni a pusť soubory sem &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Odstranit soubor',
+            uploadTitle: 'nahrát soubor',
+            zoomTitle: 'zobrazit podrobnosti',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Ještě nenahrál',
+            indicatorSuccessTitle: 'Nahraný',
+            indicatorErrorTitle: 'Nahrát Chyba',
+            indicatorLoadingTitle: 'Nahrávání ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+/*!
+ * FileInput Danish Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+    
+    $.fn.fileinputLocales['da'] = {
+        fileSingle: 'fil',
+        filePlural: 'filer',
+        browseLabel: 'Browse &hellip;',
+        removeLabel: 'Fjern',
+        removeTitle: 'Fjern valgte filer',
+        cancelLabel: 'Fortryd',
+        cancelTitle: 'Afbryd nuv&aelig;rende upload',
+        uploadLabel: 'Upload',
+        uploadTitle: 'Upload valgte filer',
+        msgNo: 'Ingen',
+        msgNoFilesSelected: '',
+        msgCancelled: 'aflyst',
+        msgZoomModalHeading: 'Detaljeret visning',
+        msgSizeTooLarge: 'Fil "{name}" (<b>{size} KB</b>) er st&oslash;rre end de tilladte <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Du skal mindst v&aelig;lge <b>{n}</b> {files} til upload.',
+        msgFilesTooMany: '<b>({n})</b> filer valgt til upload, men maks. <b>{m}</b> er tilladt.',
+        msgFileNotFound: 'Filen "{name}" blev ikke fundet!',
+        msgFileSecured: 'Sikkerhedsrestriktioner forhindrer l&aelig;sning af "{name}".',
+        msgFileNotReadable: 'Filen "{name}" kan ikke indl&aelig;ses.',
+        msgFilePreviewAborted: 'Filpreview annulleret for "{name}".',
+        msgFilePreviewError: 'Der skete en fejl under l&aelig;sningen af filen "{name}".',
+        msgInvalidFileType: 'Ukendt type for filen "{name}". Kun "{types}" kan bruges.',
+        msgInvalidFileExtension: 'Ukendt filtype for filen "{name}". Kun "{extensions}" filer kan bruges.',
+        msgUploadAborted: 'Filupload annulleret',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Validering Fejl',
+        msgLoading: 'Henter fil {index} af {files} &hellip;',
+        msgProgress: 'Henter fil {index} af {files} - {name} - {percent}% f&aelig;rdiggjort.',
+        msgSelected: '{n} {files} valgt',
+        msgFoldersNotAllowed: 'Drag & drop kun filer! {n} mappe(r) sprunget over.',
+        msgImageWidthSmall: 'Bredden af billedet "{name}" skal v&aelig;re p&aring; mindst {size} px.',
+        msgImageHeightSmall: 'H&oslash;jden af billedet "{name}" skal v&aelig;re p&aring; mindst {size} px.',
+        msgImageWidthLarge: 'Bredden af billedet "{name}" m&aring; ikke v&aelig;re over {size} px.',
+        msgImageHeightLarge: 'H&oslash;jden af billedet "{name}" m&aring; ikke v&aelig;re over {size} px.',
+        msgImageResizeError: 'Kunne ikke få billedets dimensioner for at ændre størrelsen.',
+        msgImageResizeException: 'Fejl ved at ændre størrelsen på billedet.<pre>{errors}</pre>',
+        dropZoneTitle: 'Drag & drop filer her &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Fjern fil',
+            uploadTitle: 'Upload fil',
+            zoomTitle: 'Se detaljer',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Ikke uploadet endnu',
+            indicatorSuccessTitle: 'Uploadet',
+            indicatorErrorTitle: 'Upload fejl',
+            indicatorLoadingTitle: 'Uploader ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+/*!
+ * FileInput German Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['de'] = {
+        fileSingle: 'Datei',
+        filePlural: 'Dateien',
+        browseLabel: 'Auswählen &hellip;',
+        removeLabel: 'Löschen',
+        removeTitle: 'Ausgewählte löschen',
+        cancelLabel: 'Laden',
+        cancelTitle: 'Hochladen abbrechen',
+        uploadLabel: 'Hochladen',
+        uploadTitle: 'Hochladen der ausgewählten Dateien',
+        msgNo: 'Keine',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Abgebrochen',
+        msgZoomModalHeading: 'ausführliche Vorschau',
+        msgSizeTooLarge: 'Datei "{name}" (<b>{size} KB</b>) überschreitet maximal zulässige Upload-Größe von <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Sie müssen mindestens <b>{n}</b> {files} zum Hochladen auswählen.',
+        msgFilesTooMany: 'Anzahl der Dateien für den Upload ausgewählt <b>({n})</b> überschreitet maximal zulässige Grenze von <b>{m}</b> Stück.',
+        msgFileNotFound: 'Datei "{name}" wurde nicht gefunden!',
+        msgFileSecured: 'Sicherheitseinstellungen verhindern das Lesen der Datei "{name}".',
+        msgFileNotReadable: 'Die Datei "{name}" ist nicht lesbar.',
+        msgFilePreviewAborted: 'Dateivorschau abgebrochen für "{name}".',
+        msgFilePreviewError: 'Beim Lesen der Datei "{name}" ein Fehler aufgetreten.',
+        msgInvalidFileType: 'Ungültiger Typ für Datei "{name}". Nur Dateien der Typen "{types}" werden unterstützt.',
+        msgInvalidFileExtension: 'Ungültige Erweiterung für Datei "{name}". Nur Dateien mit der Endung "{extensions}" werden unterstützt.',
+        msgUploadAborted: 'Der Datei-Upload wurde abgebrochen',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Validierungs fehler',
+        msgLoading: 'Lade Datei {index} von {files} hoch&hellip;',
+        msgProgress: 'Datei {index} von {files} - {name} - zu {percent}% fertiggestellt.',
+        msgSelected: '{n} {files} ausgewählt',
+        msgFoldersNotAllowed: 'Drag & Drop funktioniert nur bei Dateien! {n} Ordner übersprungen.',
+        msgImageWidthSmall: 'Breite der Bilddatei "{name}" muss mindestens {size} px betragen.',
+        msgImageHeightSmall: 'Höhe der Bilddatei "{name}" muss mindestens {size} px betragen.',
+        msgImageWidthLarge: 'Breite der Bilddatei "{name}" nicht überschreiten {size} px.',
+        msgImageHeightLarge: 'Höhe der Bilddatei "{name}" nicht überschreiten {size} px.',
+        msgImageResizeError: 'Konnte nicht die Bildabmessungen zu ändern.',
+        msgImageResizeException: 'Fehler beim Ändern der Größe des Bildes.<pre>{errors}</pre>',
+        dropZoneTitle: 'Dateien hierher ziehen &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Datei entfernen',
+            uploadTitle: 'Datei hochladen',
+            zoomTitle: 'Details anzeigen',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Noch nicht hochgeladen',
+            indicatorSuccessTitle: 'Hochgeladen',
+            indicatorErrorTitle: 'Upload Fehler',
+            indicatorLoadingTitle: 'Hochladen ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Greek Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['el'] = {
+        fileSingle: 'Αρχείο',
+        filePlural: 'Αρχεία',
+        browseLabel: 'Αναζήτηση &hellip;',
+        removeLabel: 'Ακύρωση',
+        removeTitle: 'Εκκαθάριση αρχείων',
+        cancelLabel: 'Ακύρωση',
+        cancelTitle: 'Ακύρωση μεταφόρτωσης',
+        uploadLabel: 'Μεταφόρτωση',
+        uploadTitle: 'Μεταφόρτωση επιλεγμένων αρχείων',
+        msgNo: 'Όχι',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Ακυρώθηκε',
+        msgZoomModalHeading: 'λεπτομερής Προεπισκόπηση',
+        msgSizeTooLarge: 'Το αρχείο "{name}" (<b>{size} KB</b>) υπερβαίνει το μέγιστο επιτρεπόμενο μέγεθος μεταφόρτωσης <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Πρέπει να επιλέξετε τουλάχιστον <b>{n}</b> {files} για να ξεκινήσει η μεταφόρτωση.',
+        msgFilesTooMany: 'Ο αριθμός των αρχείων που έχουν επιλεγεί για μεταφόρτωση <b>({n})</b> υπερβαίνει το μέγιστο επιτρεπόμενο αριθμό <b>{m}</b>.',
+        msgFileNotFound: 'Το αρχείο με όνομα "{name}" δεν βρέθηκε!',
+        msgFileSecured: 'Περιορισμοί ασφαλείας εμπόδισαν την ανάγνωση του αρχείου"{name}".',
+        msgFileNotReadable: 'Το αρχείο με όνομα "{name}" δεν είναι αναγνώσιμο.',
+        msgFilePreviewAborted: 'Η προεπισκόπηση του αρχείου ακυρώθηκε για "{name}".',
+        msgFilePreviewError: 'Παρουσιάστηκε σφάλμα κατά την ανάγνωση του αρχείου "{name}".',
+        msgInvalidFileType: 'Μη έγκυρος τύπος αρχείου "{name}". Οι τύποι αρχείων που υποστηρίζονται είναι : "{types}".',
+        msgInvalidFileExtension: 'Μη έγκυρη επέκταση αρχείου "{name}". Οι επεκτάσεις που υποστηρίζονται είναι:  "{extensions}" .',
+        msgUploadAborted: 'Το ανέβασμα των αρχείων ματαιώθηκε',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Σπικύρωση σφάλματος',
+        msgLoading: 'Φόρτωση αρχείου {index} από {files} &hellip;',
+        msgProgress: 'Φόρτωση αρχείου {index} απο {files} - {name} - {percent}% ολοκληρώθηκε.',
+        msgSelected: '{n} {files} επιλέχθηκαν',
+        msgFoldersNotAllowed: 'Μπορείτε να σύρετε μόνο αρχεία! Παραβλέφθηκαν {n} φάκελος(οι).',
+        msgImageWidthSmall: 'Πλάτος του αρχείου εικόνας "{name}" πρέπει να είναι τουλάχιστον {size} px.',
+        msgImageHeightSmall: 'Ύψος του αρχείου εικόνας "{name}" πρέπει να είναι τουλάχιστον {size} px.',
+        msgImageWidthLarge: 'Πλάτος του αρχείου εικόνας "{name}" δεν μπορεί να υπερβαίνει το {size} px.',
+        msgImageHeightLarge: 'Ύψος του αρχείου εικόνας "{name}" δεν μπορεί να υπερβαίνει το {size} px.',
+        msgImageResizeError: 'Δεν θα μπορούσε να πάρει τις διαστάσεις της εικόνας για να αλλάξετε το μέγεθος.',
+        msgImageResizeException: 'Σφάλμα κατά την αλλαγή μεγέθους της εικόνας.<pre>{errors}</pre>',
+        dropZoneTitle: 'Σύρετε τα αρχεία εδώ &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Αφαιρέστε το αρχείο',
+            uploadTitle: 'Ανεβάστε το αρχείο',
+            zoomTitle: 'Δείτε λεπτομέρειες',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Δεν ανεβάσει ακόμα',
+            indicatorSuccessTitle: 'Προστέθηκε',
+            indicatorErrorTitle: 'Ανέβασμα Σφάλμα',
+            indicatorLoadingTitle: 'Μεταφόρτωση ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+/*!
+ * FileInput Spanish Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['es'] = {
+        fileSingle: 'archivo',
+        filePlural: 'archivos',
+        browseLabel: 'Examinar &hellip;',
+        removeLabel: 'Quitar',
+        removeTitle: 'Quitar archivos seleccionados',
+        cancelLabel: 'Cancelar',
+        cancelTitle: 'Abortar la subida en curso',
+        uploadLabel: 'Subir archivo',
+        uploadTitle: 'Subir archivos seleccionados',
+        msgNo: 'No',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Cancelado',
+        msgZoomModalHeading: 'Vista previa detallada',
+        msgSizeTooLarge: 'Archivo "{name}" (<b>{size} KB</b>) excede el tamaño máximo permitido de <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Debe seleccionar al menos <b>{n}</b> {files} a cargar.',
+        msgFilesTooMany: 'El número de archivos seleccionados a cargar <b>({n})</b> excede el límite máximo permitido de <b>{m}</b>.',
+        msgFileNotFound: 'Archivo "{name}" no encontrado.',
+        msgFileSecured: 'No es posible acceder al archivo "{name}" porque estará siendo usado por otra aplicación o no tengamos permisos de lectura.',
+        msgFileNotReadable: 'No es posible acceder al archivo "{name}".',
+        msgFilePreviewAborted: 'Previsualización del archivo "{name}" cancelada.',
+        msgFilePreviewError: 'Ocurrió un error mientras se leía el archivo "{name}".',
+        msgInvalidFileType: 'Tipo de archivo no válido para "{name}". Sólo archivos "{types}" son permitidos.',
+        msgInvalidFileExtension: 'Extensión de archivo no válido para "{name}". Sólo archivos "{extensions}" son permitidos.',
+        msgUploadAborted: 'La carga de archivos se ha cancelado',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Error de validacion',
+        msgLoading: 'Subiendo archivo {index} de {files} &hellip;',
+        msgProgress: 'Subiendo archivo {index} de {files} - {name} - {percent}% completado.',
+        msgSelected: '{n} {files} seleccionado(s)',
+        msgFoldersNotAllowed: 'Arrastre y suelte únicamente archivos. Omitida(s) {n} carpeta(s).',
+        msgImageWidthSmall: 'El ancho de la imagen "{name}" debe ser al menos {size} px.',
+        msgImageHeightSmall: 'La altura de la imagen "{name}" debe ser al menos {size} px.',
+        msgImageWidthLarge: 'El ancho de la imagen "{name}" no puede exceder de {size} px.',
+        msgImageHeightLarge: 'La altura de la imagen "{name}" no puede exceder de {size} px.',
+        msgImageResizeError: 'No se pudo obtener las dimensiones de imagen para cambiar el tamaño.',
+        msgImageResizeException: 'Error al cambiar el tamaño de la imagen.<pre>{errors}</pre>',
+        dropZoneTitle: 'Arrastre y suelte aquí los archivos &hellip;',
+        dropZoneClickTitle: '<br>(o haga click para seleccionar {files})',
+        fileActionSettings: {
+            removeTitle: 'Eliminar archivo',
+            uploadTitle: 'Subir archivo',
+            zoomTitle: 'Ver detalles',
+            dragTitle: 'Mover / Arreglar de nuevo',
+            indicatorNewTitle: 'No subido todavía',
+            indicatorSuccessTitle: 'Subido',
+            indicatorErrorTitle: 'Subir Error',
+            indicatorLoadingTitle: 'Subiendo ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'Ver archivo anterior',
+            next: 'Ver archivo siguiente',
+            toggleheader: 'Activar encabezado',
+            fullscreen: 'Activar pantalla completa',
+            borderless: 'Activar el modo sin bordes',
+            close: 'Cerrar vista detallada'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Persian Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ * @author Milad Nekofar <milad@nekofar.com>
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['fa'] = {
+        fileSingle: 'فایل',
+        filePlural: 'فایل',
+        browseLabel: 'مرور &hellip;',
+        removeLabel: 'حذف',
+        removeTitle: 'پاکسازی فایل‌های انتخاب شده',
+        cancelLabel: 'لغو',
+        cancelTitle: 'لغو بارگزاری جاری',
+        uploadLabel: 'بارگذاری',
+        uploadTitle: 'بارگذاری فایل‌های انتخاب شده',
+        msgNo: 'No',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Cancelled',
+        msgZoomModalHeading: 'Detailed Preview',
+        msgSizeTooLarge: 'فایل "{name}" (<b>{size} کیلوبایت</b>) از حداکثر مجاز <b>{maxSize} کیلوبایت</b>.',
+        msgFilesTooLess: 'شما باید حداقل <b>{n}</b> {files} فایل برای بارگذاری انتخاب کنید.',
+        msgFilesTooMany: 'تعداد فایل‌های انتخاب شده برای بارگذاری <b>({n})</b> از حداکثر مجاز عبور کرده است <b>{m}</b>.',
+        msgFileNotFound: 'فایل "{name}" یافت نشد!',
+        msgFileSecured: 'محدودیت های امنیتی مانع خواندن فایل "{name}" است.',
+        msgFileNotReadable: 'فایل "{name}" قابل نوشتن نیست.',
+        msgFilePreviewAborted: 'پیشنمایش فایل "{name}". شکست خورد',
+        msgFilePreviewError: 'در هنگام خواندن فایل "{name}" خطایی رخ داد.',
+        msgInvalidFileType: 'نوع فایل "{name}" معتبر نیست. فقط "{types}" پشیبانی می‌شود.',
+        msgInvalidFileExtension: 'پسوند فایل "{name}" معتبر نیست. فقط "{extensions}" پشتیبانی می‌شود.',
+        msgUploadAborted: 'The file upload was aborted',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'خطای اعتبار سنجی',
+        msgLoading: 'بارگیری فایل {index} از {files} &hellip;',
+        msgProgress: 'بارگیری فایل {index} از {files} - {name} - {percent}% تمام شد.',
+        msgSelected: '{n} {files} انتخاب شده',
+        msgFoldersNotAllowed: 'فقط فایل‌ها را بکشید و رها کنید! {n} پوشه نادیده گرفته شد.',
+        msgImageWidthSmall: 'عرض فایل تصویر "{name}" باید حداقل {size} پیکسل باشد.',
+        msgImageHeightSmall: 'ارتفاع فایل تصویر "{name}" باید حداقل {size} پیکسل باشد.',
+        msgImageWidthLarge: 'عرض فایل تصویر "{name}" نمیتواند از {size} پیکسل بیشتر باشد.',
+        msgImageHeightLarge: 'ارتفاع فایل تصویر "{name}" نمی‌تواند از {size} پیکسل بیشتر باشد.',
+        msgImageResizeError: 'یافت نشد ابعاد تصویر را برای تغییر اندازه.',
+        msgImageResizeException: 'خطا در هنگام تغییر اندازه تصویر.<pre>{errors}</pre>',
+        dropZoneTitle: 'فایل‌ها را بکشید و در اینجا رها کنید &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'حذف فایل',
+            uploadTitle: 'آپلود فایل',
+            zoomTitle: 'دیدن جزئیات',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'آپلود نشده است',
+            indicatorSuccessTitle: 'آپلود شده',
+            indicatorErrorTitle: 'بارگذاری خطا',
+            indicatorLoadingTitle: 'آپلود ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Finnish Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales.fi = {
+        fileSingle: 'tiedosto',
+        filePlural: 'tiedostot',
+        browseLabel: 'Selaa &hellip;',
+        removeLabel: 'Poista',
+        removeTitle: 'Tyhj&auml;nn&auml; valitut tiedostot',
+        cancelLabel: 'Peruuta',
+        cancelTitle: 'Peruuta lataus',
+        uploadLabel: 'Lataa',
+        uploadTitle: 'Lataa valitut tiedostot',
+        msgNoFilesSelected: '',
+        msgSizeTooLarge: 'Tiedosto "{name}" (<b>{size} Kt</b>) ylitt&auml;&auml; suurimman sallitun tiedoston koon, joka on <b>{maxSize} Kt</b>. Yrit&auml; uudelleen!',
+        msgFilesTooLess: 'V&auml;hint&auml;&auml;n <b>{n}</b> {files} tiedostoa on valittava ladattavaksi. Ole hyv&auml; ja yrit&auml; uudelleen!',
+        msgFilesTooMany: 'Valittujen tiedostojen lukum&auml;&auml;r&auml; <b>({n})</b> ylitt&auml;&auml; suurimman sallitun m&auml;&auml;r&auml;n <b>{m}</b>. Ole hyv&auml; ja yrit&auml; uudelleen!',
+        msgFileNotFound: 'Tiedostoa "{name}" ei l&ouml;ydy!',
+        msgFileSecured: 'Tietoturvarajoitukset est&auml;v&auml;t tiedoston "{name}" lukemisen.',
+        msgFileNotReadable: 'Tiedosto "{name}" ei ole luettavissa.',
+        msgFilePreviewAborted: 'Tiedoston "{name}" esikatselu keskeytetty.',
+        msgFilePreviewError: 'Virhe on tapahtunut luettaessa tiedostoa "{name}".',
+        msgInvalidFileType: 'Tiedosto "{name}" on v&auml;&auml;r&auml;n tyyppinen. Ainoastaan tiedostot tyyppi&auml; "{types}" ovat tuettuja.',
+        msgInvalidFileExtension: 'Tiedoston "{name}" tarkenne on ep&auml;kelpo. Ainoastaan tarkenteet "{extensions}" ovat tuettuja.',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Tiedoston latausvirhe',
+        msgLoading: 'Ladataan tiedostoa {index} / {files} &hellip;',
+        msgProgress: 'Ladataan tiedostoa {index} / {files} - {name} - {percent}% valmistunut.',
+        msgSelected: '{n} tiedostoa valittu',
+        msgFoldersNotAllowed: 'Raahaa ja pudota ainoastaan tiedostoja! Ohitettu {n} raahattua kansiota.',
+        dropZoneTitle: 'Raahaa ja pudota tiedostot t&auml;h&auml;n &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Remove file',
+            uploadTitle: 'Upload file',
+            zoomTitle: 'View Details',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Not uploaded yet',
+            indicatorSuccessTitle: 'Uploaded',
+            indicatorErrorTitle: 'Upload Error',
+            indicatorLoadingTitle: 'Uploading ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+
+    $.extend($.fn.fileinput.defaults, $.fn.fileinputLocales.fi);
+})(window.jQuery);
+/*!
+ * FileInput French Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['fr'] = {
+        fileSingle: 'fichier',
+        filePlural: 'fichiers',
+        browseLabel: 'Parcourir&hellip;',
+        removeLabel: 'Retirer',
+        removeTitle: 'Retirer les fichiers sélectionnés',
+        cancelLabel: 'Annuler',
+        cancelTitle: "Annuler l'envoi en cours",
+        uploadLabel: 'Transférer',
+        uploadTitle: 'Transférer les fichiers sélectionnés',
+        msgNo: 'Non',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Annulé',
+        msgZoomModalHeading: 'Aperçu détaillé',
+        msgSizeTooLarge: 'Le fichier "{name}" (<b>{size} Ko</b>) dépasse la taille maximale autorisée qui est de <b>{maxSize} Ko</b>.',
+        msgFilesTooLess: 'Vous devez sélectionner au moins <b>{n}</b> {files} à transmettre.',
+        msgFilesTooMany: 'Le nombre de fichier sélectionné <b>({n})</b> dépasse la quantité maximale autorisée qui est de <b>{m}</b>.',
+        msgFileNotFound: 'Le fichier "{name}" est introuvable !',
+        msgFileSecured: "Des restrictions de sécurité vous empêchent d'accéder au fichier \"{name}\".",
+        msgFileNotReadable: 'Le fichier "{name}" est illisble.',
+        msgFilePreviewAborted: 'Prévisualisation du fichier "{name}" annulée.',
+        msgFilePreviewError: 'Une erreur est survenue lors de la lecture du fichier "{name}".',
+        msgInvalidFileType: 'Type de document invalide pour "{name}". Seulement les documents de type "{types}" sont autorisés.',
+        msgInvalidFileExtension: 'Extension invalide pour le fichier "{name}". Seules les extensions "{extensions}" sont autorisées.',
+        msgUploadAborted: 'Le téléchargement du fichier a été interrompu',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Erreur de validation',
+        msgLoading: 'Transmission du fichier {index} sur {files}&hellip;',
+        msgProgress: 'Transmission du fichier {index} sur {files} - {name} - {percent}% faits.',
+        msgSelected: '{n} {files} sélectionné(s)',
+        msgFoldersNotAllowed: 'Glissez et déposez uniquement des fichiers ! {n} répertoire(s) exclu(s).',
+        msgImageWidthSmall: 'Largeur de fichier image "{name}" doit être d\'au moins {size} px.',
+        msgImageHeightSmall: 'Hauteur de fichier image "{name}" doit être d\'au moins {size} px.',
+        msgImageWidthLarge: 'Largeur de fichier image "{name}" ne peut pas dépasser {size} px.',
+        msgImageHeightLarge: 'Hauteur de fichier image "{name}" ne peut pas dépasser {size} px.',
+        msgImageResizeError: "Impossible d'obtenir les dimensions de l'image à redimensionner.",
+        msgImageResizeException: "Erreur lors du redimensionnement de l'image.<pre>{errors}</pre>",
+        dropZoneTitle: 'Glissez et déposez les fichiers ici&hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Supprimer le fichier',
+            uploadTitle: 'Télécharger un fichier',
+            zoomTitle: 'Voir les détails',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Pas encore téléchargé',
+            indicatorSuccessTitle: 'Posté',
+            indicatorErrorTitle: 'Ajouter erreur',
+            indicatorLoadingTitle: 'ajout ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+/*!
+ * FileInput Hungarian Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['hu'] = {
+        fileSingle: 'fájl',
+        filePlural: 'fájl',
+        browseLabel: 'Böngész &hellip;',
+        removeLabel: 'Eltávolít',
+        removeTitle: 'Kijelölt fájlok törlése',
+        cancelLabel: 'Mégse',
+        cancelTitle: 'Feltöltés megszakítása',
+        uploadLabel: 'Feltöltés',
+        uploadTitle: 'Kijelölt fájlok feltöltése',
+        msgNo: 'No',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Cancelled',
+        msgZoomModalHeading: 'Részletes Preview',
+        msgSizeTooLarge: '"{name}" fájl (<b>{size} KB</b>) mérete nagyobb a megengedettnél <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Legalább <b>{n}</b> {files} ki kell választania a feltöltéshez.',
+        msgFilesTooMany: 'A feltölteni kívánt fájlok száma <b>({n})</b> elérte a megengedett maximumot <b>{m}</b>.',
+        msgFileNotFound: '"{name}" fájl nem található!',
+        msgFileSecured: 'Biztonsági beállítások nem engedik olvasni a fájlt "{name}".',
+        msgFileNotReadable: '"{name}" fájl nem olvasható',
+        msgFilePreviewAborted: '"{name}" fájl feltöltése megszakítva.',
+        msgFilePreviewError: 'Hiba lépett fel a "{name}" fájl olvasása közben.',
+        msgInvalidFileType: 'Nem megengedett fájl "{name}". Csak a "{types}" fájl típusok támogatottak.',
+        msgInvalidFileExtension: 'Nem megengedett kiterjesztés / fájltípus "{name}". Csak a "{extensions}" kiterjesztés(ek) / fájltípus(ok) támogatottak.',
+        msgUploadAborted: 'A fájl feltöltés megszakítva',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Érvényesítés hiba',
+        msgLoading: '{index} / {files} töltése &hellip;',
+        msgProgress: 'Feltöltés: {index} / {files} - {name} - {percent}% kész.',
+        msgSelected: '{n} {files} kiválasztva.',
+        msgFoldersNotAllowed: 'Csak fájlokat húzzon ide! Kihagyva {n} könyvtár.',
+        msgImageWidthSmall: 'Szélessége image file "{name}" legalább {size} px.',
+        msgImageHeightSmall: 'Magassága image file "{name}" legalább {size} px.',
+        msgImageWidthLarge: 'Szélessége image file "{name}" nem haladhatja meg a {size} px.',
+        msgImageHeightLarge: 'Magassága image file "{name}" nem haladhatja meg a {size} px.',
+        msgImageResizeError: 'Nem lehet megszerezni a kép méretei átméretezni.',
+        msgImageResizeException: 'Hiba történt a méretezés.<pre>{errors}</pre>',
+        dropZoneTitle: 'Fájlok húzása ide &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'A fájl eltávolítása',
+            uploadTitle: 'fájl feltöltése',
+            zoomTitle: 'Részletek megtekintése',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Nem feltöltve',
+            indicatorSuccessTitle: 'Feltöltött',
+            indicatorErrorTitle: 'Feltöltés Error',
+            indicatorLoadingTitle: 'Feltöltése ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Indonesian Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ * @author Bambang Riswanto <bamz3r@gmail.com>
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['id'] = {
+        fileSingle: 'berkas',
+        filePlural: 'berkas',
+        browseLabel: 'Pilih File &hellip;',
+        removeLabel: 'Hapus',
+        removeTitle: 'Hapus berkas terpilih',
+        cancelLabel: 'Batal',
+        cancelTitle: 'Batalkan proses pengunggahan',
+        uploadLabel: 'Unggah',
+        uploadTitle: 'Unggah berkas terpilih',
+        msgNo: 'Tidak',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Dibatalkan',
+        msgZoomModalHeading: 'Pratinjau terperinci',
+        msgSizeTooLarge: 'Berkas "{name}" (<b>{size} KB</b>) melebihi ukuran upload maksimal yaitu <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Anda harus memilih setidaknya <b>{n}</b> {files} untuk diunggah.',
+        msgFilesTooMany: '<b>({n})</b> berkas yang dipilih untuk diunggah melebihi ukuran upload maksimal yaitu <b>{m}</b>.',
+        msgFileNotFound: 'Berkas "{name}" tak ditemukan!',
+        msgFileSecured: 'Sistem keamanan mencegah untuk membaca berkas "{name}".',
+        msgFileNotReadable: 'Berkas "{name}" tak dapat dibaca.',
+        msgFilePreviewAborted: 'Pratinjau untuk berkas "{name}" dibatalkan.',
+        msgFilePreviewError: 'Kesalahan saat membaca berkas "{name}".',
+        msgInvalidFileType: 'Jenis berkas "{name}" tidak sah. Hanya berkas "{types}" yang didukung.',
+        msgInvalidFileExtension: 'Ekstensi berkas "{name}" tidak sah. Hanya ekstensi "{extensions}" yang didukung.',
+        msgUploadAborted: 'Pengunggahan berkas dibatalkan',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Kesalahan validasi',
+        msgLoading: 'Memuat {index} dari {files} berkas &hellip;',
+        msgProgress: 'Memuat {index} dari {files} berkas - {name} - {percent}% selesai.',
+        msgSelected: '{n} {files} dipilih',
+        msgFoldersNotAllowed: 'Hanya tahan dan lepas file saja! {n} folder diabaikan.',
+        msgImageWidthSmall: 'Lebar dari gambar "{name}" harus sekurangnya {size} px.',
+        msgImageHeightSmall: 'Tinggi dari gambar "{name}" harus sekurangnya {size} px.',
+        msgImageWidthLarge: 'Lebar dari gambar "{name}" tak boleh melebihi {size} px.',
+        msgImageHeightLarge: 'Tinggi dari gambar "{name}" tak boleh melebihi {size} px.',
+        msgImageResizeError: 'Tak dapat menentukan dimensi gambar untuk mengubah ukuran.',
+        msgImageResizeException: 'Kesalahan saat mengubah ukuran gambar.<pre>{errors}</pre>',
+        dropZoneTitle: 'Tarik dan lepaskan berkas disini &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Hapus berkas',
+            uploadTitle: 'Unggah berkas',
+            zoomTitle: 'Tampilkan Rincian',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Belum diunggah',
+            indicatorSuccessTitle: 'Sudah diunggah',
+            indicatorErrorTitle: 'Kesalahan pengunggahan',
+            indicatorLoadingTitle: 'Mengunggah ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Italian Translation
+ * 
+ * Author: Lorenzo Milesi <maxxer@yetopen.it>
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['it'] = {
+        fileSingle: 'file',
+        filePlural: 'file',
+        browseLabel: 'Sfoglia&hellip;',
+        removeLabel: 'Rimuovi',
+        removeTitle: 'Rimuovi i file selezionati',
+        cancelLabel: 'Annulla',
+        cancelTitle: 'Annulla i caricamenti in corso',
+        uploadLabel: 'Carica',
+        uploadTitle: 'Carica i file selezionati',
+        msgNo: 'No',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Annullato',
+        msgZoomModalHeading: 'Anteprima dettagliata',
+        msgSizeTooLarge: 'Il file "{name}" (<b>{size} KB</b>) eccede la dimensione massima di caricamento di <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Devi selezionare almeno <b>{n}</b> {files} da caricare.',
+        msgFilesTooMany: 'Il numero di file selezionati per il caricamento <b>({n})</b> eccede il numero massimo di file accettati <b>{m}</b>.',
+        msgFileNotFound: 'File "{name}" non trovato!',
+        msgFileSecured: 'Restrizioni di sicurezza impediscono la lettura del file "{name}".',
+        msgFileNotReadable: 'Il file "{name}" non \xE8 leggibile.',
+        msgFilePreviewAborted: 'Generazione anteprima per "{name}" annullata.',
+        msgFilePreviewError: 'Errore durante la lettura del file "{name}".',
+        msgInvalidFileType: 'Tipo non valido per il file "{name}". Sono ammessi solo file di tipo "{types}".',
+        msgInvalidFileExtension: 'Estensione non valida per il file "{name}". Sono ammessi solo file con estensione "{extensions}".',
+        msgUploadAborted: 'Il caricamento del file è stata interrotta',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Errore di convalida',
+        msgLoading: 'Caricamento file {index} di {files}&hellip;',
+        msgProgress: 'Caricamento file {index} di {files} - {name} - {percent}% completato.',
+        msgSelected: '{n} {files} selezionati',
+        msgFoldersNotAllowed: 'Trascina solo file! Ignorata/e {n} cartella/e.',
+        msgImageWidthSmall: 'Larghezza di file immagine "{name}" deve essere di almeno {size} px.',
+        msgImageHeightSmall: 'Altezza di file immagine "{name}" deve essere di almeno {size} px.',
+        msgImageWidthLarge: 'Larghezza di file immagine "{name}" non può superare {size} px.',
+        msgImageHeightLarge: 'Altezza di file immagine "{name}" non può superare {size} px.',
+        msgImageResizeError: "Impossibile ottenere le dimensioni dell'immagine per ridimensionare.",
+        msgImageResizeException: "Errore durante il ridimensionamento dell'immagine.<pre>{errors}</pre>",
+        dropZoneTitle: 'Trascina i file qui&hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Rimuovere il file',
+            uploadTitle: 'Caricare un file',
+            zoomTitle: 'Guarda i dettagli',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Non ancora caricato',
+            indicatorSuccessTitle: 'Caricati',
+            indicatorErrorTitle: 'Carica Errore',
+            indicatorLoadingTitle: 'Caricamento ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+/*!
+ * FileInput Japanese Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ * @author Yuta Hoshina <hoshina@gmail.com>
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ * slugCallback
+ *    \u4e00-\u9fa5 : Kanji (Chinese characters)
+ *    \u3040-\u309f : Hiragana (Japanese syllabary)
+ *    \u30a0-\u30ff\u31f0-\u31ff : Katakana (including phonetic extension)
+ *    \u3200-\u32ff : Enclosed CJK Letters and Months
+ *    \uff00-\uffef : Halfwidth and Fullwidth Forms
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['ja'] = {
+        fileSingle: 'ファイル',
+        filePlural: 'ファイル',
+        browseLabel: 'ファイルを選択&hellip;',
+        removeLabel: '削除',
+        removeTitle: '選択したファイルを削除',
+        cancelLabel: 'キャンセル',
+        cancelTitle: 'アップロードをキャンセル',
+        uploadLabel: 'アップロード',
+        uploadTitle: '選択したファイルをアップロード',
+        msgNo: 'いいえ',
+        msgNoFilesSelected: 'ファイルが選択されていません',
+        msgCancelled: 'キャンセル',
+        msgZoomModalHeading: 'プレビュー',
+        msgSizeTooLarge: 'ファイル"{name}" (<b>{size} KB</b>)はアップロード可能な上限容量<b>{maxSize} KB</b>を超えています',
+        msgFilesTooLess: '最低<b>{n}</b>個の{files}を選択してください',
+        msgFilesTooMany: '選択したファイルの数<b>({n}個)</b>はアップロード可能な上限数<b>({m}個)</b>を超えています',
+        msgFileNotFound: 'ファイル"{name}"はありませんでした',
+        msgFileSecured: 'ファイル"{name}"は読み取り権限がないため取得できません',
+        msgFileNotReadable: 'ファイル"{name}"は読み込めません',
+        msgFilePreviewAborted: 'ファイル"{name}"のプレビューを中止しました',
+        msgFilePreviewError: 'ファイル"{name}"の読み込み中にエラーが発生しました',
+        msgInvalidFileType: '"{name}"は無効なファイル形式です。"{types}"形式のファイルのみサポートしています',
+        msgInvalidFileExtension: '"{name}"は無効なファイル拡張子です。拡張子が"{extensions}"のファイルのみサポートしています',
+        msgUploadAborted: 'ファイルのアップロードが中止されました',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: '検証エラー',
+        msgLoading: '{files}個中{index}個目のファイルを読み込み中&hellip;',
+        msgProgress: '{files}個中{index}個のファイルを読み込み中 - {name} - {percent}% 完了',
+        msgSelected: '{n}個の{files}を選択',
+        msgFoldersNotAllowed: 'ドラッグ&ドロップが可能なのはファイルのみです。{n}個のフォルダ－は無視されました',
+        msgImageWidthSmall: '画像ファイル"{name}"の幅が小さすぎます。画像サイズの幅は少なくとも{size}px必要です',
+        msgImageHeightSmall: '画像ファイル"{name}"の高さが小さすぎます。画像サイズの高さは少なくとも{size}px必要です',
+        msgImageWidthLarge: '画像ファイル"{name}"の幅がアップロード可能な画像サイズ({size}px)を超えています',
+        msgImageHeightLarge: '画像ファイル"{name}"の高さがアップロード可能な画像サイズ({size}px)を超えています',
+        msgImageResizeError: 'リサイズ時に画像サイズが取得できませんでした',
+        msgImageResizeException: '画像のリサイズ時にエラーが発生しました。<pre>{errors}</pre>',
+        dropZoneTitle: 'ファイルをドラッグ&ドロップ&hellip;',
+        dropZoneClickTitle: '<br>(または クリックして{files}を選択 )',
+        slugCallback: function(text) {
+            return text ? text.split(/(\\|\/)/g).pop().replace(/[^\w\u4e00-\u9fa5\u3040-\u309f\u30a0-\u30ff\u31f0-\u31ff\u3200-\u32ff\uff00-\uffef\-.\\\/ ]+/g, '') : '';
+        },
+        fileActionSettings: {
+            removeTitle: 'ファイルを削除',
+            uploadTitle: 'ファイルをアップロード',
+            zoomTitle: 'プレビュー',
+            dragTitle: '移動 / 再配置',
+            indicatorNewTitle: 'まだアップロードされていません',
+            indicatorSuccessTitle: 'アップロード済み',
+            indicatorErrorTitle: 'アップロード失敗',
+            indicatorLoadingTitle: 'アップロード中...'
+        },
+        previewZoomButtonTitles: {
+            prev: '前のファイルを表示',
+            next: '次のファイルを表示',
+            toggleheader: 'ファイル情報の表示/非表示',
+            fullscreen: 'フルスクリーン表示の開始/終了',
+            borderless: 'フルウィンドウ表示の開始/終了',
+            close: 'プレビューを閉じる'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Dutch Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['nl'] = {
+        fileSingle: 'bestand',
+        filePlural: 'bestanden',
+        browseLabel: 'Zoek &hellip;',
+        removeLabel: 'Verwijder',
+        removeTitle: 'Verwijder geselecteerde bestanden',
+        cancelLabel: 'Annuleren',
+        cancelTitle: 'Annuleer upload',
+        uploadLabel: 'Upload',
+        uploadTitle: 'Upload geselecteerde bestanden',
+        msgNo: 'Nee',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Geannuleerd',
+        msgZoomModalHeading: 'Gedetailleerd voorbeeld',
+        msgSizeTooLarge: 'Bestand "{name}" (<b>{size} KB</b>) is groter dan de toegestane <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'U moet minstens <b>{n}</b> {files} selecteren om te uploaden.',
+        msgFilesTooMany: 'Aantal geselecteerde bestanden <b>({n})</b> is meer dan de toegestane <b>{m}</b>.',
+        msgFileNotFound: 'Bestand "{name}" niet gevonden!',
+        msgFileSecured: 'Bestand kan niet gelezen worden in verband met beveiligings redenen "{name}".',
+        msgFileNotReadable: 'Bestand "{name}" is niet leesbaar.',
+        msgFilePreviewAborted: 'Bestand weergaven geannuleerd voor "{name}".',
+        msgFilePreviewError: 'Er is een fout opgetreden met het lezen van "{name}".',
+        msgInvalidFileType: 'Geen geldig bestand "{name}". Alleen "{types}" zijn toegestaan.',
+        msgInvalidFileExtension: 'Geen geldige extensie "{name}". Alleen "{extensions}" zijn toegestaan.',
+        msgUploadAborted: 'Het uploaden van bestanden is afgebroken',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Bevestiging fout',
+        msgLoading: 'Bestanden laden {index} van de {files} &hellip;',
+        msgProgress: 'Bestanden laden {index} van de {files} - {name} - {percent}% compleet.',
+        msgSelected: '{n} {files} geselecteerd',
+        msgFoldersNotAllowed: 'Drag & drop alleen bestanden! {n} overgeslagen map(pen).',
+        msgImageWidthSmall: 'Breedte van het foto-bestand "{name}" moet minstens {size} px zijn.',
+        msgImageHeightSmall: 'Hoogte van het foto-bestand "{name}" moet minstens {size} px zijn.',
+        msgImageWidthLarge: 'Breedte van het foto-bestand "{name}" kan niet hoger zijn dan {size} px.',
+        msgImageHeightLarge: 'Hoogte van het foto bestand "{name}" kan niet hoger zijn dan {size} px.',
+        msgImageResizeError: 'Kon de foto afmetingen niet lezen om te verkleinen.',
+        msgImageResizeException: 'Fout bij het verkleinen van de foto.<pre>{errors}</pre>',
+        dropZoneTitle: 'Drag & drop bestanden hier &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Verwijder bestand',
+            uploadTitle: 'bestand uploaden',
+            zoomTitle: 'Bekijk details',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Nog niet geupload',
+            indicatorSuccessTitle: 'geupload',
+            indicatorErrorTitle: 'fout uploaden',
+            indicatorLoadingTitle: 'uploaden ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Polish Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['pl'] = {
+        fileSingle: 'plik',
+        filePlural: 'pliki',
+        browseLabel: 'Przeglądaj &hellip;',
+        removeLabel: 'Usuń',
+        removeTitle: 'Usuń zaznaczone pliki',
+        cancelLabel: 'Przerwij',
+        cancelTitle: 'Anuluj wysyłanie',
+        uploadLabel: 'Wgraj',
+        uploadTitle: 'Wgraj zaznaczone pliki',
+        msgNo: 'Nie',
+        msgNoFilesSelected: 'Brak zaznaczonych plików',
+        msgCancelled: 'Odwołany',
+        msgZoomModalHeading: 'Szczegółowe Podgląd',
+        msgSizeTooLarge: 'Plik o nazwie "{name}" (<b>{size} KB</b>) przekroczył maksymalną dopuszczalną wielkość pliku wynoszącą <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Musisz wybrać przynajmniej <b>{n}</b> {files} do wgrania.',
+        msgFilesTooMany: 'Liczba plików wybranych do wgrania w liczbie <b>({n})</b>, przekracza maksymalny dozwolony limit wynoszący <b>{m}</b>.',
+        msgFileNotFound: 'Plik "{name}" nie istnieje!',
+        msgFileSecured: 'Ustawienia zabezpieczeń uniemożliwiają odczyt pliku "{name}".',
+        msgFileNotReadable: 'Plik "{name}" nie jest plikiem do odczytu.',
+        msgFilePreviewAborted: 'Podgląd pliku "{name}" został przerwany.',
+        msgFilePreviewError: 'Wystąpił błąd w czasie odczytu pliku "{name}".',
+        msgInvalidFileType: 'Nieznny typ pliku "{name}". Tylko następujące rodzaje plików "{types}", są obsługiwane.',
+        msgInvalidFileExtension: 'Złe rozszerzenie dla pliku "{name}". Tylko następujące rozszerzenia plików "{extensions}", są obsługiwane.',
+        msgUploadAborted: 'Plik przesyłanie zostało przerwane',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Błąd walidacji',
+        msgLoading: 'Wczytywanie pliku {index} z {files} &hellip;',
+        msgProgress: 'Wczytywanie pliku {index} z {files} - {name} - {percent}% zakończone.',
+        msgSelected: '{n} {files} zaznaczonych',
+        msgFoldersNotAllowed: 'Metodą przeciągnij i upuść, można przenosić tylko pliki. Pominięto {n} katalogów.',
+        msgImageWidthSmall: 'Szerokość pliku obrazu "{name}" musi być co najmniej {size} px.',
+        msgImageHeightSmall: 'Wysokość pliku obrazu "{name}" musi być co najmniej {size} px.',
+        msgImageWidthLarge: 'Szerokość pliku obrazu "{name}" nie może przekraczać {size} px.',
+        msgImageHeightLarge: 'Wysokość pliku obrazu "{name}" nie może przekraczać {size} px.',
+        msgImageResizeError: 'Nie udało się uzyskać wymiary obrazu, aby zmienić rozmiar.',
+        msgImageResizeException: 'Błąd podczas zmiany rozmiaru obrazu.<pre>{errors}</pre>',
+        dropZoneTitle: 'Przeciągnij i upuść pliki tu &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Usuń plik',
+            uploadTitle: 'przesyłanie pliku',
+            zoomTitle: 'Pokaż szczegóły',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Jeszcze nie przesłanych',
+            indicatorSuccessTitle: 'Dodane',
+            indicatorErrorTitle: 'Prześlij błąd',
+            indicatorLoadingTitle: 'Zamieszczanie ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+/*!
+ * FileInput Brazillian Portuguese Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['pt-BR'] = {
+        fileSingle: 'arquivo',
+        filePlural: 'arquivos',
+        browseLabel: 'Procurar&hellip;',
+        removeLabel: 'Remover',
+        removeTitle: 'Remover arquivos selecionados',
+        cancelLabel: 'Cancelar',
+        cancelTitle: 'Interromper envio em andamento',
+        uploadLabel: 'Enviar',
+        uploadTitle: 'Enviar arquivos selecionados',
+        msgNo: 'Não',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Cancelado',
+        msgZoomModalHeading: 'Pré-visualização detalhada',
+        msgSizeTooLarge: 'O arquivo "{name}" (<b>{size} KB</b>) excede o tamanho máximo permitido de <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Você deve selecionar pelo menos <b>{n}</b> {files} para enviar.',
+        msgFilesTooMany: 'O número de arquivos selecionados para o envio <b>({n})</b> excede o limite máximo permitido de <b>{m}</b>.',
+        msgFileNotFound: 'O arquivo "{name}" não foi encontrado!',
+        msgFileSecured: 'Restrições de segurança impedem a leitura do arquivo "{name}".',
+        msgFileNotReadable: 'O arquivo "{name}" não pode ser lido.',
+        msgFilePreviewAborted: 'A pré-visualização do arquivo "{name}" foi interrompida.',
+        msgFilePreviewError: 'Ocorreu um erro ao ler o arquivo "{name}".',
+        msgInvalidFileType: 'Tipo inválido para o arquivo "{name}". Apenas arquivos "{types}" são permitidos.',
+        msgInvalidFileExtension: 'Extensão inválida para o arquivo "{name}". Apenas arquivos "{extensions}" são permitidos.',
+        msgUploadAborted: 'O envio do arquivo foi abortado',
+        msgUploadThreshold: 'Processando...',
+        msgValidationError: 'Erro de validação',
+        msgLoading: 'Enviando arquivo {index} de {files}&hellip;',
+        msgProgress: 'Enviando arquivo {index} de {files} - {name} - {percent}% completo.',
+        msgSelected: '{n} {files} selecionado(s)',
+        msgFoldersNotAllowed: 'Arraste e solte apenas arquivos! {n} pasta(s) ignoradas.',
+        msgImageWidthSmall: 'Largura do arquivo de imagem "{name}" deve ser pelo menos {size} px.',
+        msgImageHeightSmall: 'Altura do arquivo de imagem "{name}" deve ser pelo menos {size} px.',
+        msgImageWidthLarge: 'Largura do arquivo de imagem "{name}" não pode exceder {size} px.',
+        msgImageHeightLarge: 'Altura do arquivo de imagem "{name}" não pode exceder {size} px.',
+        msgImageResizeError: 'Não foi possível obter as dimensões da imagem para redimensionar.',
+        msgImageResizeException: 'Erro ao redimensionar a imagem.<pre>{errors}</pre>',
+        dropZoneTitle: 'Arraste e solte os arquivos aqui&hellip;',
+        dropZoneClickTitle: '<br>(ou clique para selecionar o(s) arquivo(s))',
+        fileActionSettings: {
+            removeTitle: 'Remover arquivo',
+            uploadTitle: 'Enviar arquivo',
+            zoomTitle: 'Ver detalhes',
+            dragTitle: 'Mover / Reordenar',
+            indicatorNewTitle: 'Ainda não enviado',
+            indicatorSuccessTitle: 'Enviado',
+            indicatorErrorTitle: 'Erro',
+            indicatorLoadingTitle: 'A enviar ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'Visualizar arquivo anterior',
+            next: 'Visualizar próximo arquivo',
+            toggleheader: 'Mostrar cabeçalho',
+            fullscreen: 'Ativar tela cheia',
+            borderless: 'Ativar modo sem borda',
+            close: 'Fechar pré-visualização detalhada'
+        }
+    };
+})(window.jQuery);
+/*!
+ * FileInput Portuguese Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['pt'] = {
+        fileSingle: 'ficheiro',
+        filePlural: 'ficheiros',
+        browseLabel: 'Procurar &hellip;',
+        removeLabel: 'Remover',
+        removeTitle: 'Remover ficheiros seleccionados',
+        cancelLabel: 'Cancelar',
+        cancelTitle: 'Abortar carregamento ',
+        uploadLabel: 'Carregar',
+        uploadTitle: 'Carregar ficheiros seleccionados',
+        msgNo: 'Não',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Cancelado',
+        msgZoomModalHeading: 'Pré-visualização detalhada',
+        msgSizeTooLarge: 'Ficheiro "{name}" (<b>{size} KB</b>) excede o tamanho máximo permido de <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Deve seleccionar pelo menos <b>{n}</b> {files} para fazer upload.',
+        msgFilesTooMany: 'Número máximo de ficheiros seleccionados <b>({n})</b> excede o limite máximo de <b>{m}</b>.',
+        msgFileNotFound: 'Ficheiro "{name}" não encontrado!',
+        msgFileSecured: 'Restrições de segurança preventem a leitura do ficheiro "{name}".',
+        msgFileNotReadable: 'Ficheiro "{name}" não pode ser lido.',
+        msgFilePreviewAborted: 'Pré-visualização abortado para o ficheiro "{name}".',
+        msgFilePreviewError: 'Ocorreu um erro ao ler o ficheiro "{name}".',
+        msgInvalidFileType: 'Tipo inválido para o ficheiro "{name}". Apenas ficheiros "{types}" são suportados.',
+        msgInvalidFileExtension: 'Extensão inválida para o ficheiro "{name}". Apenas ficheiros "{extensions}" são suportados.',
+        msgUploadAborted: 'O upload do arquivo foi abortada',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Erro de validação',
+        msgLoading: 'A carregar ficheiro {index} de {files} &hellip;',
+        msgProgress: 'A carregar ficheiro {index} de {files} - {name} - {percent}% completo.',
+        msgSelected: '{n} {files} seleccionados',
+        msgFoldersNotAllowed: 'Arrastar e largar ficheiros apenas! {n} pasta(s) ignoradas.',
+        msgImageWidthSmall: 'Largura do arquivo de imagem "{name}" deve ser pelo menos {size} px.',
+        msgImageHeightSmall: 'Altura do arquivo de imagem "{name}" deve ser pelo menos {size} px.',
+        msgImageWidthLarge: 'Largura do arquivo de imagem "{name}" não pode exceder {size} px.',
+        msgImageHeightLarge: 'Altura do arquivo de imagem "{name}" não pode exceder {size} px.',
+        msgImageResizeError: 'Could not get the image dimensions to resize.',
+        msgImageResizeException: 'Erro ao redimensionar a imagem.<pre>{errors}</pre>',
+        dropZoneTitle: 'Arrastar e largar ficheiros aqui &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Remover arquivo',
+            uploadTitle: 'Carregar arquivo',
+            zoomTitle: 'Ver detalhes',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Ainda não carregou',
+            indicatorSuccessTitle: 'Carregado',
+            indicatorErrorTitle: 'Carregar Erro',
+            indicatorLoadingTitle: 'A carregar ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+/*!
+ * FileInput Romanian Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ * @author Ciprian Voicu <pictoru@autoportret.ro>
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['ro'] = {
+        fileSingle: 'fișier',
+        filePlural: 'fișiere',
+        browseLabel: 'Răsfoiește &hellip;',
+        removeLabel: 'Șterge',
+        removeTitle: 'Curăță fișierele selectate',
+        cancelLabel: 'Renunță',
+        cancelTitle: 'Anulează încărcarea curentă',
+        uploadLabel: 'Încarcă',
+        uploadTitle: 'Încarcă fișierele selectate',
+        msgNo: 'Nu',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Anulat',
+        msgZoomModalHeading: 'Previzualizare detaliată',
+        msgSizeTooLarge: 'Fișierul "{name}" (<b>{size} KB</b>) depășește limita maximă de încărcare de <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Trebuie să selectezi cel puțin <b>{n}</b> {files} pentru a încărca.',
+        msgFilesTooMany: 'Numărul fișierelor pentru încărcare <b>({n})</b> depășește limita maximă de <b>{m}</b>.',
+        msgFileNotFound: 'Fișierul "{name}" nu a fost găsit!',
+        msgFileSecured: 'Restricții de securitate previn citirea fișierului "{name}".',
+        msgFileNotReadable: 'Fișierul "{name}" nu se poate citi.',
+        msgFilePreviewAborted: 'Fișierului "{name}" nu poate fi previzualizat.',
+        msgFilePreviewError: 'A intervenit o eroare în încercarea de citire a fișierului "{name}".',
+        msgInvalidFileType: 'Tip de fișier incorect pentru "{name}". Sunt suportate doar fișiere de tipurile "{types}".',
+        msgInvalidFileExtension: 'Extensie incorectă pentru "{name}". Sunt suportate doar extensiile "{extensions}".',
+        msgUploadAborted: 'Fișierul Încărcarea a fost întrerupt',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Eroare de validare',
+        msgLoading: 'Se încarcă fișierul {index} din {files} &hellip;',
+        msgProgress: 'Se încarcă fișierul {index} din {files} - {name} - {percent}% încărcat.',
+        msgSelected: '{n} {files} încărcate',
+        msgFoldersNotAllowed: 'Se poate doar trăgând fișierele! Se renunță la {n} dosar(e).',
+        msgImageWidthSmall: 'Lățimea de fișier de imagine "{name}" trebuie să fie de cel puțin {size} px.',
+        msgImageHeightSmall: 'Înălțimea fișier imagine "{name}" trebuie să fie de cel puțin {size} px.',
+        msgImageWidthLarge: 'Lățimea de fișier de imagine "{name}" nu poate depăși {size} px.',
+        msgImageHeightLarge: 'Înălțimea fișier imagine "{name}" nu poate depăși {size} px.',
+        msgImageResizeError: 'Nu a putut obține dimensiunile imaginii pentru a redimensiona.',
+        msgImageResizeException: 'Eroare la redimensionarea imaginii.<pre>{errors}</pre>',
+        dropZoneTitle: 'Trage fișierele aici &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Scoateți fișier',
+            uploadTitle: 'Incarca fisier',
+            zoomTitle: 'Vezi detalii',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Nu a încărcat încă',
+            indicatorSuccessTitle: 'încărcat',
+            indicatorErrorTitle: 'Încărcați eroare',
+            indicatorLoadingTitle: 'Se încarcă ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Russian Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ * @author CyanoFresh <cyanofresh@gmail.com>
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['ru'] = {
+        fileSingle: 'файл',
+        filePlural: 'файлы',
+        browseLabel: 'Выбрать &hellip;',
+        removeLabel: 'Удалить',
+        removeTitle: 'Очистить выбранные файлы',
+        cancelLabel: 'Отмена',
+        cancelTitle: 'Отменить текущую загрузку',
+        uploadLabel: 'Загрузить',
+        uploadTitle: 'Загрузить выбранные файлы',
+        msgNo: 'нет',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Отменено',
+        msgZoomModalHeading: 'Подробное превью',
+        msgSizeTooLarge: 'Файл "{name}" (<b>{size} KB</b>) превышает максимальный размер <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Вы должны выбрать как минимум <b>{n}</b> {files} для загрузки.',
+        msgFilesTooMany: 'Количество выбранных файлов <b>({n})</b> превышает максимально допустимое количество <b>{m}</b>.',
+        msgFileNotFound: 'Файл "{name}" не найден!',
+        msgFileSecured: 'Ограничения безопасности запрещают читать файл "{name}".',
+        msgFileNotReadable: 'Файл "{name}" невозможно прочитать.',
+        msgFilePreviewAborted: 'Предпросмотр отменен для файла "{name}".',
+        msgFilePreviewError: 'Произошла ошибка при чтении файла "{name}".',
+        msgInvalidFileType: 'Запрещенный тип файла для "{name}". Только "{types}" разрешены.',
+        msgInvalidFileExtension: 'Запрещенное расширение для файла "{name}". Только "{extensions}" разрешены.',
+        msgUploadAborted: 'Выгрузка файла прервана',
+        msgUploadThreshold: 'Обработка...',
+        msgValidationError: 'Ошибка проверки',
+        msgLoading: 'Загрузка файла {index} из {files} &hellip;',
+        msgProgress: 'Загрузка файла {index} из {files} - {name} - {percent}% завершено.',
+        msgSelected: 'Выбрано файлов: {n}',
+        msgFoldersNotAllowed: 'Разрешено перетаскивание только файлов! Пропущено {n} папок.',
+        msgImageWidthSmall: 'Ширина изображения {name} должна быть не меньше {size} px.',
+        msgImageHeightSmall: 'Высота изображения {name} должна быть не меньше {size} px.',
+        msgImageWidthLarge: 'Ширина изображения "{name}" не может превышать {size} px.',
+        msgImageHeightLarge: 'Высота изображения "{name}" не может превышать {size} px.',
+        msgImageResizeError: 'Не удалось получить размеры изображения, чтобы изменить размер.',
+        msgImageResizeException: 'Ошибка при изменении размера изображения.<pre>{errors}</pre>',
+        dropZoneTitle: 'Перетащите файлы сюда &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Удалить файл',
+            uploadTitle: 'Загрузить файл',
+            zoomTitle: 'посмотреть детали',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Еще не загружен',
+            indicatorSuccessTitle: 'Загружен',
+            indicatorErrorTitle: 'Ошибка загрузки',
+            indicatorLoadingTitle: 'Загрузка ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Slovakian Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['sk'] = {
+        fileSingle: 'súbor',
+        filePlural: 'súbory',
+        browseLabel: 'Vybrať &hellip;',
+        removeLabel: 'Odstrániť',
+        removeTitle: 'Vyčistiť vybraté súbory',
+        cancelLabel: 'Storno',
+        cancelTitle: 'Prerušiť  nahrávanie',
+        uploadLabel: 'Nahrať',
+        uploadTitle: 'Nahrať vybraté súbory',
+        msgNo: 'Nie',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Zrušené',
+        msgZoomModalHeading: 'Detailný náhľad',
+        msgSizeTooLarge: 'Súbor "{name}" (<b>{size} KB</b>): prekročenie - maximálna povolená veľkosť <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Musíte vybrať najmenej <b>{n}</b> {files} pre nahranie.',
+        msgFilesTooMany: 'Počet vybratých súborov pre nahranie <b>({n})</b>: prekročenie - maximálny povolený limit <b>{m}</b>.',
+        msgFileNotFound: 'Súbor "{name}" nebol nájdený!',
+        msgFileSecured: 'Zabezpečenie súboru znemožnilo čítať súbor "{name}".',
+        msgFileNotReadable: 'Súbor "{name}" nie je čitateľný.',
+        msgFilePreviewAborted: 'Náhľad súboru bol prerušený pre "{name}".',
+        msgFilePreviewError: 'Nastala chyba pri načítaní súboru "{name}".',
+        msgInvalidFileType: 'Neplatný typ súboru "{name}". Iba "{types}" súborov sú podporované.',
+        msgInvalidFileExtension: 'Neplatná extenzia súboru "{name}". Iba "{extensions}" súborov sú podporované.',
+        msgUploadAborted: 'Súbor nahrávania bol prerušený',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Chyba overenia',
+        msgLoading: 'Nahrávanie súboru {index} z {files} &hellip;',
+        msgProgress: 'Nahrávanie súboru {index} z {files} - {name} - {percent}% dokončené.',
+        msgSelected: '{n} {files} vybraté',
+        msgFoldersNotAllowed: 'Tiahni a pusť iba súbory! Vynechané {n} pustené prečinok(y).',
+        msgImageWidthSmall: 'Šírka image súboru "{name}", musí byť minimálne {size} px.',
+        msgImageHeightSmall: 'Výška image súboru "{name}", musí byť minimálne {size} px.',
+        msgImageWidthLarge: 'Šírka image súboru "{name}" nemôže presiahnuť {size} px.',
+        msgImageHeightLarge: 'Výška súboru obrazu "{name}" nesmie presiahnuť {size} px.',
+        msgImageResizeError: 'Nemožno získať rozmery obrázku zmeniť veľkosť.',
+        msgImageResizeException: 'Chyba pri zmene veľkosti obrázka.<pre>{errors}</pre>',
+        dropZoneTitle: 'Tiahni a pusť súbory tu &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'odstrániť súbor',
+            uploadTitle: 'nahrať súbor',
+            zoomTitle: 'Zobraziť podrobnosti',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Ešte nenahral',
+            indicatorSuccessTitle: 'nahral',
+            indicatorErrorTitle: 'nahrať Chyba',
+            indicatorLoadingTitle: 'nahrávanie ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+/*!
+ * FileInput Thai Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['th'] = {
+        fileSingle: 'ไฟล์',
+        filePlural: 'ไฟล์',
+        browseLabel: 'เลือกดู &hellip;',
+        removeLabel: 'ลบทิ้ง',
+        removeTitle: 'ลบไฟล์ที่เลือกทิ้ง',
+        cancelLabel: 'ยกเลิก',
+        cancelTitle: 'ยกเลิกการอัพโหลด',
+        uploadLabel: 'อัพโหลด',
+        uploadTitle: 'อัพโหลดไฟล์ที่เลือก',
+        msgNo: 'ไม่',
+        msgNoFilesSelected: '',
+        msgCancelled: 'ยกเลิก',
+        msgZoomModalHeading: 'ตัวอย่างละเอียด',
+        msgSizeTooLarge: 'ไฟล์ "{name}" (<b>{size} KB</b>) มีขนาดเกินที่ระบบอนุญาตที่ <b>{maxSize} KB</b>, กรุณาลองใหม่อีกครั้ง!',
+        msgFilesTooLess: 'คุณต้องเลือกไฟล์จำนวนอย่างน้อย <b>{n}</b> {files} เพื่ออัพโหลด, กรุณาลองใหม่อีกครั้ง!',
+        msgFilesTooMany: 'ไฟล์ที่คุณเลือกมีจำนวน <b>({n})</b> ซึ่งเกินกว่าที่ระบบอนุญาตที่ <b>{m}</b>, กรุณาลองใหม่อีกครั้ง!',
+        msgFileNotFound: 'ไม่พบไฟล์ "{name}" !',
+        msgFileSecured: 'ระบบความปลอดภัยไม่อนุญาตให้อ่านไฟล์ "{name}".',
+        msgFileNotReadable: 'ไม่สามารถอ่านไฟล์ "{name}" ได้',
+        msgFilePreviewAborted: 'ไฟล์ "{name}" ไม่อนุญาตให้ดูตัวอย่าง',
+        msgFilePreviewError: 'พบปัญหาในการดูตัวอย่างไฟล์ "{name}".',
+        msgInvalidFileType: 'ไฟล์ "{name}" เป็นประเภทไฟล์ที่ไม่ถูกต้อง, อนุญาตเฉพาะไฟล์ประเภท "{types}"',
+        msgInvalidFileExtension: 'ไฟล์ "{name}" เป็น extension ที่ไมถูกต้อง, อนุญาตเฉพาะไฟล์ extension "{extensions}"',
+        msgUploadAborted: 'อัปโหลดไฟล์ถูกยกเลิก',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'ข้อผิดพลาดในการตรวจสอบ',
+        msgLoading: 'กำลังโหลดไฟล์ {index} จาก {files} &hellip;',
+        msgProgress: 'กำลังโหลดไฟล์ {index} จาก {files} - {name} - {percent}%',
+        msgSelected: '{n} {files} ถูกเลือก',
+        msgFoldersNotAllowed: 'Drag & drop เฉพาะไฟล์เท่านั้น! ข้าม dropped folder จำนวน {n}',
+        msgImageWidthSmall: 'ความกว้างของภาพไฟล์ "{name}" ต้องมีอย่างน้อย {size} px.',
+        msgImageHeightSmall: 'ความสูงของภาพไฟล์ "{name}" ต้องมีอย่างน้อย {size} px.',
+        msgImageWidthLarge: 'ความกว้างของภาพไฟล์ "{name}" ไม่เกิน {size} พิกเซล.',
+        msgImageHeightLarge: 'ความสูงของไฟล์ภาพ "{name}" ไม่เกิน {size} พิกเซล.',
+        msgImageResizeError: 'ไม่สามารถรับขนาดภาพเพื่อปรับขนาด',
+        msgImageResizeException: 'ข้อผิดพลาดขณะปรับขนาดภาพ<pre>{errors}</pre>',
+        dropZoneTitle: 'Drag & drop ไฟล์ตรงนี้ &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'ลบไฟล์',
+            uploadTitle: 'อัปโหลดไฟล์',
+            zoomTitle: 'ดูรายละเอียด',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'ยังไม่ได้อัปโหลด',
+            indicatorSuccessTitle: 'อัพโหลด',
+            indicatorErrorTitle: 'อัปโหลดข้อผิดพลาด',
+            indicatorLoadingTitle: 'อัพโหลด ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+/*!
+ * FileInput Turkish Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['tr'] = {
+        fileSingle: 'dosya',
+        filePlural: 'dosyalar',
+        browseLabel: 'Gözat &hellip;',
+        removeLabel: 'Sil',
+        removeTitle: 'Seçilen dosyaları sil',
+        cancelLabel: 'İptal',
+        cancelTitle: 'Devam eden yüklemeyi iptal et',
+        uploadLabel: 'Yükle',
+        uploadTitle: 'Seçilen dosyaları yükle',
+        msgNo: 'Hayır',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Iptal edildi',
+        msgZoomModalHeading: 'Detaylı Önizleme',
+        msgSizeTooLarge: '"{name}" dosyasının boyutu (<b>{size} KB</b>) izin verilen azami dosya boyutu olan <b>{maxSize} KB</b>\'tan büyük.',
+        msgFilesTooLess: 'Yüklemek için en az <b>{n}</b> {files} dosya seçmelisiniz.',
+        msgFilesTooMany: 'Yüklemek için seçtiğiniz dosya sayısı <b>({n})</b> azami limitin <b>({m})</b> altında olmalıdır.',
+        msgFileNotFound: '"{name}" dosyası bulunamadı!',
+        msgFileSecured: 'Güvenlik kısıtlamaları "{name}" dosyasının okunmasını engelliyor.',
+        msgFileNotReadable: '"{name}" dosyası okunabilir değil.',
+        msgFilePreviewAborted: '"{name}" dosyası için önizleme iptal edildi.',
+        msgFilePreviewError: '"{name}" dosyası okunurken bir hata oluştu.',
+        msgInvalidFileType: '"{name}" dosyasının türü geçerli değil. Yalnızca "{types}" türünde dosyalara izin veriliyor.',
+        msgInvalidFileExtension: '"{name}" dosyasının uzantısı geçersiz. Yalnızca "{extensions}" uzantılı dosyalara izin veriliyor.',
+        msgUploadAborted: 'Dosya yükleme iptal edildi',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Doğrulama Hatası',
+        msgLoading: 'Dosya yükleniyor {index} / {files} &hellip;',
+        msgProgress: 'Dosya yükleniyor {index} / {files} - {name} - %{percent} tamamlandı.',
+        msgSelected: '{n} {files} seçildi',
+        msgFoldersNotAllowed: 'Yalnızca dosyaları sürükleyip bırakabilirsiniz! {n} dizin(ler) göz ardı edildi.',
+        msgImageWidthSmall: '"{name}" adlı görüntü dosyasının genişliği en az {size} piksel olmalıdır.',
+        msgImageHeightSmall: '"{name}" adlı görüntü dosyasının yüksekliği en az {size} piksel olmalıdır.',
+        msgImageWidthLarge: '"{name}" adlı görüntü dosyasının genişliği {size} pikseli geçemez.',
+        msgImageHeightLarge: '"{name}" adlı görüntü dosyasının yüksekliği {size} pikseli geçemez.',
+        msgImageResizeError: 'Görüntü boyutlarını yeniden boyutlandırmak için alınamadı.',
+        msgImageResizeException: 'Görsel boyutlandırma sırasında hata.<pre>{errors}</pre>',
+        dropZoneTitle: 'Dosyaları buraya sürükleyip bırakın &hellip;',
+        dropZoneClickTitle: '<br>(ya da {files} seçmek için tıklayınız)',
+        fileActionSettings: {
+            removeTitle: 'Dosyayı kaldır',
+            uploadTitle: 'Dosyayı yükle',
+            zoomTitle: 'Ayrıntıları görüntüle',
+            dragTitle: 'Taşı / Yeniden düzenle',
+            indicatorNewTitle: 'Henüz yüklenemedi',
+            indicatorSuccessTitle: 'Yüklendi',
+            indicatorErrorTitle: 'Yükleme Hatası',
+            indicatorLoadingTitle: 'Yükleniyor ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'Önceki dosyayı görüntüle',
+            next: 'Sonraki dosyayı görüntüle',
+            toggleheader: 'Başlık geçiş',
+            fullscreen: 'Tam ekran geçiş',
+            borderless: 'Çerçevesiz moda geçiş',
+            close: 'Detaylı önizlemeyi kapat'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Ukrainian Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ * @author CyanoFresh <cyanofresh@gmail.com>
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['uk'] = {
+        fileSingle: 'файл',
+        filePlural: 'файли',
+        browseLabel: 'Вибрати &hellip;',
+        removeLabel: 'Видалити',
+        removeTitle: 'Видалити вибрані файли',
+        cancelLabel: 'Скасувати',
+        cancelTitle: 'Скасувати поточну загрузку',
+        uploadLabel: 'Загрузити',
+        uploadTitle: 'Загрузити вибрані файли',
+        msgNo: 'Немає',
+        msgNoFilesSelected: '',
+        msgCancelled: 'Cкасовано',
+        msgZoomModalHeading: 'Детальний превью',
+        msgSizeTooLarge: 'Файл "{name}" (<b>{size} KB</b>) перевищує максимальний розмір <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Ви повинні вибрати як мінімум <b>{n}</b> {files} для загрузки.',
+        msgFilesTooMany: 'Кількість вибраних файлів <b>({n})</b> перевищує максимально допустиму кількість <b>{m}</b>.',
+        msgFileNotFound: 'Файл "{name}" не знайдено!',
+        msgFileSecured: 'Обмеження безпеки перешкоджають читанню файла "{name}".',
+        msgFileNotReadable: 'Файл "{name}" неможливо прочитати.',
+        msgFilePreviewAborted: 'Перегляд скасований для файла "{name}".',
+        msgFilePreviewError: 'Сталася помилка під час читання файла "{name}".',
+        msgInvalidFileType: 'Заборонений тип файла для "{name}". Тільки "{types}" дозволені.',
+        msgInvalidFileExtension: 'Заборонене розширення для файла "{name}". Тільки "{extensions}" дозволені.',
+        msgUploadAborted: 'Вивантаження файлу перервана',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: 'Помилка перевірки',
+        msgLoading: 'Загрузка файла {index} із {files} &hellip;',
+        msgProgress: 'Загрузка файла {index} із {files} - {name} - {percent}% завершено.',
+        msgSelected: '{n} {files} вибрано',
+        msgFoldersNotAllowed: 'Дозволено перетягувати тільки файли! Пропущено {n} папок.',
+        msgImageWidthSmall: 'Ширина зображення "{name}" повинна бути не менше {size} px.',
+        msgImageHeightSmall: 'Висота зображення "{name}" повинна бути не менше {size} px.',
+        msgImageWidthLarge: 'Ширина зображення "{name}" не може перевищувати {size} px.',
+        msgImageHeightLarge: 'Висота зображення "{name}" не може перевищувати {size} px.',
+        msgImageResizeError: 'Не вдалося розміри зображення, щоб змінити розмір.',
+        msgImageResizeException: 'Помилка при зміні розміру зображення.<pre>{errors}</pre>',
+        dropZoneTitle: 'Перетягніть файли сюди &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: 'Видалити файл',
+            uploadTitle: 'Загрузити файл',
+            zoomTitle: 'Подивитися деталі',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: 'Ще не загружено',
+            indicatorSuccessTitle: 'Загружено',
+            indicatorErrorTitle: 'Помилка при загрузці',
+            indicatorLoadingTitle: 'Загрузка ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Vietnamese Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+ 
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['vi'] = {
+        fileSingle: 'tập tin',
+        filePlural: 'các tập tin',
+        browseLabel: 'Duyệt &hellip;',
+        removeLabel: 'Gỡ bỏ',
+        removeTitle: 'Bỏ tập tin đã chọn',
+        cancelLabel: 'Hủy',
+        cancelTitle: 'Hủy upload',
+        uploadLabel: 'Upload',
+        uploadTitle: 'Upload tập tin đã chọn',
+        msgNo: 'Không',
+        msgNoFilesSelected: 'Không tập tin nào được chọn',
+        msgCancelled: 'Đã hủy',
+        msgZoomModalHeading: 'Chi tiết xem trước',
+        msgSizeTooLarge: 'Tập tin "{name}" (<b>{size} KB</b>) vượt quá kích thước giới hạn cho phép <b>{maxSize} KB</b>.',
+        msgFilesTooLess: 'Bạn phải chọn ít nhất <b>{n}</b> {files} để upload.',
+        msgFilesTooMany: 'Số lượng tập tin upload <b>({n})</b> vượt quá giới hạn cho phép là <b>{m}</b>.',
+        msgFileNotFound: 'Không tìm thấy tập tin "{name}"!',
+        msgFileSecured: 'Các hạn chế về bảo mật không cho phép đọc tập tin "{name}".',
+        msgFileNotReadable: 'Không đọc được tập tin "{name}".',
+        msgFilePreviewAborted: 'Đã dừng xem trước tập tin "{name}".',
+        msgFilePreviewError: 'Đã xảy ra lỗi khi đọc tập tin "{name}".',
+        msgInvalidFileType: 'Tập tin "{name}" không hợp lệ. Chỉ hỗ trợ loại tập tin "{types}".',
+        msgInvalidFileExtension: 'Phần mở rộng của tập tin "{name}" không hợp lệ. Chỉ hỗ trợ phần mở rộng "{extensions}".',
+        msgUploadAborted: 'Đã dừng upload',
+        msgUploadThreshold: 'Đang xử lý...',
+        msgValidationError: 'Lỗi xác nhận',
+        msgLoading: 'Đang nạp {index} tập tin trong số {files} &hellip;',
+        msgProgress: 'Đang nạp {index} tập tin trong số {files} - {name} - {percent}% hoàn thành.',
+        msgSelected: '{n} {files} được chọn',
+        msgFoldersNotAllowed: 'Chỉ kéo thả tập tin! Đã bỏ qua {n} thư mục.',
+        msgImageWidthSmall: 'Chiều rộng của hình ảnh "{name}" phải tối thiểu là {size} px.',
+        msgImageHeightSmall: 'Chiều cao của hình ảnh "{name}" phải tối thiểu là {size} px.',
+        msgImageWidthLarge: 'Chiều rộng của hình ảnh "{name}" không được quá {size} px.',
+        msgImageHeightLarge: 'Chiều cao của hình ảnh "{name}" không được quá {size} px.',
+        msgImageResizeError: 'Không lấy được kích thước của hình ảnh để resize.',
+        msgImageResizeException: 'Resize hình ảnh bị lỗi.<pre>{errors}</pre>',
+        dropZoneTitle: 'Kéo thả tập tin vào đây &hellip;',
+        dropZoneClickTitle: '<br>(hoặc click để chọn {files})',
+        fileActionSettings: {
+            removeTitle: 'Gỡ bỏ',
+            uploadTitle: 'Upload tập tin',
+            zoomTitle: 'Phóng lớn',
+            dragTitle: 'Di chuyển / Sắp xếp lại',
+            indicatorNewTitle: 'Chưa được upload',
+            indicatorSuccessTitle: 'Đã upload',
+            indicatorErrorTitle: 'Upload bị lỗi',
+            indicatorLoadingTitle: 'Đang upload ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'Xem tập tin phía trước',
+            next: 'Xem tập tin tiếp theo',
+            toggleheader: 'Ẩn/hiện tiêu đề',
+            fullscreen: 'Bật/tắt toàn màn hình',
+            borderless: 'Bật/tắt chế độ không viền',
+            close: 'Đóng'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Chinese Traditional Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ * @author kangqf <kangqingfei@gmail.com>
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['zh-TW'] = {
+        fileSingle: '單一檔案',
+        filePlural: '複選檔案',
+        browseLabel: '瀏覽 &hellip;',
+        removeLabel: '移除',
+        removeTitle: '清除選取檔案',
+        cancelLabel: '取消',
+        cancelTitle: '取消上傳中檔案',
+        uploadLabel: '上傳',
+        uploadTitle: '上傳選取檔案',
+        msgNo: '沒有',
+        msgNoFilesSelected: '',
+        msgCancelled: '取消',
+        zoomTitle: '詳細資料',
+        msgZoomModalHeading: '內容預覽',
+        msgSizeTooLarge: '檔案 "{name}" (<b>{size} KB</b>) 大小超過上限 <b>{maxSize} KB</b>.',
+        msgFilesTooLess: '最少必須選擇 <b>{n}</b> {files} 來上傳. ',
+        msgFilesTooMany: '上傳的檔案數量 <b>({n})</b> 超過最大檔案上傳限制 <b>{m}</b>.',
+        msgFileNotFound: '檔案 "{name}" 未發現!',
+        msgFileSecured: '安全限制，禁止讀取檔案 "{name}".',
+        msgFileNotReadable: '文件 "{name}" 不可讀取.',
+        msgFilePreviewAborted: '檔案 "{name}" 預覽中止.',
+        msgFilePreviewError: '讀取 "{name}" 發生錯誤.',
+        msgInvalidFileType: '檔案類型錯誤 "{name}". 只能使用 "{types}" 類型的檔案.',
+        msgInvalidFileExtension: '附檔名錯誤 "{name}". 只能使用 "{extensions}" 的檔案.',
+        msgUploadAborted: '該文件上傳被中止',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: '驗證錯誤',
+        msgLoading: '載入第 {index} 個檔案，共 {files} &hellip;',
+        msgProgress: '載入第 {index} 個檔案，共 {files} - {name} - {percent}% 成功.',
+        msgSelected: '{n} {files} 選取',
+        msgFoldersNotAllowed: '只支援單檔拖曳! 無法使用 {n} 拖拽的資料夹.',
+        msgImageWidthSmall: '圖檔寬度"{name}"必須至少為{size}像素(px).',
+        msgImageHeightSmall: '圖檔高度"{name}"必須至少為{size}像素(px).',
+        msgImageWidthLarge: '圖檔寬度"{name}"不能超過{size}像素(px).',
+        msgImageHeightLarge: '圖檔高度"{name}"不能超過{size}像素(px).',
+        msgImageResizeError: '無法獲取的圖像尺寸調整。',
+        msgImageResizeException: '錯誤而調整圖像大小。<pre>{errors}</pre>',
+        dropZoneTitle: '拖曳檔案至此 &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: '刪除檔案',
+            uploadTitle: '上傳檔案',
+            zoomTitle: '詳細資料',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: '尚未上傳',
+            indicatorSuccessTitle: '上傳成功',
+            indicatorErrorTitle: '上傳失敗',
+            indicatorLoadingTitle: '上傳中 ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
+
+/*!
+ * FileInput Chinese Translations
+ *
+ * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
+ * any HTML markup tags in the messages must not be converted or translated.
+ *
+ * @see http://github.com/kartik-v/bootstrap-fileinput
+ * @author kangqf <kangqingfei@gmail.com>
+ *
+ * NOTE: this file must be saved in UTF-8 encoding.
+ */
+(function ($) {
+    "use strict";
+
+    $.fn.fileinputLocales['zh'] = {
+        fileSingle: '文件',
+        filePlural: '多个文件',
+        browseLabel: '选择 &hellip;',
+        removeLabel: '移除',
+        removeTitle: '清除选中文件',
+        cancelLabel: '取消',
+        cancelTitle: '取消进行中的上传',
+        uploadLabel: '上传',
+        uploadTitle: '上传选中文件',
+        msgNo: '没有',
+        msgNoFilesSelected: '',
+        msgCancelled: '取消',
+        msgZoomModalHeading: '详细预览',
+        msgSizeTooLarge: '文件 "{name}" (<b>{size} KB</b>) 超过了允许大小 <b>{maxSize} KB</b>.',
+        msgFilesTooLess: '你必须选择最少 <b>{n}</b> {files} 来上传. ',
+        msgFilesTooMany: '选择的上传文件个数 <b>({n})</b> 超出最大文件的限制个数 <b>{m}</b>.',
+        msgFileNotFound: '文件 "{name}" 未找到!',
+        msgFileSecured: '安全限制，为了防止读取文件 "{name}".',
+        msgFileNotReadable: '文件 "{name}" 不可读.',
+        msgFilePreviewAborted: '取消 "{name}" 的预览.',
+        msgFilePreviewError: '读取 "{name}" 时出现了一个错误.',
+        msgInvalidFileType: '不正确的类型 "{name}". 只支持 "{types}" 类型的文件.',
+        msgInvalidFileExtension: '不正确的文件扩展名 "{name}". 只支持 "{extensions}" 的文件扩展名.',
+        msgUploadAborted: '该文件上传被中止',
+        msgUploadThreshold: 'Processing...',
+        msgValidationError: '验证错误',
+        msgLoading: '加载第 {index} 文件 共 {files} &hellip;',
+        msgProgress: '加载第 {index} 文件 共 {files} - {name} - {percent}% 完成.',
+        msgSelected: '{n} {files} 选中',
+        msgFoldersNotAllowed: '只支持拖拽文件! 跳过 {n} 拖拽的文件夹.',
+        msgImageWidthSmall: '宽度的图像文件的"{name}"的必须是至少{size}像素.',
+        msgImageHeightSmall: '图像文件的"{name}"的高度必须至少为{size}像素.',
+        msgImageWidthLarge: '宽度的图像文件"{name}"不能超过{size}像素.',
+        msgImageHeightLarge: '图像文件"{name}"的高度不能超过{size}像素.',
+        msgImageResizeError: '无法获取的图像尺寸调整。',
+        msgImageResizeException: '错误而调整图像大小。<pre>{errors}</pre>',
+        dropZoneTitle: '拖拽文件到这里 &hellip;',
+        dropZoneClickTitle: '<br>(or click to select {files})',
+        fileActionSettings: {
+            removeTitle: '删除文件',
+            uploadTitle: '上传文件',
+            zoomTitle: '查看详情',
+            dragTitle: 'Move / Rearrange',
+            indicatorNewTitle: '没有上传',
+            indicatorSuccessTitle: '上传',
+            indicatorErrorTitle: '上传错误',
+            indicatorLoadingTitle: '上传 ...'
+        },
+        previewZoomButtonTitles: {
+            prev: 'View previous file',
+            next: 'View next file',
+            toggleheader: 'Toggle header',
+            fullscreen: 'Toggle full screen',
+            borderless: 'Toggle borderless mode',
+            close: 'Close detailed preview'
+        }
+    };
+})(window.jQuery);
 /*
  * JavaScript Canvas to Blob 2.0.5
  * https://github.com/blueimp/JavaScript-Canvas-to-Blob
@@ -68269,2288 +70459,6 @@ return support;
 
 /*! Sortable 1.4.2 - MIT | git://github.com/rubaxa/Sortable.git */
 !function(t){"use strict";"function"==typeof define&&define.amd?define(t):"undefined"!=typeof module&&"undefined"!=typeof module.exports?module.exports=t():"undefined"!=typeof Package?KvSortable=t():window.KvSortable=t()}(function(){"use strict";function t(t,e){if(!t||!t.nodeType||1!==t.nodeType)throw"KvSortable: `el` must be HTMLElement, and not "+{}.toString.call(t);this.el=t,this.options=e=b({},e),t[j]=this;var n={group:Math.random(),sort:!0,disabled:!1,store:null,handle:null,scroll:!0,scrollSensitivity:30,scrollSpeed:10,draggable:/[uo]l/i.test(t.nodeName)?"li":">*",ghostClass:"kvsortable-ghost",chosenClass:"kvsortable-chosen",ignore:"a, img",filter:null,animation:0,setData:function(t,e){t.setData("Text",e.textContent)},dropBubble:!1,dragoverBubble:!1,dataIdAttr:"data-id",delay:0,forceFallback:!1,fallbackClass:"kvsortable-fallback",fallbackOnBody:!1};for(var i in n)!(i in e)&&(e[i]=n[i]);z(e);for(var r in this)"_"===r.charAt(0)&&(this[r]=this[r].bind(this));this.nativeDraggable=e.forceFallback?!1:P,o(t,"mousedown",this._onTapStart),o(t,"touchstart",this._onTapStart),this.nativeDraggable&&(o(t,"dragover",this),o(t,"dragenter",this)),q.push(this._onDragOver),e.store&&this.sort(e.store.get(this))}function e(t){w&&w.state!==t&&(s(w,"display",t?"none":""),!t&&w.state&&S.insertBefore(w,_),w.state=t)}function n(t,e,n){if(t){n=n||U;do if(">*"===e&&t.parentNode===n||v(t,e))return t;while(t!==n&&(t=t.parentNode))}return null}function i(t){t.dataTransfer&&(t.dataTransfer.dropEffect="move"),t.preventDefault()}function o(t,e,n){t.addEventListener(e,n,!1)}function r(t,e,n){t.removeEventListener(e,n,!1)}function a(t,e,n){if(t)if(t.classList)t.classList[n?"add":"remove"](e);else{var i=(" "+t.className+" ").replace(M," ").replace(" "+e+" "," ");t.className=(i+(n?" "+e:"")).replace(M," ")}}function s(t,e,n){var i=t&&t.style;if(i){if(void 0===n)return U.defaultView&&U.defaultView.getComputedStyle?n=U.defaultView.getComputedStyle(t,""):t.currentStyle&&(n=t.currentStyle),void 0===e?n:n[e];e in i||(e="-webkit-"+e),i[e]=n+("string"==typeof n?"":"px")}}function l(t,e,n){if(t){var i=t.getElementsByTagName(e),o=0,r=i.length;if(n)for(;r>o;o++)n(i[o],o);return i}return[]}function d(t,e,n,i,o,r,a){var s=U.createEvent("Event"),l=(t||e[j]).options,d="on"+n.charAt(0).toUpperCase()+n.substr(1);s.initEvent(n,!0,!0),s.to=e,s.from=o||e,s.item=i||e,s.clone=w,s.oldIndex=r,s.newIndex=a,e.dispatchEvent(s),l[d]&&l[d].call(t,s)}function c(t,e,n,i,o,r){var a,s,l=t[j],d=l.options.onMove;return a=U.createEvent("Event"),a.initEvent("move",!0,!0),a.to=e,a.from=t,a.dragged=n,a.draggedRect=i,a.related=o||e,a.relatedRect=r||e.getBoundingClientRect(),t.dispatchEvent(a),d&&(s=d.call(l,a)),s}function u(t){t.draggable=!1}function h(){K=!1}function f(t,e){var n=t.lastElementChild,i=n.getBoundingClientRect();return(e.clientY-(i.top+i.height)>5||e.clientX-(i.right+i.width)>5)&&n}function p(t){for(var e=t.tagName+t.className+t.src+t.href+t.textContent,n=e.length,i=0;n--;)i+=e.charCodeAt(n);return i.toString(36)}function g(t,e){var n=0;if(!t||!t.parentNode)return-1;for(;t&&(t=t.previousElementSibling);)"TEMPLATE"!==t.nodeName.toUpperCase()&&v(t,e)&&n++;return n}function v(t,e){if(t){e=e.split(".");var n=e.shift().toUpperCase(),i=new RegExp("\\s("+e.join("|")+")(?=\\s)","g");return!(""!==n&&t.nodeName.toUpperCase()!=n||e.length&&((" "+t.className+" ").match(i)||[]).length!=e.length)}return!1}function m(t,e){var n,i;return function(){void 0===n&&(n=arguments,i=this,setTimeout(function(){1===n.length?t.call(i,n[0]):t.apply(i,n),n=void 0},e))}}function b(t,e){if(t&&e)for(var n in e)e.hasOwnProperty(n)&&(t[n]=e[n]);return t}if("undefined"==typeof window||"undefined"==typeof window.document)return function(){throw new Error("sortable.js requires a window with a document")};var _,D,y,w,S,T,C,E,x,N,B,k,O,X,Y,A,I,R={},M=/\s+/g,j="KvSortable"+(new Date).getTime(),L=window,U=L.document,H=L.parseInt,P=!!("draggable"in U.createElement("div")),W=function(t){return t=U.createElement("x"),t.style.cssText="pointer-events:auto","auto"===t.style.pointerEvents}(),K=!1,F=Math.abs,q=([].slice,[]),V=m(function(t,e,n){if(n&&e.scroll){var i,o,r,a,s=e.scrollSensitivity,l=e.scrollSpeed,d=t.clientX,c=t.clientY,u=window.innerWidth,h=window.innerHeight;if(E!==n&&(C=e.scroll,E=n,C===!0)){C=n;do if(C.offsetWidth<C.scrollWidth||C.offsetHeight<C.scrollHeight)break;while(C=C.parentNode)}C&&(i=C,o=C.getBoundingClientRect(),r=(F(o.right-d)<=s)-(F(o.left-d)<=s),a=(F(o.bottom-c)<=s)-(F(o.top-c)<=s)),r||a||(r=(s>=u-d)-(s>=d),a=(s>=h-c)-(s>=c),(r||a)&&(i=L)),(R.vx!==r||R.vy!==a||R.el!==i)&&(R.el=i,R.vx=r,R.vy=a,clearInterval(R.pid),i&&(R.pid=setInterval(function(){i===L?L.scrollTo(L.pageXOffset+r*l,L.pageYOffset+a*l):(a&&(i.scrollTop+=a*l),r&&(i.scrollLeft+=r*l))},24)))}},30),z=function(t){var e=t.group;e&&"object"==typeof e||(e=t.group={name:e}),["pull","put"].forEach(function(t){t in e||(e[t]=!0)}),t.groups=" "+e.name+(e.put.join?" "+e.put.join(" "):"")+" "};return t.prototype={constructor:t,_onTapStart:function(t){var e=this,i=this.el,o=this.options,r=t.type,a=t.touches&&t.touches[0],s=(a||t).target,l=s,c=o.filter;if(!("mousedown"===r&&0!==t.button||o.disabled)&&(s=n(s,o.draggable,i))){if(k=g(s,o.draggable),"function"==typeof c){if(c.call(this,t,s,this))return d(e,l,"filter",s,i,k),void t.preventDefault()}else if(c&&(c=c.split(",").some(function(t){return t=n(l,t.trim(),i),t?(d(e,t,"filter",s,i,k),!0):void 0})))return void t.preventDefault();(!o.handle||n(l,o.handle,i))&&this._prepareDragStart(t,a,s)}},_prepareDragStart:function(t,e,n){var i,r=this,s=r.el,d=r.options,c=s.ownerDocument;n&&!_&&n.parentNode===s&&(Y=t,S=s,_=n,D=_.parentNode,T=_.nextSibling,X=d.group,i=function(){r._disableDelayedDrag(),_.draggable=!0,a(_,r.options.chosenClass,!0),r._triggerDragStart(e)},d.ignore.split(",").forEach(function(t){l(_,t.trim(),u)}),o(c,"mouseup",r._onDrop),o(c,"touchend",r._onDrop),o(c,"touchcancel",r._onDrop),d.delay?(o(c,"mouseup",r._disableDelayedDrag),o(c,"touchend",r._disableDelayedDrag),o(c,"touchcancel",r._disableDelayedDrag),o(c,"mousemove",r._disableDelayedDrag),o(c,"touchmove",r._disableDelayedDrag),r._dragStartTimer=setTimeout(i,d.delay)):i())},_disableDelayedDrag:function(){var t=this.el.ownerDocument;clearTimeout(this._dragStartTimer),r(t,"mouseup",this._disableDelayedDrag),r(t,"touchend",this._disableDelayedDrag),r(t,"touchcancel",this._disableDelayedDrag),r(t,"mousemove",this._disableDelayedDrag),r(t,"touchmove",this._disableDelayedDrag)},_triggerDragStart:function(t){t?(Y={target:_,clientX:t.clientX,clientY:t.clientY},this._onDragStart(Y,"touch")):this.nativeDraggable?(o(_,"dragend",this),o(S,"dragstart",this._onDragStart)):this._onDragStart(Y,!0);try{U.selection?U.selection.empty():window.getSelection().removeAllRanges()}catch(e){}},_dragStarted:function(){S&&_&&(a(_,this.options.ghostClass,!0),t.active=this,d(this,S,"start",_,S,k))},_emulateDragOver:function(){if(A){if(this._lastX===A.clientX&&this._lastY===A.clientY)return;this._lastX=A.clientX,this._lastY=A.clientY,W||s(y,"display","none");var t=U.elementFromPoint(A.clientX,A.clientY),e=t,n=" "+this.options.group.name,i=q.length;if(e)do{if(e[j]&&e[j].options.groups.indexOf(n)>-1){for(;i--;)q[i]({clientX:A.clientX,clientY:A.clientY,target:t,rootEl:e});break}t=e}while(e=e.parentNode);W||s(y,"display","")}},_onTouchMove:function(e){if(Y){t.active||this._dragStarted(),this._appendGhost();var n=e.touches?e.touches[0]:e,i=n.clientX-Y.clientX,o=n.clientY-Y.clientY,r=e.touches?"translate3d("+i+"px,"+o+"px,0)":"translate("+i+"px,"+o+"px)";I=!0,A=n,s(y,"webkitTransform",r),s(y,"mozTransform",r),s(y,"msTransform",r),s(y,"transform",r),e.preventDefault()}},_appendGhost:function(){if(!y){var t,e=_.getBoundingClientRect(),n=s(_),i=this.options;y=_.cloneNode(!0),a(y,i.ghostClass,!1),a(y,i.fallbackClass,!0),s(y,"top",e.top-H(n.marginTop,10)),s(y,"left",e.left-H(n.marginLeft,10)),s(y,"width",e.width),s(y,"height",e.height),s(y,"opacity","0.8"),s(y,"position","fixed"),s(y,"zIndex","100000"),s(y,"pointerEvents","none"),i.fallbackOnBody&&U.body.appendChild(y)||S.appendChild(y),t=y.getBoundingClientRect(),s(y,"width",2*e.width-t.width),s(y,"height",2*e.height-t.height)}},_onDragStart:function(t,e){var n=t.dataTransfer,i=this.options;this._offUpEvents(),"clone"==X.pull&&(w=_.cloneNode(!0),s(w,"display","none"),S.insertBefore(w,_)),e?("touch"===e?(o(U,"touchmove",this._onTouchMove),o(U,"touchend",this._onDrop),o(U,"touchcancel",this._onDrop)):(o(U,"mousemove",this._onTouchMove),o(U,"mouseup",this._onDrop)),this._loopId=setInterval(this._emulateDragOver,50)):(n&&(n.effectAllowed="move",i.setData&&i.setData.call(this,n,_)),o(U,"drop",this),setTimeout(this._dragStarted,0))},_onDragOver:function(t){var i,o,r,a=this.el,l=this.options,d=l.group,u=d.put,p=X===d,g=l.sort;if(void 0!==t.preventDefault&&(t.preventDefault(),!l.dragoverBubble&&t.stopPropagation()),I=!0,X&&!l.disabled&&(p?g||(r=!S.contains(_)):X.pull&&u&&(X.name===d.name||u.indexOf&&~u.indexOf(X.name)))&&(void 0===t.rootEl||t.rootEl===this.el)){if(V(t,l,this.el),K)return;if(i=n(t.target,l.draggable,a),o=_.getBoundingClientRect(),r)return e(!0),void(w||T?S.insertBefore(_,w||T):g||S.appendChild(_));if(0===a.children.length||a.children[0]===y||a===t.target&&(i=f(a,t))){if(i){if(i.animated)return;m=i.getBoundingClientRect()}e(p),c(S,a,_,o,i,m)!==!1&&(_.contains(a)||(a.appendChild(_),D=a),this._animate(o,_),i&&this._animate(m,i))}else if(i&&!i.animated&&i!==_&&void 0!==i.parentNode[j]){x!==i&&(x=i,N=s(i),B=s(i.parentNode));var v,m=i.getBoundingClientRect(),b=m.right-m.left,C=m.bottom-m.top,E=/left|right|inline/.test(N.cssFloat+N.display)||"flex"==B.display&&0===B["flex-direction"].indexOf("row"),k=i.offsetWidth>_.offsetWidth,O=i.offsetHeight>_.offsetHeight,Y=(E?(t.clientX-m.left)/b:(t.clientY-m.top)/C)>.5,A=i.nextElementSibling,R=c(S,a,_,o,i,m);if(R!==!1){if(K=!0,setTimeout(h,30),e(p),1===R||-1===R)v=1===R;else if(E){var M=_.offsetTop,L=i.offsetTop;v=M===L?i.previousElementSibling===_&&!k||Y&&k:L>M}else v=A!==_&&!O||Y&&O;_.contains(a)||(v&&!A?a.appendChild(_):i.parentNode.insertBefore(_,v?A:i)),D=_.parentNode,this._animate(o,_),this._animate(m,i)}}}},_animate:function(t,e){var n=this.options.animation;if(n){var i=e.getBoundingClientRect();s(e,"transition","none"),s(e,"transform","translate3d("+(t.left-i.left)+"px,"+(t.top-i.top)+"px,0)"),e.offsetWidth,s(e,"transition","all "+n+"ms"),s(e,"transform","translate3d(0,0,0)"),clearTimeout(e.animated),e.animated=setTimeout(function(){s(e,"transition",""),s(e,"transform",""),e.animated=!1},n)}},_offUpEvents:function(){var t=this.el.ownerDocument;r(U,"touchmove",this._onTouchMove),r(t,"mouseup",this._onDrop),r(t,"touchend",this._onDrop),r(t,"touchcancel",this._onDrop)},_onDrop:function(e){var n=this.el,i=this.options;clearInterval(this._loopId),clearInterval(R.pid),clearTimeout(this._dragStartTimer),r(U,"mousemove",this._onTouchMove),this.nativeDraggable&&(r(U,"drop",this),r(n,"dragstart",this._onDragStart)),this._offUpEvents(),e&&(I&&(e.preventDefault(),!i.dropBubble&&e.stopPropagation()),y&&y.parentNode.removeChild(y),_&&(this.nativeDraggable&&r(_,"dragend",this),u(_),a(_,this.options.ghostClass,!1),a(_,this.options.chosenClass,!1),S!==D?(O=g(_,i.draggable),O>=0&&(d(null,D,"sort",_,S,k,O),d(this,S,"sort",_,S,k,O),d(null,D,"add",_,S,k,O),d(this,S,"remove",_,S,k,O))):(w&&w.parentNode.removeChild(w),_.nextSibling!==T&&(O=g(_,i.draggable),O>=0&&(d(this,S,"update",_,S,k,O),d(this,S,"sort",_,S,k,O)))),t.active&&((null===O||-1===O)&&(O=k),d(this,S,"end",_,S,k,O),this.save()))),this._nulling()},_nulling:function(){S=_=D=y=T=w=C=E=Y=A=I=O=x=N=X=t.active=null},handleEvent:function(t){var e=t.type;"dragover"===e||"dragenter"===e?_&&(this._onDragOver(t),i(t)):("drop"===e||"dragend"===e)&&this._onDrop(t)},toArray:function(){for(var t,e=[],i=this.el.children,o=0,r=i.length,a=this.options;r>o;o++)t=i[o],n(t,a.draggable,this.el)&&e.push(t.getAttribute(a.dataIdAttr)||p(t));return e},sort:function(t){var e={},i=this.el;this.toArray().forEach(function(t,o){var r=i.children[o];n(r,this.options.draggable,i)&&(e[t]=r)},this),t.forEach(function(t){e[t]&&(i.removeChild(e[t]),i.appendChild(e[t]))})},save:function(){var t=this.options.store;t&&t.set(this)},closest:function(t,e){return n(t,e||this.options.draggable,this.el)},option:function(t,e){var n=this.options;return void 0===e?n[t]:(n[t]=e,void("group"===t&&z(n)))},destroy:function(){var t=this.el;t[j]=null,r(t,"mousedown",this._onTapStart),r(t,"touchstart",this._onTapStart),this.nativeDraggable&&(r(t,"dragover",this),r(t,"dragenter",this)),Array.prototype.forEach.call(t.querySelectorAll("[draggable]"),function(t){t.removeAttribute("draggable")}),q.splice(q.indexOf(this._onDragOver),1),this._onDrop(),this.el=t=null}},t.utils={on:o,off:r,css:s,find:l,is:function(t,e){return!!n(t,e,t)},extend:b,throttle:m,closest:n,toggleClass:a,index:g},t.create=function(e,n){return new t(e,n)},t.version="1.4.2",t}),function(t){"use strict";"function"==typeof define&&define.amd?define(["jquery"],t):t(jQuery)}(function(t){"use strict";t.fn.kvsortable=function(e){var n,i=arguments;return this.each(function(){var o=t(this),r=o.data("kvsortable");if(r||!(e instanceof Object)&&e||(r=new KvSortable(this,e),o.data("kvsortable",r)),r){if("widget"===e)return r;"destroy"===e?(r.destroy(),o.removeData("kvsortable")):"function"==typeof r[e]?n=r[e].apply(r,[].slice.call(i,1)):e in r.options&&(n=r.option.apply(r,i))}}),void 0===n?this:n}});
-/*!
- * FileInput <_LANG_> Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['_LANG_'] = {
-        fileSingle: 'file',
-        filePlural: 'files',
-        browseLabel: 'Browse &hellip;',
-        removeLabel: 'Remove',
-        removeTitle: 'Clear selected files',
-        cancelLabel: 'Cancel',
-        cancelTitle: 'Abort ongoing upload',
-        uploadLabel: 'Upload',
-        uploadTitle: 'Upload selected files',
-        msgNo: 'No',
-        msgNoFilesSelected: 'No files selected',
-        msgCancelled: 'Cancelled',
-        msgZoomModalHeading: 'Detailed Preview',
-        msgSizeTooLarge: 'File "{name}" (<b>{size} KB</b>) exceeds maximum allowed upload size of <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'You must select at least <b>{n}</b> {files} to upload.',
-        msgFilesTooMany: 'Number of files selected for upload <b>({n})</b> exceeds maximum allowed limit of <b>{m}</b>.',
-        msgFileNotFound: 'File "{name}" not found!',
-        msgFileSecured: 'Security restrictions prevent reading the file "{name}".',
-        msgFileNotReadable: 'File "{name}" is not readable.',
-        msgFilePreviewAborted: 'File preview aborted for "{name}".',
-        msgFilePreviewError: 'An error occurred while reading the file "{name}".',
-        msgInvalidFileType: 'Invalid type for file "{name}". Only "{types}" files are supported.',
-        msgInvalidFileExtension: 'Invalid extension for file "{name}". Only "{extensions}" files are supported.',
-        msgUploadAborted: 'The file upload was aborted',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Validation Error',
-        msgLoading: 'Loading file {index} of {files} &hellip;',
-        msgProgress: 'Loading file {index} of {files} - {name} - {percent}% completed.',
-        msgSelected: '{n} {files} selected',
-        msgFoldersNotAllowed: 'Drag & drop files only! Skipped {n} dropped folder(s).',
-        msgImageWidthSmall: 'Width of image file "{name}" must be at least {size} px.',
-        msgImageHeightSmall: 'Height of image file "{name}" must be at least {size} px.',
-        msgImageWidthLarge: 'Width of image file "{name}" cannot exceed {size} px.',
-        msgImageHeightLarge: 'Height of image file "{name}" cannot exceed {size} px.',
-        msgImageResizeError: 'Could not get the image dimensions to resize.',
-        msgImageResizeException: 'Error while resizing the image.<pre>{errors}</pre>',
-        dropZoneTitle: 'Drag & drop files here &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Remove file',
-            uploadTitle: 'Upload file',
-            zoomTitle: 'View details',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Not uploaded yet',
-            indicatorSuccessTitle: 'Uploaded',
-            indicatorErrorTitle: 'Upload Error',
-            indicatorLoadingTitle: 'Uploading ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-/*!
- * FileInput Arabic Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- * @author Yasser Lotfy <y_l@live.com>
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['ar'] = {
-        fileSingle: 'ملف',
-        filePlural: 'ملفات',
-        browseLabel: 'تصفح &hellip;',
-        removeLabel: 'إزالة',
-        removeTitle: 'إزالة الملفات المختارة',
-        cancelLabel: 'إلغاء',
-        cancelTitle: 'إنهاء الرفع الحالي',
-        uploadLabel: 'رفع',
-        uploadTitle: 'رفع الملفات المختارة',
-        msgNo: 'لا',
-        msgNoFilesSelected: '',
-        msgCancelled: 'ألغيت',
-        msgZoomModalHeading: 'معاينة تفصيلية',
-        msgSizeTooLarge: 'الملف "{name}" (<b>{size} ك.ب</b>) تعدى الحد الأقصى المسموح للرفع <b>{maxSize} ك.ب</b>.',
-        msgFilesTooLess: 'يجب عليك اختيار <b>{n}</b> {files} على الأقل للرفع.',
-        msgFilesTooMany: 'عدد الملفات المختارة للرفع <b>({n})</b> تعدت الحد الأقصى المسموح به لعدد <b>{m}</b>.',
-        msgFileNotFound: 'الملف "{name}" غير موجود!',
-        msgFileSecured: 'قيود أمنية تمنع قراءة الملف "{name}".',
-        msgFileNotReadable: 'الملف "{name}" غير قابل للقراءة.',
-        msgFilePreviewAborted: 'تم إلغاء معاينة الملف "{name}".',
-        msgFilePreviewError: 'حدث خطأ أثناء قراءة الملف "{name}".',
-        msgInvalidFileType: 'نوعية غير صالحة للملف "{name}". فقط هذه النوعيات مدعومة "{types}".',
-        msgInvalidFileExtension: 'امتداد غير صالح للملف "{name}". فقط هذه الملفات مدعومة "{extensions}".',
-        msgUploadAborted: 'تم إلغاء رفع الملف',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'خطأ التحقق من صحة',
-        msgLoading: 'تحميل ملف {index} من {files} &hellip;',
-        msgProgress: 'تحميل ملف {index} من {files} - {name} - {percent}% منتهي.',
-        msgSelected: '{n} {files} مختار(ة)',
-        msgFoldersNotAllowed: 'اسحب وأفلت الملفات فقط! تم تخطي {n} مجلد(ات).',
-        msgImageWidthSmall: 'عرض ملف الصورة "{name}" يجب أن يكون على الأقل {size} px.',
-        msgImageHeightSmall: 'طول ملف الصورة "{name}" يجب أن يكون على الأقل {size} px.',
-        msgImageWidthLarge: 'عرض ملف الصورة "{name}" لا يمكن أن يتعدى {size} px.',
-        msgImageHeightLarge: 'طول ملف الصورة "{name}" لا يمكن أن يتعدى {size} px.',
-        msgImageResizeError: 'لم يتمكن من معرفة أبعاد الصورة لتغييرها.',
-        msgImageResizeException: 'حدث خطأ أثناء تغيير أبعاد الصورة.<pre>{errors}</pre>',
-        dropZoneTitle: 'اسحب وأفلت الملفات هنا &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'إزالة الملف',
-            uploadTitle: 'رفع الملف',
-            zoomTitle: 'مشاهدة التفاصيل',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'لم يتم الرفع بعد',
-            indicatorSuccessTitle: 'تم الرفع',
-            indicatorErrorTitle: 'خطأ بالرفع',
-            indicatorLoadingTitle: 'جارٍ الرفع ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Bulgarian Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['bg'] = {
-        fileSingle: 'файл',
-        filePlural: 'файла',
-        browseLabel: 'Избери &hellip;',
-        removeLabel: 'Премахни',
-        removeTitle: 'Изчисти избраните',
-        cancelLabel: 'Откажи',
-        cancelTitle: 'Откажи качването',
-        uploadLabel: 'Качи',
-        uploadTitle: 'Качи избраните файлове',
-        msgNo: 'Не',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Отменен',
-        msgZoomModalHeading: 'Детайлен преглед',
-        msgSizeTooLarge: 'Файла "{name}" (<b>{size} KB</b>) надвишава максималните разрешени <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Трябва да изберете поне <b>{n}</b> {files} файла.',
-        msgFilesTooMany: 'Броя файлове избрани за качване <b>({n})</b> надвишава ограниченито от максимум <b>{m}</b>.',
-        msgFileNotFound: 'Файлът "{name}" не може да бъде намерен!',
-        msgFileSecured: 'От съображения за сигурност не може да прочетем файла "{name}".',
-        msgFileNotReadable: 'Файлът "{name}" не е четим.',
-        msgFilePreviewAborted: 'Прегледа на файла е прекратен за "{name}".',
-        msgFilePreviewError: 'Грешка при опит за четене на файла "{name}".',
-        msgInvalidFileType: 'Невалиден тип на файла "{name}". Разрешени са само "{types}".',
-        msgInvalidFileExtension: 'Невалидно разрешение на "{name}". Разрешени са само "{extensions}".',
-        msgUploadAborted: 'Качите файла, бе прекратена',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'утвърждаване грешка',
-        msgLoading: 'Зареждане на файл {index} от общо {files} &hellip;',
-        msgProgress: 'Зареждане на файл {index} от общо {files} - {name} - {percent}% завършени.',
-        msgSelected: '{n} {files} избрани',
-        msgFoldersNotAllowed: 'Само пуснати файлове! Пропуснати {n} пуснати папки.',
-        msgImageWidthSmall: 'Широчината на изображението "{name}" трябва да е поне {size} px.',
-        msgImageHeightSmall: 'Височината на изображението "{name}" трябва да е поне {size} px.',
-        msgImageWidthLarge: 'Широчината на изображението "{name}" не може да е по-голяма от {size} px.',
-        msgImageHeightLarge: 'Височината на изображението "{name}" нее може да е по-голяма от {size} px.',
-        msgImageResizeError: 'Не може да размерите на изображението, за да промените размера.',
-        msgImageResizeException: 'Грешка при промяна на размера на изображението.<pre>{errors}</pre>',
-        dropZoneTitle: 'Пуснете файловете тук &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Махни файл',
-            uploadTitle: 'Качване на файл',
-            zoomTitle: 'Вижте детайли',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Все още не е качил',
-            indicatorSuccessTitle: 'Качено',
-            indicatorErrorTitle: 'Качи Error',
-            indicatorLoadingTitle: 'Качва се ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Català Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['ca'] = {
-        fileSingle: 'arxiu',
-        filePlural: 'arxius',
-        browseLabel: 'Examinar &hellip;',
-        removeLabel: 'Treure',
-        removeTitle: 'Treure arxius seleccionats',
-        cancelLabel: 'Cancel',
-        cancelTitle: 'Avortar la pujada en curs',
-        uploadLabel: 'Pujar arxiu',
-        uploadTitle: 'Pujar arxius seleccionats',
-        msgNo: 'No',
-        msgNoFilesSelected: '',
-        msgCancelled: 'cancel·lat',
-        msgZoomModalHeading: 'Vista prèvia detallada',
-        msgSizeTooLarge: 'Arxiu "{name}" (<b>{size} KB</b>) excedeix la mida màxima permès de <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Heu de seleccionar almenys <b>{n}</b> {files} a carregar.',
-        msgFilesTooMany: 'El nombre d\'arxius seleccionats a carregar <b>({n})</b> excedeix el límit màxim permès de <b>{m}</b>.',
-        msgFileNotFound: 'Arxiu "{name}" no trobat.',
-        msgFileSecured: 'No es pot accedir a l\'arxiu "{name}" perquè estarà sent usat per una altra aplicació o no tinguem permisos de lectura.',
-        msgFileNotReadable: 'No es pot accedir a l\'arxiu "{name}".',
-        msgFilePreviewAborted: 'Previsualització de l\'arxiu "{name}" cancel·lada.',
-        msgFilePreviewError: 'S\'ha produït un error mentre es llegia el fitxer "{name}".',
-        msgInvalidFileType: 'Tipus de fitxer no vàlid per a "{name}". Només arxius "{types}" són permesos.',
-        msgInvalidFileExtension: 'Extensió de fitxer no vàlid per a "{name}". Només arxius "{extensions}" són permesos.',
-        msgUploadAborted: 'La càrrega d\'arxius s\'ha cancel·lat',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Error de validació',
-        msgLoading: 'Pujant fitxer {index} de {files} &hellip;',
-        msgProgress: 'Pujant fitxer {index} de {files} - {name} - {percent}% completat.',
-        msgSelected: '{n} {files} seleccionat(s)',
-        msgFoldersNotAllowed: 'Arrossegueu i deixeu anar únicament arxius. Omesa(es) {n} carpeta(es).',
-        msgImageWidthSmall: 'L\'ample de la imatge "{name}" ha de ser almenys {size} px.',
-        msgImageHeightSmall: 'L\'alçada de la imatge "{name}" ha de ser almenys {size} px.',
-        msgImageWidthLarge: 'L\'ample de la imatge "{name}" no pot excedir de {size} px.',
-        msgImageHeightLarge: 'L\'alçada de la imatge "{name}" no pot excedir de {size} px.',
-        msgImageResizeError: 'No s\'ha pogut obtenir les dimensions d\'imatge per canviar la mida.',
-        msgImageResizeException: 'Error en canviar la mida de la imatge.<pre>{errors}</pre>',
-        dropZoneTitle: 'Arrossegueu i deixeu anar aquí els arxius &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Eliminar arxiu',
-            uploadTitle: 'Pujar arxiu',
-            zoomTitle: 'Veure detalls',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'No pujat encara',
-            indicatorSuccessTitle: 'Subido',
-            indicatorErrorTitle: 'Pujar Error',
-            indicatorLoadingTitle: 'Pujant ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Croatian Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- * @author Milos Stojanovic <stojanovic.loshmi@gmail.com>
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['cr'] = {
-        fileSingle: 'datoteka',
-        filePlural: 'datoteke',
-        browseLabel: 'Izaberi &hellip;',
-        removeLabel: 'Ukloni',
-        removeTitle: 'Ukloni označene datoteke',
-        cancelLabel: 'Odustani',
-        cancelTitle: 'Prekini trenutno otpremanje',
-        uploadLabel: 'Otpremi',
-        uploadTitle: 'Otpremi označene datoteke',
-        msgNo: 'Ne',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Otkazan',
-        msgZoomModalHeading: 'Detaljni pregled',
-        msgSizeTooLarge: 'Datoteka "{name}" (<b>{size} KB</b>) prekoračuje maksimalnu dozvoljenu veličinu datoteke od <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Morate odabrati najmanje <b>{n}</b> {files} za otpremanje.',
-        msgFilesTooMany: 'Broj datoteka označenih za otpremanje <b>({n})</b> prekoračuje maksimalni dozvoljeni limit od <b>{m}</b>.',
-        msgFileNotFound: 'Datoteka "{name}" nije pronađena!',
-        msgFileSecured: 'Datoteku "{name}" nije moguće pročitati zbog bezbednosnih ograničenja.',
-        msgFileNotReadable: 'Datoteku "{name}" nije moguće pročitati.',
-        msgFilePreviewAborted: 'Generisanje prikaza nije moguće za "{name}".',
-        msgFilePreviewError: 'Došlo je do greške prilikom čitanja datoteke "{name}".',
-        msgInvalidFileType: 'Datoteka "{name}" je pogrešnog formata. Dozvoljeni formati su "{types}".',
-        msgInvalidFileExtension: 'Ekstenzija datoteke "{name}" nije dozvoljena. Dozvoljene ekstenzije su "{extensions}".',
-        msgUploadAborted: 'Prijenos datoteka je prekinut',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Provjera pogrešaka',
-        msgLoading: 'Učitavanje datoteke {index} od {files} &hellip;',
-        msgProgress: 'Učitavanje datoteke {index} od {files} - {name} - {percent}% završeno.',
-        msgSelected: '{n} {files} je označeno',
-        msgFoldersNotAllowed: 'Moguće je prevlačiti samo datoteke! Preskočeno je {n} fascikla.',
-        msgImageWidthSmall: 'Širina slikovnu datoteku "{name}" moraju biti najmanje {size} px.',
-        msgImageHeightSmall: 'Visina slikovnu datoteku "{name}" moraju biti najmanje {size} px.',
-        msgImageWidthLarge: 'Širina slikovnu datoteku "{name}" ne može prelaziti {size} px.',
-        msgImageHeightLarge: 'Visina slikovnu datoteku "{name}" ne može prelaziti {size} px.',
-        msgImageResizeError: 'Nije mogao dobiti dimenzije slike na veličinu.',
-        msgImageResizeException: 'Greška prilikom promjene veličine slike.<pre>{errors}</pre>',
-        dropZoneTitle: 'Prevucite datoteke ovde &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Uklonite datoteku',
-            uploadTitle: 'Postavi datoteku',
-            zoomTitle: 'Pregledavati pojedinosti',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Još nije učitao',
-            indicatorSuccessTitle: 'Preneseno',
-            indicatorErrorTitle: 'Postavi Greška',
-            indicatorLoadingTitle: 'Prijenos ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Czech Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['cz'] = {
-        fileSingle: 'soubor',
-        filePlural: 'soubory',
-        browseLabel: 'Vybrat &hellip;',
-        removeLabel: 'Odstranit',
-        removeTitle: 'Vyčistit vybrané soubory',
-        cancelLabel: 'Storno',
-        cancelTitle: 'Přerušit  nahrávání',
-        uploadLabel: 'Nahrát',
-        uploadTitle: 'Nahrát vybrané soubory',
-        msgNo: 'Ne',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Zrušeno',
-        msgZoomModalHeading: 'Detailní náhled',
-        msgSizeTooLarge: 'Soubor "{name}" (<b>{size} KB</b>): překročení - maximální povolená velikost <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Musíte vybrat nejméně <b>{n}</b> {files} pro nahrání.',
-        msgFilesTooMany: 'Počet vybraných souborů pro nahrání <b>({n})</b>: překročení - maximální povolený limit <b>{m}</b>.',
-        msgFileNotFound: 'Soubor "{name}" nebyl nalezen!',
-        msgFileSecured: 'Zabezpečení souboru znemožnilo číst soubor "{name}".',
-        msgFileNotReadable: 'Soubor "{name}" není čitelný.',
-        msgFilePreviewAborted: 'Náhled souboru byl přerušen pro "{name}".',
-        msgFilePreviewError: 'Nastala chyba při načtení souboru "{name}".',
-        msgInvalidFileType: 'Neplatný typ souboru "{name}". Pouze "{types}" souborů jsou podporovány.',
-        msgInvalidFileExtension: 'Neplatná extenze souboru "{name}". Pouze "{extensions}" souborů jsou podporovány.',
-        msgUploadAborted: 'Soubor nahrávání byl přerušen',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Chyba ověření',
-        msgLoading: 'Nahrávání souboru {index} z {files} &hellip;',
-        msgProgress: 'Nahrávání souboru {index} z {files} - {name} - {percent}% dokončeno.',
-        msgSelected: '{n} {files} vybrano',
-        msgFoldersNotAllowed: 'Táhni a pusť pouze soubory! Vynechané {n} pustěné složk(y).',
-        msgImageWidthSmall: 'Šířka image soubor "{name}", musí být alespoň {size} px.',
-        msgImageHeightSmall: 'Výška image soubor "{name}", musí být alespoň {size} px.',
-        msgImageWidthLarge: 'Šířka obrazového souboru "{name}" nelze překročit {size} px.',
-        msgImageHeightLarge: 'Výška obrazového souboru "{name}" nelze překročit {size} px.',
-        msgImageResizeError: 'Nelze získat rozměry obrázku změnit velikost.',
-        msgImageResizeException: 'Chyba při změně velikosti obrázku.<pre>{errors}</pre>',
-        dropZoneTitle: 'Táhni a pusť soubory sem &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Odstranit soubor',
-            uploadTitle: 'nahrát soubor',
-            zoomTitle: 'zobrazit podrobnosti',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Ještě nenahrál',
-            indicatorSuccessTitle: 'Nahraný',
-            indicatorErrorTitle: 'Nahrát Chyba',
-            indicatorLoadingTitle: 'Nahrávání ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-/*!
- * FileInput Danish Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-    
-    $.fn.fileinputLocales['da'] = {
-        fileSingle: 'fil',
-        filePlural: 'filer',
-        browseLabel: 'Browse &hellip;',
-        removeLabel: 'Fjern',
-        removeTitle: 'Fjern valgte filer',
-        cancelLabel: 'Fortryd',
-        cancelTitle: 'Afbryd nuv&aelig;rende upload',
-        uploadLabel: 'Upload',
-        uploadTitle: 'Upload valgte filer',
-        msgNo: 'Ingen',
-        msgNoFilesSelected: '',
-        msgCancelled: 'aflyst',
-        msgZoomModalHeading: 'Detaljeret visning',
-        msgSizeTooLarge: 'Fil "{name}" (<b>{size} KB</b>) er st&oslash;rre end de tilladte <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Du skal mindst v&aelig;lge <b>{n}</b> {files} til upload.',
-        msgFilesTooMany: '<b>({n})</b> filer valgt til upload, men maks. <b>{m}</b> er tilladt.',
-        msgFileNotFound: 'Filen "{name}" blev ikke fundet!',
-        msgFileSecured: 'Sikkerhedsrestriktioner forhindrer l&aelig;sning af "{name}".',
-        msgFileNotReadable: 'Filen "{name}" kan ikke indl&aelig;ses.',
-        msgFilePreviewAborted: 'Filpreview annulleret for "{name}".',
-        msgFilePreviewError: 'Der skete en fejl under l&aelig;sningen af filen "{name}".',
-        msgInvalidFileType: 'Ukendt type for filen "{name}". Kun "{types}" kan bruges.',
-        msgInvalidFileExtension: 'Ukendt filtype for filen "{name}". Kun "{extensions}" filer kan bruges.',
-        msgUploadAborted: 'Filupload annulleret',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Validering Fejl',
-        msgLoading: 'Henter fil {index} af {files} &hellip;',
-        msgProgress: 'Henter fil {index} af {files} - {name} - {percent}% f&aelig;rdiggjort.',
-        msgSelected: '{n} {files} valgt',
-        msgFoldersNotAllowed: 'Drag & drop kun filer! {n} mappe(r) sprunget over.',
-        msgImageWidthSmall: 'Bredden af billedet "{name}" skal v&aelig;re p&aring; mindst {size} px.',
-        msgImageHeightSmall: 'H&oslash;jden af billedet "{name}" skal v&aelig;re p&aring; mindst {size} px.',
-        msgImageWidthLarge: 'Bredden af billedet "{name}" m&aring; ikke v&aelig;re over {size} px.',
-        msgImageHeightLarge: 'H&oslash;jden af billedet "{name}" m&aring; ikke v&aelig;re over {size} px.',
-        msgImageResizeError: 'Kunne ikke få billedets dimensioner for at ændre størrelsen.',
-        msgImageResizeException: 'Fejl ved at ændre størrelsen på billedet.<pre>{errors}</pre>',
-        dropZoneTitle: 'Drag & drop filer her &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Fjern fil',
-            uploadTitle: 'Upload fil',
-            zoomTitle: 'Se detaljer',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Ikke uploadet endnu',
-            indicatorSuccessTitle: 'Uploadet',
-            indicatorErrorTitle: 'Upload fejl',
-            indicatorLoadingTitle: 'Uploader ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-/*!
- * FileInput German Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['de'] = {
-        fileSingle: 'Datei',
-        filePlural: 'Dateien',
-        browseLabel: 'Auswählen &hellip;',
-        removeLabel: 'Löschen',
-        removeTitle: 'Ausgewählte löschen',
-        cancelLabel: 'Laden',
-        cancelTitle: 'Hochladen abbrechen',
-        uploadLabel: 'Hochladen',
-        uploadTitle: 'Hochladen der ausgewählten Dateien',
-        msgNo: 'Keine',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Abgebrochen',
-        msgZoomModalHeading: 'ausführliche Vorschau',
-        msgSizeTooLarge: 'Datei "{name}" (<b>{size} KB</b>) überschreitet maximal zulässige Upload-Größe von <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Sie müssen mindestens <b>{n}</b> {files} zum Hochladen auswählen.',
-        msgFilesTooMany: 'Anzahl der Dateien für den Upload ausgewählt <b>({n})</b> überschreitet maximal zulässige Grenze von <b>{m}</b> Stück.',
-        msgFileNotFound: 'Datei "{name}" wurde nicht gefunden!',
-        msgFileSecured: 'Sicherheitseinstellungen verhindern das Lesen der Datei "{name}".',
-        msgFileNotReadable: 'Die Datei "{name}" ist nicht lesbar.',
-        msgFilePreviewAborted: 'Dateivorschau abgebrochen für "{name}".',
-        msgFilePreviewError: 'Beim Lesen der Datei "{name}" ein Fehler aufgetreten.',
-        msgInvalidFileType: 'Ungültiger Typ für Datei "{name}". Nur Dateien der Typen "{types}" werden unterstützt.',
-        msgInvalidFileExtension: 'Ungültige Erweiterung für Datei "{name}". Nur Dateien mit der Endung "{extensions}" werden unterstützt.',
-        msgUploadAborted: 'Der Datei-Upload wurde abgebrochen',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Validierungs fehler',
-        msgLoading: 'Lade Datei {index} von {files} hoch&hellip;',
-        msgProgress: 'Datei {index} von {files} - {name} - zu {percent}% fertiggestellt.',
-        msgSelected: '{n} {files} ausgewählt',
-        msgFoldersNotAllowed: 'Drag & Drop funktioniert nur bei Dateien! {n} Ordner übersprungen.',
-        msgImageWidthSmall: 'Breite der Bilddatei "{name}" muss mindestens {size} px betragen.',
-        msgImageHeightSmall: 'Höhe der Bilddatei "{name}" muss mindestens {size} px betragen.',
-        msgImageWidthLarge: 'Breite der Bilddatei "{name}" nicht überschreiten {size} px.',
-        msgImageHeightLarge: 'Höhe der Bilddatei "{name}" nicht überschreiten {size} px.',
-        msgImageResizeError: 'Konnte nicht die Bildabmessungen zu ändern.',
-        msgImageResizeException: 'Fehler beim Ändern der Größe des Bildes.<pre>{errors}</pre>',
-        dropZoneTitle: 'Dateien hierher ziehen &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Datei entfernen',
-            uploadTitle: 'Datei hochladen',
-            zoomTitle: 'Details anzeigen',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Noch nicht hochgeladen',
-            indicatorSuccessTitle: 'Hochgeladen',
-            indicatorErrorTitle: 'Upload Fehler',
-            indicatorLoadingTitle: 'Hochladen ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Greek Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['el'] = {
-        fileSingle: 'Αρχείο',
-        filePlural: 'Αρχεία',
-        browseLabel: 'Αναζήτηση &hellip;',
-        removeLabel: 'Ακύρωση',
-        removeTitle: 'Εκκαθάριση αρχείων',
-        cancelLabel: 'Ακύρωση',
-        cancelTitle: 'Ακύρωση μεταφόρτωσης',
-        uploadLabel: 'Μεταφόρτωση',
-        uploadTitle: 'Μεταφόρτωση επιλεγμένων αρχείων',
-        msgNo: 'Όχι',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Ακυρώθηκε',
-        msgZoomModalHeading: 'λεπτομερής Προεπισκόπηση',
-        msgSizeTooLarge: 'Το αρχείο "{name}" (<b>{size} KB</b>) υπερβαίνει το μέγιστο επιτρεπόμενο μέγεθος μεταφόρτωσης <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Πρέπει να επιλέξετε τουλάχιστον <b>{n}</b> {files} για να ξεκινήσει η μεταφόρτωση.',
-        msgFilesTooMany: 'Ο αριθμός των αρχείων που έχουν επιλεγεί για μεταφόρτωση <b>({n})</b> υπερβαίνει το μέγιστο επιτρεπόμενο αριθμό <b>{m}</b>.',
-        msgFileNotFound: 'Το αρχείο με όνομα "{name}" δεν βρέθηκε!',
-        msgFileSecured: 'Περιορισμοί ασφαλείας εμπόδισαν την ανάγνωση του αρχείου"{name}".',
-        msgFileNotReadable: 'Το αρχείο με όνομα "{name}" δεν είναι αναγνώσιμο.',
-        msgFilePreviewAborted: 'Η προεπισκόπηση του αρχείου ακυρώθηκε για "{name}".',
-        msgFilePreviewError: 'Παρουσιάστηκε σφάλμα κατά την ανάγνωση του αρχείου "{name}".',
-        msgInvalidFileType: 'Μη έγκυρος τύπος αρχείου "{name}". Οι τύποι αρχείων που υποστηρίζονται είναι : "{types}".',
-        msgInvalidFileExtension: 'Μη έγκυρη επέκταση αρχείου "{name}". Οι επεκτάσεις που υποστηρίζονται είναι:  "{extensions}" .',
-        msgUploadAborted: 'Το ανέβασμα των αρχείων ματαιώθηκε',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Σπικύρωση σφάλματος',
-        msgLoading: 'Φόρτωση αρχείου {index} από {files} &hellip;',
-        msgProgress: 'Φόρτωση αρχείου {index} απο {files} - {name} - {percent}% ολοκληρώθηκε.',
-        msgSelected: '{n} {files} επιλέχθηκαν',
-        msgFoldersNotAllowed: 'Μπορείτε να σύρετε μόνο αρχεία! Παραβλέφθηκαν {n} φάκελος(οι).',
-        msgImageWidthSmall: 'Πλάτος του αρχείου εικόνας "{name}" πρέπει να είναι τουλάχιστον {size} px.',
-        msgImageHeightSmall: 'Ύψος του αρχείου εικόνας "{name}" πρέπει να είναι τουλάχιστον {size} px.',
-        msgImageWidthLarge: 'Πλάτος του αρχείου εικόνας "{name}" δεν μπορεί να υπερβαίνει το {size} px.',
-        msgImageHeightLarge: 'Ύψος του αρχείου εικόνας "{name}" δεν μπορεί να υπερβαίνει το {size} px.',
-        msgImageResizeError: 'Δεν θα μπορούσε να πάρει τις διαστάσεις της εικόνας για να αλλάξετε το μέγεθος.',
-        msgImageResizeException: 'Σφάλμα κατά την αλλαγή μεγέθους της εικόνας.<pre>{errors}</pre>',
-        dropZoneTitle: 'Σύρετε τα αρχεία εδώ &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Αφαιρέστε το αρχείο',
-            uploadTitle: 'Ανεβάστε το αρχείο',
-            zoomTitle: 'Δείτε λεπτομέρειες',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Δεν ανεβάσει ακόμα',
-            indicatorSuccessTitle: 'Προστέθηκε',
-            indicatorErrorTitle: 'Ανέβασμα Σφάλμα',
-            indicatorLoadingTitle: 'Μεταφόρτωση ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-/*!
- * FileInput Spanish Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['es'] = {
-        fileSingle: 'archivo',
-        filePlural: 'archivos',
-        browseLabel: 'Examinar &hellip;',
-        removeLabel: 'Quitar',
-        removeTitle: 'Quitar archivos seleccionados',
-        cancelLabel: 'Cancelar',
-        cancelTitle: 'Abortar la subida en curso',
-        uploadLabel: 'Subir archivo',
-        uploadTitle: 'Subir archivos seleccionados',
-        msgNo: 'No',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Cancelado',
-        msgZoomModalHeading: 'Vista previa detallada',
-        msgSizeTooLarge: 'Archivo "{name}" (<b>{size} KB</b>) excede el tamaño máximo permitido de <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Debe seleccionar al menos <b>{n}</b> {files} a cargar.',
-        msgFilesTooMany: 'El número de archivos seleccionados a cargar <b>({n})</b> excede el límite máximo permitido de <b>{m}</b>.',
-        msgFileNotFound: 'Archivo "{name}" no encontrado.',
-        msgFileSecured: 'No es posible acceder al archivo "{name}" porque estará siendo usado por otra aplicación o no tengamos permisos de lectura.',
-        msgFileNotReadable: 'No es posible acceder al archivo "{name}".',
-        msgFilePreviewAborted: 'Previsualización del archivo "{name}" cancelada.',
-        msgFilePreviewError: 'Ocurrió un error mientras se leía el archivo "{name}".',
-        msgInvalidFileType: 'Tipo de archivo no válido para "{name}". Sólo archivos "{types}" son permitidos.',
-        msgInvalidFileExtension: 'Extensión de archivo no válido para "{name}". Sólo archivos "{extensions}" son permitidos.',
-        msgUploadAborted: 'La carga de archivos se ha cancelado',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Error de validacion',
-        msgLoading: 'Subiendo archivo {index} de {files} &hellip;',
-        msgProgress: 'Subiendo archivo {index} de {files} - {name} - {percent}% completado.',
-        msgSelected: '{n} {files} seleccionado(s)',
-        msgFoldersNotAllowed: 'Arrastre y suelte únicamente archivos. Omitida(s) {n} carpeta(s).',
-        msgImageWidthSmall: 'El ancho de la imagen "{name}" debe ser al menos {size} px.',
-        msgImageHeightSmall: 'La altura de la imagen "{name}" debe ser al menos {size} px.',
-        msgImageWidthLarge: 'El ancho de la imagen "{name}" no puede exceder de {size} px.',
-        msgImageHeightLarge: 'La altura de la imagen "{name}" no puede exceder de {size} px.',
-        msgImageResizeError: 'No se pudo obtener las dimensiones de imagen para cambiar el tamaño.',
-        msgImageResizeException: 'Error al cambiar el tamaño de la imagen.<pre>{errors}</pre>',
-        dropZoneTitle: 'Arrastre y suelte aquí los archivos &hellip;',
-        dropZoneClickTitle: '<br>(o haga click para seleccionar {files})',
-        fileActionSettings: {
-            removeTitle: 'Eliminar archivo',
-            uploadTitle: 'Subir archivo',
-            zoomTitle: 'Ver detalles',
-            dragTitle: 'Mover / Arreglar de nuevo',
-            indicatorNewTitle: 'No subido todavía',
-            indicatorSuccessTitle: 'Subido',
-            indicatorErrorTitle: 'Subir Error',
-            indicatorLoadingTitle: 'Subiendo ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'Ver archivo anterior',
-            next: 'Ver archivo siguiente',
-            toggleheader: 'Activar encabezado',
-            fullscreen: 'Activar pantalla completa',
-            borderless: 'Activar el modo sin bordes',
-            close: 'Cerrar vista detallada'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Persian Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- * @author Milad Nekofar <milad@nekofar.com>
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['fa'] = {
-        fileSingle: 'فایل',
-        filePlural: 'فایل',
-        browseLabel: 'مرور &hellip;',
-        removeLabel: 'حذف',
-        removeTitle: 'پاکسازی فایل‌های انتخاب شده',
-        cancelLabel: 'لغو',
-        cancelTitle: 'لغو بارگزاری جاری',
-        uploadLabel: 'بارگذاری',
-        uploadTitle: 'بارگذاری فایل‌های انتخاب شده',
-        msgNo: 'No',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Cancelled',
-        msgZoomModalHeading: 'Detailed Preview',
-        msgSizeTooLarge: 'فایل "{name}" (<b>{size} کیلوبایت</b>) از حداکثر مجاز <b>{maxSize} کیلوبایت</b>.',
-        msgFilesTooLess: 'شما باید حداقل <b>{n}</b> {files} فایل برای بارگذاری انتخاب کنید.',
-        msgFilesTooMany: 'تعداد فایل‌های انتخاب شده برای بارگذاری <b>({n})</b> از حداکثر مجاز عبور کرده است <b>{m}</b>.',
-        msgFileNotFound: 'فایل "{name}" یافت نشد!',
-        msgFileSecured: 'محدودیت های امنیتی مانع خواندن فایل "{name}" است.',
-        msgFileNotReadable: 'فایل "{name}" قابل نوشتن نیست.',
-        msgFilePreviewAborted: 'پیشنمایش فایل "{name}". شکست خورد',
-        msgFilePreviewError: 'در هنگام خواندن فایل "{name}" خطایی رخ داد.',
-        msgInvalidFileType: 'نوع فایل "{name}" معتبر نیست. فقط "{types}" پشیبانی می‌شود.',
-        msgInvalidFileExtension: 'پسوند فایل "{name}" معتبر نیست. فقط "{extensions}" پشتیبانی می‌شود.',
-        msgUploadAborted: 'The file upload was aborted',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'خطای اعتبار سنجی',
-        msgLoading: 'بارگیری فایل {index} از {files} &hellip;',
-        msgProgress: 'بارگیری فایل {index} از {files} - {name} - {percent}% تمام شد.',
-        msgSelected: '{n} {files} انتخاب شده',
-        msgFoldersNotAllowed: 'فقط فایل‌ها را بکشید و رها کنید! {n} پوشه نادیده گرفته شد.',
-        msgImageWidthSmall: 'عرض فایل تصویر "{name}" باید حداقل {size} پیکسل باشد.',
-        msgImageHeightSmall: 'ارتفاع فایل تصویر "{name}" باید حداقل {size} پیکسل باشد.',
-        msgImageWidthLarge: 'عرض فایل تصویر "{name}" نمیتواند از {size} پیکسل بیشتر باشد.',
-        msgImageHeightLarge: 'ارتفاع فایل تصویر "{name}" نمی‌تواند از {size} پیکسل بیشتر باشد.',
-        msgImageResizeError: 'یافت نشد ابعاد تصویر را برای تغییر اندازه.',
-        msgImageResizeException: 'خطا در هنگام تغییر اندازه تصویر.<pre>{errors}</pre>',
-        dropZoneTitle: 'فایل‌ها را بکشید و در اینجا رها کنید &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'حذف فایل',
-            uploadTitle: 'آپلود فایل',
-            zoomTitle: 'دیدن جزئیات',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'آپلود نشده است',
-            indicatorSuccessTitle: 'آپلود شده',
-            indicatorErrorTitle: 'بارگذاری خطا',
-            indicatorLoadingTitle: 'آپلود ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Finnish Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales.fi = {
-        fileSingle: 'tiedosto',
-        filePlural: 'tiedostot',
-        browseLabel: 'Selaa &hellip;',
-        removeLabel: 'Poista',
-        removeTitle: 'Tyhj&auml;nn&auml; valitut tiedostot',
-        cancelLabel: 'Peruuta',
-        cancelTitle: 'Peruuta lataus',
-        uploadLabel: 'Lataa',
-        uploadTitle: 'Lataa valitut tiedostot',
-        msgNoFilesSelected: '',
-        msgSizeTooLarge: 'Tiedosto "{name}" (<b>{size} Kt</b>) ylitt&auml;&auml; suurimman sallitun tiedoston koon, joka on <b>{maxSize} Kt</b>. Yrit&auml; uudelleen!',
-        msgFilesTooLess: 'V&auml;hint&auml;&auml;n <b>{n}</b> {files} tiedostoa on valittava ladattavaksi. Ole hyv&auml; ja yrit&auml; uudelleen!',
-        msgFilesTooMany: 'Valittujen tiedostojen lukum&auml;&auml;r&auml; <b>({n})</b> ylitt&auml;&auml; suurimman sallitun m&auml;&auml;r&auml;n <b>{m}</b>. Ole hyv&auml; ja yrit&auml; uudelleen!',
-        msgFileNotFound: 'Tiedostoa "{name}" ei l&ouml;ydy!',
-        msgFileSecured: 'Tietoturvarajoitukset est&auml;v&auml;t tiedoston "{name}" lukemisen.',
-        msgFileNotReadable: 'Tiedosto "{name}" ei ole luettavissa.',
-        msgFilePreviewAborted: 'Tiedoston "{name}" esikatselu keskeytetty.',
-        msgFilePreviewError: 'Virhe on tapahtunut luettaessa tiedostoa "{name}".',
-        msgInvalidFileType: 'Tiedosto "{name}" on v&auml;&auml;r&auml;n tyyppinen. Ainoastaan tiedostot tyyppi&auml; "{types}" ovat tuettuja.',
-        msgInvalidFileExtension: 'Tiedoston "{name}" tarkenne on ep&auml;kelpo. Ainoastaan tarkenteet "{extensions}" ovat tuettuja.',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Tiedoston latausvirhe',
-        msgLoading: 'Ladataan tiedostoa {index} / {files} &hellip;',
-        msgProgress: 'Ladataan tiedostoa {index} / {files} - {name} - {percent}% valmistunut.',
-        msgSelected: '{n} tiedostoa valittu',
-        msgFoldersNotAllowed: 'Raahaa ja pudota ainoastaan tiedostoja! Ohitettu {n} raahattua kansiota.',
-        dropZoneTitle: 'Raahaa ja pudota tiedostot t&auml;h&auml;n &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Remove file',
-            uploadTitle: 'Upload file',
-            zoomTitle: 'View Details',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Not uploaded yet',
-            indicatorSuccessTitle: 'Uploaded',
-            indicatorErrorTitle: 'Upload Error',
-            indicatorLoadingTitle: 'Uploading ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-
-    $.extend($.fn.fileinput.defaults, $.fn.fileinputLocales.fi);
-})(window.jQuery);
-/*!
- * FileInput French Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['fr'] = {
-        fileSingle: 'fichier',
-        filePlural: 'fichiers',
-        browseLabel: 'Parcourir&hellip;',
-        removeLabel: 'Retirer',
-        removeTitle: 'Retirer les fichiers sélectionnés',
-        cancelLabel: 'Annuler',
-        cancelTitle: "Annuler l'envoi en cours",
-        uploadLabel: 'Transférer',
-        uploadTitle: 'Transférer les fichiers sélectionnés',
-        msgNo: 'Non',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Annulé',
-        msgZoomModalHeading: 'Aperçu détaillé',
-        msgSizeTooLarge: 'Le fichier "{name}" (<b>{size} Ko</b>) dépasse la taille maximale autorisée qui est de <b>{maxSize} Ko</b>.',
-        msgFilesTooLess: 'Vous devez sélectionner au moins <b>{n}</b> {files} à transmettre.',
-        msgFilesTooMany: 'Le nombre de fichier sélectionné <b>({n})</b> dépasse la quantité maximale autorisée qui est de <b>{m}</b>.',
-        msgFileNotFound: 'Le fichier "{name}" est introuvable !',
-        msgFileSecured: "Des restrictions de sécurité vous empêchent d'accéder au fichier \"{name}\".",
-        msgFileNotReadable: 'Le fichier "{name}" est illisble.',
-        msgFilePreviewAborted: 'Prévisualisation du fichier "{name}" annulée.',
-        msgFilePreviewError: 'Une erreur est survenue lors de la lecture du fichier "{name}".',
-        msgInvalidFileType: 'Type de document invalide pour "{name}". Seulement les documents de type "{types}" sont autorisés.',
-        msgInvalidFileExtension: 'Extension invalide pour le fichier "{name}". Seules les extensions "{extensions}" sont autorisées.',
-        msgUploadAborted: 'Le téléchargement du fichier a été interrompu',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Erreur de validation',
-        msgLoading: 'Transmission du fichier {index} sur {files}&hellip;',
-        msgProgress: 'Transmission du fichier {index} sur {files} - {name} - {percent}% faits.',
-        msgSelected: '{n} {files} sélectionné(s)',
-        msgFoldersNotAllowed: 'Glissez et déposez uniquement des fichiers ! {n} répertoire(s) exclu(s).',
-        msgImageWidthSmall: 'Largeur de fichier image "{name}" doit être d\'au moins {size} px.',
-        msgImageHeightSmall: 'Hauteur de fichier image "{name}" doit être d\'au moins {size} px.',
-        msgImageWidthLarge: 'Largeur de fichier image "{name}" ne peut pas dépasser {size} px.',
-        msgImageHeightLarge: 'Hauteur de fichier image "{name}" ne peut pas dépasser {size} px.',
-        msgImageResizeError: "Impossible d'obtenir les dimensions de l'image à redimensionner.",
-        msgImageResizeException: "Erreur lors du redimensionnement de l'image.<pre>{errors}</pre>",
-        dropZoneTitle: 'Glissez et déposez les fichiers ici&hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Supprimer le fichier',
-            uploadTitle: 'Télécharger un fichier',
-            zoomTitle: 'Voir les détails',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Pas encore téléchargé',
-            indicatorSuccessTitle: 'Posté',
-            indicatorErrorTitle: 'Ajouter erreur',
-            indicatorLoadingTitle: 'ajout ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-/*!
- * FileInput Hungarian Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['hu'] = {
-        fileSingle: 'fájl',
-        filePlural: 'fájl',
-        browseLabel: 'Böngész &hellip;',
-        removeLabel: 'Eltávolít',
-        removeTitle: 'Kijelölt fájlok törlése',
-        cancelLabel: 'Mégse',
-        cancelTitle: 'Feltöltés megszakítása',
-        uploadLabel: 'Feltöltés',
-        uploadTitle: 'Kijelölt fájlok feltöltése',
-        msgNo: 'No',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Cancelled',
-        msgZoomModalHeading: 'Részletes Preview',
-        msgSizeTooLarge: '"{name}" fájl (<b>{size} KB</b>) mérete nagyobb a megengedettnél <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Legalább <b>{n}</b> {files} ki kell választania a feltöltéshez.',
-        msgFilesTooMany: 'A feltölteni kívánt fájlok száma <b>({n})</b> elérte a megengedett maximumot <b>{m}</b>.',
-        msgFileNotFound: '"{name}" fájl nem található!',
-        msgFileSecured: 'Biztonsági beállítások nem engedik olvasni a fájlt "{name}".',
-        msgFileNotReadable: '"{name}" fájl nem olvasható',
-        msgFilePreviewAborted: '"{name}" fájl feltöltése megszakítva.',
-        msgFilePreviewError: 'Hiba lépett fel a "{name}" fájl olvasása közben.',
-        msgInvalidFileType: 'Nem megengedett fájl "{name}". Csak a "{types}" fájl típusok támogatottak.',
-        msgInvalidFileExtension: 'Nem megengedett kiterjesztés / fájltípus "{name}". Csak a "{extensions}" kiterjesztés(ek) / fájltípus(ok) támogatottak.',
-        msgUploadAborted: 'A fájl feltöltés megszakítva',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Érvényesítés hiba',
-        msgLoading: '{index} / {files} töltése &hellip;',
-        msgProgress: 'Feltöltés: {index} / {files} - {name} - {percent}% kész.',
-        msgSelected: '{n} {files} kiválasztva.',
-        msgFoldersNotAllowed: 'Csak fájlokat húzzon ide! Kihagyva {n} könyvtár.',
-        msgImageWidthSmall: 'Szélessége image file "{name}" legalább {size} px.',
-        msgImageHeightSmall: 'Magassága image file "{name}" legalább {size} px.',
-        msgImageWidthLarge: 'Szélessége image file "{name}" nem haladhatja meg a {size} px.',
-        msgImageHeightLarge: 'Magassága image file "{name}" nem haladhatja meg a {size} px.',
-        msgImageResizeError: 'Nem lehet megszerezni a kép méretei átméretezni.',
-        msgImageResizeException: 'Hiba történt a méretezés.<pre>{errors}</pre>',
-        dropZoneTitle: 'Fájlok húzása ide &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'A fájl eltávolítása',
-            uploadTitle: 'fájl feltöltése',
-            zoomTitle: 'Részletek megtekintése',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Nem feltöltve',
-            indicatorSuccessTitle: 'Feltöltött',
-            indicatorErrorTitle: 'Feltöltés Error',
-            indicatorLoadingTitle: 'Feltöltése ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Indonesian Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- * @author Bambang Riswanto <bamz3r@gmail.com>
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['id'] = {
-        fileSingle: 'berkas',
-        filePlural: 'berkas',
-        browseLabel: 'Pilih File &hellip;',
-        removeLabel: 'Hapus',
-        removeTitle: 'Hapus berkas terpilih',
-        cancelLabel: 'Batal',
-        cancelTitle: 'Batalkan proses pengunggahan',
-        uploadLabel: 'Unggah',
-        uploadTitle: 'Unggah berkas terpilih',
-        msgNo: 'Tidak',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Dibatalkan',
-        msgZoomModalHeading: 'Pratinjau terperinci',
-        msgSizeTooLarge: 'Berkas "{name}" (<b>{size} KB</b>) melebihi ukuran upload maksimal yaitu <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Anda harus memilih setidaknya <b>{n}</b> {files} untuk diunggah.',
-        msgFilesTooMany: '<b>({n})</b> berkas yang dipilih untuk diunggah melebihi ukuran upload maksimal yaitu <b>{m}</b>.',
-        msgFileNotFound: 'Berkas "{name}" tak ditemukan!',
-        msgFileSecured: 'Sistem keamanan mencegah untuk membaca berkas "{name}".',
-        msgFileNotReadable: 'Berkas "{name}" tak dapat dibaca.',
-        msgFilePreviewAborted: 'Pratinjau untuk berkas "{name}" dibatalkan.',
-        msgFilePreviewError: 'Kesalahan saat membaca berkas "{name}".',
-        msgInvalidFileType: 'Jenis berkas "{name}" tidak sah. Hanya berkas "{types}" yang didukung.',
-        msgInvalidFileExtension: 'Ekstensi berkas "{name}" tidak sah. Hanya ekstensi "{extensions}" yang didukung.',
-        msgUploadAborted: 'Pengunggahan berkas dibatalkan',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Kesalahan validasi',
-        msgLoading: 'Memuat {index} dari {files} berkas &hellip;',
-        msgProgress: 'Memuat {index} dari {files} berkas - {name} - {percent}% selesai.',
-        msgSelected: '{n} {files} dipilih',
-        msgFoldersNotAllowed: 'Hanya tahan dan lepas file saja! {n} folder diabaikan.',
-        msgImageWidthSmall: 'Lebar dari gambar "{name}" harus sekurangnya {size} px.',
-        msgImageHeightSmall: 'Tinggi dari gambar "{name}" harus sekurangnya {size} px.',
-        msgImageWidthLarge: 'Lebar dari gambar "{name}" tak boleh melebihi {size} px.',
-        msgImageHeightLarge: 'Tinggi dari gambar "{name}" tak boleh melebihi {size} px.',
-        msgImageResizeError: 'Tak dapat menentukan dimensi gambar untuk mengubah ukuran.',
-        msgImageResizeException: 'Kesalahan saat mengubah ukuran gambar.<pre>{errors}</pre>',
-        dropZoneTitle: 'Tarik dan lepaskan berkas disini &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Hapus berkas',
-            uploadTitle: 'Unggah berkas',
-            zoomTitle: 'Tampilkan Rincian',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Belum diunggah',
-            indicatorSuccessTitle: 'Sudah diunggah',
-            indicatorErrorTitle: 'Kesalahan pengunggahan',
-            indicatorLoadingTitle: 'Mengunggah ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Italian Translation
- * 
- * Author: Lorenzo Milesi <maxxer@yetopen.it>
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['it'] = {
-        fileSingle: 'file',
-        filePlural: 'file',
-        browseLabel: 'Sfoglia&hellip;',
-        removeLabel: 'Rimuovi',
-        removeTitle: 'Rimuovi i file selezionati',
-        cancelLabel: 'Annulla',
-        cancelTitle: 'Annulla i caricamenti in corso',
-        uploadLabel: 'Carica',
-        uploadTitle: 'Carica i file selezionati',
-        msgNo: 'No',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Annullato',
-        msgZoomModalHeading: 'Anteprima dettagliata',
-        msgSizeTooLarge: 'Il file "{name}" (<b>{size} KB</b>) eccede la dimensione massima di caricamento di <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Devi selezionare almeno <b>{n}</b> {files} da caricare.',
-        msgFilesTooMany: 'Il numero di file selezionati per il caricamento <b>({n})</b> eccede il numero massimo di file accettati <b>{m}</b>.',
-        msgFileNotFound: 'File "{name}" non trovato!',
-        msgFileSecured: 'Restrizioni di sicurezza impediscono la lettura del file "{name}".',
-        msgFileNotReadable: 'Il file "{name}" non \xE8 leggibile.',
-        msgFilePreviewAborted: 'Generazione anteprima per "{name}" annullata.',
-        msgFilePreviewError: 'Errore durante la lettura del file "{name}".',
-        msgInvalidFileType: 'Tipo non valido per il file "{name}". Sono ammessi solo file di tipo "{types}".',
-        msgInvalidFileExtension: 'Estensione non valida per il file "{name}". Sono ammessi solo file con estensione "{extensions}".',
-        msgUploadAborted: 'Il caricamento del file è stata interrotta',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Errore di convalida',
-        msgLoading: 'Caricamento file {index} di {files}&hellip;',
-        msgProgress: 'Caricamento file {index} di {files} - {name} - {percent}% completato.',
-        msgSelected: '{n} {files} selezionati',
-        msgFoldersNotAllowed: 'Trascina solo file! Ignorata/e {n} cartella/e.',
-        msgImageWidthSmall: 'Larghezza di file immagine "{name}" deve essere di almeno {size} px.',
-        msgImageHeightSmall: 'Altezza di file immagine "{name}" deve essere di almeno {size} px.',
-        msgImageWidthLarge: 'Larghezza di file immagine "{name}" non può superare {size} px.',
-        msgImageHeightLarge: 'Altezza di file immagine "{name}" non può superare {size} px.',
-        msgImageResizeError: "Impossibile ottenere le dimensioni dell'immagine per ridimensionare.",
-        msgImageResizeException: "Errore durante il ridimensionamento dell'immagine.<pre>{errors}</pre>",
-        dropZoneTitle: 'Trascina i file qui&hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Rimuovere il file',
-            uploadTitle: 'Caricare un file',
-            zoomTitle: 'Guarda i dettagli',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Non ancora caricato',
-            indicatorSuccessTitle: 'Caricati',
-            indicatorErrorTitle: 'Carica Errore',
-            indicatorLoadingTitle: 'Caricamento ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-/*!
- * FileInput Japanese Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- * @author Yuta Hoshina <hoshina@gmail.com>
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- * slugCallback
- *    \u4e00-\u9fa5 : Kanji (Chinese characters)
- *    \u3040-\u309f : Hiragana (Japanese syllabary)
- *    \u30a0-\u30ff\u31f0-\u31ff : Katakana (including phonetic extension)
- *    \u3200-\u32ff : Enclosed CJK Letters and Months
- *    \uff00-\uffef : Halfwidth and Fullwidth Forms
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['ja'] = {
-        fileSingle: 'ファイル',
-        filePlural: 'ファイル',
-        browseLabel: 'ファイルを選択&hellip;',
-        removeLabel: '削除',
-        removeTitle: '選択したファイルを削除',
-        cancelLabel: 'キャンセル',
-        cancelTitle: 'アップロードをキャンセル',
-        uploadLabel: 'アップロード',
-        uploadTitle: '選択したファイルをアップロード',
-        msgNo: 'いいえ',
-        msgNoFilesSelected: 'ファイルが選択されていません',
-        msgCancelled: 'キャンセル',
-        msgZoomModalHeading: 'プレビュー',
-        msgSizeTooLarge: 'ファイル"{name}" (<b>{size} KB</b>)はアップロード可能な上限容量<b>{maxSize} KB</b>を超えています',
-        msgFilesTooLess: '最低<b>{n}</b>個の{files}を選択してください',
-        msgFilesTooMany: '選択したファイルの数<b>({n}個)</b>はアップロード可能な上限数<b>({m}個)</b>を超えています',
-        msgFileNotFound: 'ファイル"{name}"はありませんでした',
-        msgFileSecured: 'ファイル"{name}"は読み取り権限がないため取得できません',
-        msgFileNotReadable: 'ファイル"{name}"は読み込めません',
-        msgFilePreviewAborted: 'ファイル"{name}"のプレビューを中止しました',
-        msgFilePreviewError: 'ファイル"{name}"の読み込み中にエラーが発生しました',
-        msgInvalidFileType: '"{name}"は無効なファイル形式です。"{types}"形式のファイルのみサポートしています',
-        msgInvalidFileExtension: '"{name}"は無効なファイル拡張子です。拡張子が"{extensions}"のファイルのみサポートしています',
-        msgUploadAborted: 'ファイルのアップロードが中止されました',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: '検証エラー',
-        msgLoading: '{files}個中{index}個目のファイルを読み込み中&hellip;',
-        msgProgress: '{files}個中{index}個のファイルを読み込み中 - {name} - {percent}% 完了',
-        msgSelected: '{n}個の{files}を選択',
-        msgFoldersNotAllowed: 'ドラッグ&ドロップが可能なのはファイルのみです。{n}個のフォルダ－は無視されました',
-        msgImageWidthSmall: '画像ファイル"{name}"の幅が小さすぎます。画像サイズの幅は少なくとも{size}px必要です',
-        msgImageHeightSmall: '画像ファイル"{name}"の高さが小さすぎます。画像サイズの高さは少なくとも{size}px必要です',
-        msgImageWidthLarge: '画像ファイル"{name}"の幅がアップロード可能な画像サイズ({size}px)を超えています',
-        msgImageHeightLarge: '画像ファイル"{name}"の高さがアップロード可能な画像サイズ({size}px)を超えています',
-        msgImageResizeError: 'リサイズ時に画像サイズが取得できませんでした',
-        msgImageResizeException: '画像のリサイズ時にエラーが発生しました。<pre>{errors}</pre>',
-        dropZoneTitle: 'ファイルをドラッグ&ドロップ&hellip;',
-        dropZoneClickTitle: '<br>(または クリックして{files}を選択 )',
-        slugCallback: function(text) {
-            return text ? text.split(/(\\|\/)/g).pop().replace(/[^\w\u4e00-\u9fa5\u3040-\u309f\u30a0-\u30ff\u31f0-\u31ff\u3200-\u32ff\uff00-\uffef\-.\\\/ ]+/g, '') : '';
-        },
-        fileActionSettings: {
-            removeTitle: 'ファイルを削除',
-            uploadTitle: 'ファイルをアップロード',
-            zoomTitle: 'プレビュー',
-            dragTitle: '移動 / 再配置',
-            indicatorNewTitle: 'まだアップロードされていません',
-            indicatorSuccessTitle: 'アップロード済み',
-            indicatorErrorTitle: 'アップロード失敗',
-            indicatorLoadingTitle: 'アップロード中...'
-        },
-        previewZoomButtonTitles: {
-            prev: '前のファイルを表示',
-            next: '次のファイルを表示',
-            toggleheader: 'ファイル情報の表示/非表示',
-            fullscreen: 'フルスクリーン表示の開始/終了',
-            borderless: 'フルウィンドウ表示の開始/終了',
-            close: 'プレビューを閉じる'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Dutch Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['nl'] = {
-        fileSingle: 'bestand',
-        filePlural: 'bestanden',
-        browseLabel: 'Zoek &hellip;',
-        removeLabel: 'Verwijder',
-        removeTitle: 'Verwijder geselecteerde bestanden',
-        cancelLabel: 'Annuleren',
-        cancelTitle: 'Annuleer upload',
-        uploadLabel: 'Upload',
-        uploadTitle: 'Upload geselecteerde bestanden',
-        msgNo: 'Nee',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Geannuleerd',
-        msgZoomModalHeading: 'Gedetailleerd voorbeeld',
-        msgSizeTooLarge: 'Bestand "{name}" (<b>{size} KB</b>) is groter dan de toegestane <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'U moet minstens <b>{n}</b> {files} selecteren om te uploaden.',
-        msgFilesTooMany: 'Aantal geselecteerde bestanden <b>({n})</b> is meer dan de toegestane <b>{m}</b>.',
-        msgFileNotFound: 'Bestand "{name}" niet gevonden!',
-        msgFileSecured: 'Bestand kan niet gelezen worden in verband met beveiligings redenen "{name}".',
-        msgFileNotReadable: 'Bestand "{name}" is niet leesbaar.',
-        msgFilePreviewAborted: 'Bestand weergaven geannuleerd voor "{name}".',
-        msgFilePreviewError: 'Er is een fout opgetreden met het lezen van "{name}".',
-        msgInvalidFileType: 'Geen geldig bestand "{name}". Alleen "{types}" zijn toegestaan.',
-        msgInvalidFileExtension: 'Geen geldige extensie "{name}". Alleen "{extensions}" zijn toegestaan.',
-        msgUploadAborted: 'Het uploaden van bestanden is afgebroken',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Bevestiging fout',
-        msgLoading: 'Bestanden laden {index} van de {files} &hellip;',
-        msgProgress: 'Bestanden laden {index} van de {files} - {name} - {percent}% compleet.',
-        msgSelected: '{n} {files} geselecteerd',
-        msgFoldersNotAllowed: 'Drag & drop alleen bestanden! {n} overgeslagen map(pen).',
-        msgImageWidthSmall: 'Breedte van het foto-bestand "{name}" moet minstens {size} px zijn.',
-        msgImageHeightSmall: 'Hoogte van het foto-bestand "{name}" moet minstens {size} px zijn.',
-        msgImageWidthLarge: 'Breedte van het foto-bestand "{name}" kan niet hoger zijn dan {size} px.',
-        msgImageHeightLarge: 'Hoogte van het foto bestand "{name}" kan niet hoger zijn dan {size} px.',
-        msgImageResizeError: 'Kon de foto afmetingen niet lezen om te verkleinen.',
-        msgImageResizeException: 'Fout bij het verkleinen van de foto.<pre>{errors}</pre>',
-        dropZoneTitle: 'Drag & drop bestanden hier &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Verwijder bestand',
-            uploadTitle: 'bestand uploaden',
-            zoomTitle: 'Bekijk details',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Nog niet geupload',
-            indicatorSuccessTitle: 'geupload',
-            indicatorErrorTitle: 'fout uploaden',
-            indicatorLoadingTitle: 'uploaden ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Polish Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['pl'] = {
-        fileSingle: 'plik',
-        filePlural: 'pliki',
-        browseLabel: 'Przeglądaj &hellip;',
-        removeLabel: 'Usuń',
-        removeTitle: 'Usuń zaznaczone pliki',
-        cancelLabel: 'Przerwij',
-        cancelTitle: 'Anuluj wysyłanie',
-        uploadLabel: 'Wgraj',
-        uploadTitle: 'Wgraj zaznaczone pliki',
-        msgNo: 'Nie',
-        msgNoFilesSelected: 'Brak zaznaczonych plików',
-        msgCancelled: 'Odwołany',
-        msgZoomModalHeading: 'Szczegółowe Podgląd',
-        msgSizeTooLarge: 'Plik o nazwie "{name}" (<b>{size} KB</b>) przekroczył maksymalną dopuszczalną wielkość pliku wynoszącą <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Musisz wybrać przynajmniej <b>{n}</b> {files} do wgrania.',
-        msgFilesTooMany: 'Liczba plików wybranych do wgrania w liczbie <b>({n})</b>, przekracza maksymalny dozwolony limit wynoszący <b>{m}</b>.',
-        msgFileNotFound: 'Plik "{name}" nie istnieje!',
-        msgFileSecured: 'Ustawienia zabezpieczeń uniemożliwiają odczyt pliku "{name}".',
-        msgFileNotReadable: 'Plik "{name}" nie jest plikiem do odczytu.',
-        msgFilePreviewAborted: 'Podgląd pliku "{name}" został przerwany.',
-        msgFilePreviewError: 'Wystąpił błąd w czasie odczytu pliku "{name}".',
-        msgInvalidFileType: 'Nieznny typ pliku "{name}". Tylko następujące rodzaje plików "{types}", są obsługiwane.',
-        msgInvalidFileExtension: 'Złe rozszerzenie dla pliku "{name}". Tylko następujące rozszerzenia plików "{extensions}", są obsługiwane.',
-        msgUploadAborted: 'Plik przesyłanie zostało przerwane',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Błąd walidacji',
-        msgLoading: 'Wczytywanie pliku {index} z {files} &hellip;',
-        msgProgress: 'Wczytywanie pliku {index} z {files} - {name} - {percent}% zakończone.',
-        msgSelected: '{n} {files} zaznaczonych',
-        msgFoldersNotAllowed: 'Metodą przeciągnij i upuść, można przenosić tylko pliki. Pominięto {n} katalogów.',
-        msgImageWidthSmall: 'Szerokość pliku obrazu "{name}" musi być co najmniej {size} px.',
-        msgImageHeightSmall: 'Wysokość pliku obrazu "{name}" musi być co najmniej {size} px.',
-        msgImageWidthLarge: 'Szerokość pliku obrazu "{name}" nie może przekraczać {size} px.',
-        msgImageHeightLarge: 'Wysokość pliku obrazu "{name}" nie może przekraczać {size} px.',
-        msgImageResizeError: 'Nie udało się uzyskać wymiary obrazu, aby zmienić rozmiar.',
-        msgImageResizeException: 'Błąd podczas zmiany rozmiaru obrazu.<pre>{errors}</pre>',
-        dropZoneTitle: 'Przeciągnij i upuść pliki tu &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Usuń plik',
-            uploadTitle: 'przesyłanie pliku',
-            zoomTitle: 'Pokaż szczegóły',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Jeszcze nie przesłanych',
-            indicatorSuccessTitle: 'Dodane',
-            indicatorErrorTitle: 'Prześlij błąd',
-            indicatorLoadingTitle: 'Zamieszczanie ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-/*!
- * FileInput Brazillian Portuguese Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['pt-BR'] = {
-        fileSingle: 'arquivo',
-        filePlural: 'arquivos',
-        browseLabel: 'Procurar&hellip;',
-        removeLabel: 'Remover',
-        removeTitle: 'Remover arquivos selecionados',
-        cancelLabel: 'Cancelar',
-        cancelTitle: 'Interromper envio em andamento',
-        uploadLabel: 'Enviar',
-        uploadTitle: 'Enviar arquivos selecionados',
-        msgNo: 'Não',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Cancelado',
-        msgZoomModalHeading: 'Pré-visualização detalhada',
-        msgSizeTooLarge: 'O arquivo "{name}" (<b>{size} KB</b>) excede o tamanho máximo permitido de <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Você deve selecionar pelo menos <b>{n}</b> {files} para enviar.',
-        msgFilesTooMany: 'O número de arquivos selecionados para o envio <b>({n})</b> excede o limite máximo permitido de <b>{m}</b>.',
-        msgFileNotFound: 'O arquivo "{name}" não foi encontrado!',
-        msgFileSecured: 'Restrições de segurança impedem a leitura do arquivo "{name}".',
-        msgFileNotReadable: 'O arquivo "{name}" não pode ser lido.',
-        msgFilePreviewAborted: 'A pré-visualização do arquivo "{name}" foi interrompida.',
-        msgFilePreviewError: 'Ocorreu um erro ao ler o arquivo "{name}".',
-        msgInvalidFileType: 'Tipo inválido para o arquivo "{name}". Apenas arquivos "{types}" são permitidos.',
-        msgInvalidFileExtension: 'Extensão inválida para o arquivo "{name}". Apenas arquivos "{extensions}" são permitidos.',
-        msgUploadAborted: 'O envio do arquivo foi abortado',
-        msgUploadThreshold: 'Processando...',
-        msgValidationError: 'Erro de validação',
-        msgLoading: 'Enviando arquivo {index} de {files}&hellip;',
-        msgProgress: 'Enviando arquivo {index} de {files} - {name} - {percent}% completo.',
-        msgSelected: '{n} {files} selecionado(s)',
-        msgFoldersNotAllowed: 'Arraste e solte apenas arquivos! {n} pasta(s) ignoradas.',
-        msgImageWidthSmall: 'Largura do arquivo de imagem "{name}" deve ser pelo menos {size} px.',
-        msgImageHeightSmall: 'Altura do arquivo de imagem "{name}" deve ser pelo menos {size} px.',
-        msgImageWidthLarge: 'Largura do arquivo de imagem "{name}" não pode exceder {size} px.',
-        msgImageHeightLarge: 'Altura do arquivo de imagem "{name}" não pode exceder {size} px.',
-        msgImageResizeError: 'Não foi possível obter as dimensões da imagem para redimensionar.',
-        msgImageResizeException: 'Erro ao redimensionar a imagem.<pre>{errors}</pre>',
-        dropZoneTitle: 'Arraste e solte os arquivos aqui&hellip;',
-        dropZoneClickTitle: '<br>(ou clique para selecionar o(s) arquivo(s))',
-        fileActionSettings: {
-            removeTitle: 'Remover arquivo',
-            uploadTitle: 'Enviar arquivo',
-            zoomTitle: 'Ver detalhes',
-            dragTitle: 'Mover / Reordenar',
-            indicatorNewTitle: 'Ainda não enviado',
-            indicatorSuccessTitle: 'Enviado',
-            indicatorErrorTitle: 'Erro',
-            indicatorLoadingTitle: 'A enviar ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'Visualizar arquivo anterior',
-            next: 'Visualizar próximo arquivo',
-            toggleheader: 'Mostrar cabeçalho',
-            fullscreen: 'Ativar tela cheia',
-            borderless: 'Ativar modo sem borda',
-            close: 'Fechar pré-visualização detalhada'
-        }
-    };
-})(window.jQuery);
-/*!
- * FileInput Portuguese Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['pt'] = {
-        fileSingle: 'ficheiro',
-        filePlural: 'ficheiros',
-        browseLabel: 'Procurar &hellip;',
-        removeLabel: 'Remover',
-        removeTitle: 'Remover ficheiros seleccionados',
-        cancelLabel: 'Cancelar',
-        cancelTitle: 'Abortar carregamento ',
-        uploadLabel: 'Carregar',
-        uploadTitle: 'Carregar ficheiros seleccionados',
-        msgNo: 'Não',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Cancelado',
-        msgZoomModalHeading: 'Pré-visualização detalhada',
-        msgSizeTooLarge: 'Ficheiro "{name}" (<b>{size} KB</b>) excede o tamanho máximo permido de <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Deve seleccionar pelo menos <b>{n}</b> {files} para fazer upload.',
-        msgFilesTooMany: 'Número máximo de ficheiros seleccionados <b>({n})</b> excede o limite máximo de <b>{m}</b>.',
-        msgFileNotFound: 'Ficheiro "{name}" não encontrado!',
-        msgFileSecured: 'Restrições de segurança preventem a leitura do ficheiro "{name}".',
-        msgFileNotReadable: 'Ficheiro "{name}" não pode ser lido.',
-        msgFilePreviewAborted: 'Pré-visualização abortado para o ficheiro "{name}".',
-        msgFilePreviewError: 'Ocorreu um erro ao ler o ficheiro "{name}".',
-        msgInvalidFileType: 'Tipo inválido para o ficheiro "{name}". Apenas ficheiros "{types}" são suportados.',
-        msgInvalidFileExtension: 'Extensão inválida para o ficheiro "{name}". Apenas ficheiros "{extensions}" são suportados.',
-        msgUploadAborted: 'O upload do arquivo foi abortada',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Erro de validação',
-        msgLoading: 'A carregar ficheiro {index} de {files} &hellip;',
-        msgProgress: 'A carregar ficheiro {index} de {files} - {name} - {percent}% completo.',
-        msgSelected: '{n} {files} seleccionados',
-        msgFoldersNotAllowed: 'Arrastar e largar ficheiros apenas! {n} pasta(s) ignoradas.',
-        msgImageWidthSmall: 'Largura do arquivo de imagem "{name}" deve ser pelo menos {size} px.',
-        msgImageHeightSmall: 'Altura do arquivo de imagem "{name}" deve ser pelo menos {size} px.',
-        msgImageWidthLarge: 'Largura do arquivo de imagem "{name}" não pode exceder {size} px.',
-        msgImageHeightLarge: 'Altura do arquivo de imagem "{name}" não pode exceder {size} px.',
-        msgImageResizeError: 'Could not get the image dimensions to resize.',
-        msgImageResizeException: 'Erro ao redimensionar a imagem.<pre>{errors}</pre>',
-        dropZoneTitle: 'Arrastar e largar ficheiros aqui &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Remover arquivo',
-            uploadTitle: 'Carregar arquivo',
-            zoomTitle: 'Ver detalhes',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Ainda não carregou',
-            indicatorSuccessTitle: 'Carregado',
-            indicatorErrorTitle: 'Carregar Erro',
-            indicatorLoadingTitle: 'A carregar ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-/*!
- * FileInput Romanian Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- * @author Ciprian Voicu <pictoru@autoportret.ro>
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['ro'] = {
-        fileSingle: 'fișier',
-        filePlural: 'fișiere',
-        browseLabel: 'Răsfoiește &hellip;',
-        removeLabel: 'Șterge',
-        removeTitle: 'Curăță fișierele selectate',
-        cancelLabel: 'Renunță',
-        cancelTitle: 'Anulează încărcarea curentă',
-        uploadLabel: 'Încarcă',
-        uploadTitle: 'Încarcă fișierele selectate',
-        msgNo: 'Nu',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Anulat',
-        msgZoomModalHeading: 'Previzualizare detaliată',
-        msgSizeTooLarge: 'Fișierul "{name}" (<b>{size} KB</b>) depășește limita maximă de încărcare de <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Trebuie să selectezi cel puțin <b>{n}</b> {files} pentru a încărca.',
-        msgFilesTooMany: 'Numărul fișierelor pentru încărcare <b>({n})</b> depășește limita maximă de <b>{m}</b>.',
-        msgFileNotFound: 'Fișierul "{name}" nu a fost găsit!',
-        msgFileSecured: 'Restricții de securitate previn citirea fișierului "{name}".',
-        msgFileNotReadable: 'Fișierul "{name}" nu se poate citi.',
-        msgFilePreviewAborted: 'Fișierului "{name}" nu poate fi previzualizat.',
-        msgFilePreviewError: 'A intervenit o eroare în încercarea de citire a fișierului "{name}".',
-        msgInvalidFileType: 'Tip de fișier incorect pentru "{name}". Sunt suportate doar fișiere de tipurile "{types}".',
-        msgInvalidFileExtension: 'Extensie incorectă pentru "{name}". Sunt suportate doar extensiile "{extensions}".',
-        msgUploadAborted: 'Fișierul Încărcarea a fost întrerupt',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Eroare de validare',
-        msgLoading: 'Se încarcă fișierul {index} din {files} &hellip;',
-        msgProgress: 'Se încarcă fișierul {index} din {files} - {name} - {percent}% încărcat.',
-        msgSelected: '{n} {files} încărcate',
-        msgFoldersNotAllowed: 'Se poate doar trăgând fișierele! Se renunță la {n} dosar(e).',
-        msgImageWidthSmall: 'Lățimea de fișier de imagine "{name}" trebuie să fie de cel puțin {size} px.',
-        msgImageHeightSmall: 'Înălțimea fișier imagine "{name}" trebuie să fie de cel puțin {size} px.',
-        msgImageWidthLarge: 'Lățimea de fișier de imagine "{name}" nu poate depăși {size} px.',
-        msgImageHeightLarge: 'Înălțimea fișier imagine "{name}" nu poate depăși {size} px.',
-        msgImageResizeError: 'Nu a putut obține dimensiunile imaginii pentru a redimensiona.',
-        msgImageResizeException: 'Eroare la redimensionarea imaginii.<pre>{errors}</pre>',
-        dropZoneTitle: 'Trage fișierele aici &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Scoateți fișier',
-            uploadTitle: 'Incarca fisier',
-            zoomTitle: 'Vezi detalii',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Nu a încărcat încă',
-            indicatorSuccessTitle: 'încărcat',
-            indicatorErrorTitle: 'Încărcați eroare',
-            indicatorLoadingTitle: 'Se încarcă ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Russian Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- * @author CyanoFresh <cyanofresh@gmail.com>
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['ru'] = {
-        fileSingle: 'файл',
-        filePlural: 'файлы',
-        browseLabel: 'Выбрать &hellip;',
-        removeLabel: 'Удалить',
-        removeTitle: 'Очистить выбранные файлы',
-        cancelLabel: 'Отмена',
-        cancelTitle: 'Отменить текущую загрузку',
-        uploadLabel: 'Загрузить',
-        uploadTitle: 'Загрузить выбранные файлы',
-        msgNo: 'нет',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Отменено',
-        msgZoomModalHeading: 'Подробное превью',
-        msgSizeTooLarge: 'Файл "{name}" (<b>{size} KB</b>) превышает максимальный размер <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Вы должны выбрать как минимум <b>{n}</b> {files} для загрузки.',
-        msgFilesTooMany: 'Количество выбранных файлов <b>({n})</b> превышает максимально допустимое количество <b>{m}</b>.',
-        msgFileNotFound: 'Файл "{name}" не найден!',
-        msgFileSecured: 'Ограничения безопасности запрещают читать файл "{name}".',
-        msgFileNotReadable: 'Файл "{name}" невозможно прочитать.',
-        msgFilePreviewAborted: 'Предпросмотр отменен для файла "{name}".',
-        msgFilePreviewError: 'Произошла ошибка при чтении файла "{name}".',
-        msgInvalidFileType: 'Запрещенный тип файла для "{name}". Только "{types}" разрешены.',
-        msgInvalidFileExtension: 'Запрещенное расширение для файла "{name}". Только "{extensions}" разрешены.',
-        msgUploadAborted: 'Выгрузка файла прервана',
-        msgUploadThreshold: 'Обработка...',
-        msgValidationError: 'Ошибка проверки',
-        msgLoading: 'Загрузка файла {index} из {files} &hellip;',
-        msgProgress: 'Загрузка файла {index} из {files} - {name} - {percent}% завершено.',
-        msgSelected: 'Выбрано файлов: {n}',
-        msgFoldersNotAllowed: 'Разрешено перетаскивание только файлов! Пропущено {n} папок.',
-        msgImageWidthSmall: 'Ширина изображения {name} должна быть не меньше {size} px.',
-        msgImageHeightSmall: 'Высота изображения {name} должна быть не меньше {size} px.',
-        msgImageWidthLarge: 'Ширина изображения "{name}" не может превышать {size} px.',
-        msgImageHeightLarge: 'Высота изображения "{name}" не может превышать {size} px.',
-        msgImageResizeError: 'Не удалось получить размеры изображения, чтобы изменить размер.',
-        msgImageResizeException: 'Ошибка при изменении размера изображения.<pre>{errors}</pre>',
-        dropZoneTitle: 'Перетащите файлы сюда &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Удалить файл',
-            uploadTitle: 'Загрузить файл',
-            zoomTitle: 'посмотреть детали',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Еще не загружен',
-            indicatorSuccessTitle: 'Загружен',
-            indicatorErrorTitle: 'Ошибка загрузки',
-            indicatorLoadingTitle: 'Загрузка ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Slovakian Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['sk'] = {
-        fileSingle: 'súbor',
-        filePlural: 'súbory',
-        browseLabel: 'Vybrať &hellip;',
-        removeLabel: 'Odstrániť',
-        removeTitle: 'Vyčistiť vybraté súbory',
-        cancelLabel: 'Storno',
-        cancelTitle: 'Prerušiť  nahrávanie',
-        uploadLabel: 'Nahrať',
-        uploadTitle: 'Nahrať vybraté súbory',
-        msgNo: 'Nie',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Zrušené',
-        msgZoomModalHeading: 'Detailný náhľad',
-        msgSizeTooLarge: 'Súbor "{name}" (<b>{size} KB</b>): prekročenie - maximálna povolená veľkosť <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Musíte vybrať najmenej <b>{n}</b> {files} pre nahranie.',
-        msgFilesTooMany: 'Počet vybratých súborov pre nahranie <b>({n})</b>: prekročenie - maximálny povolený limit <b>{m}</b>.',
-        msgFileNotFound: 'Súbor "{name}" nebol nájdený!',
-        msgFileSecured: 'Zabezpečenie súboru znemožnilo čítať súbor "{name}".',
-        msgFileNotReadable: 'Súbor "{name}" nie je čitateľný.',
-        msgFilePreviewAborted: 'Náhľad súboru bol prerušený pre "{name}".',
-        msgFilePreviewError: 'Nastala chyba pri načítaní súboru "{name}".',
-        msgInvalidFileType: 'Neplatný typ súboru "{name}". Iba "{types}" súborov sú podporované.',
-        msgInvalidFileExtension: 'Neplatná extenzia súboru "{name}". Iba "{extensions}" súborov sú podporované.',
-        msgUploadAborted: 'Súbor nahrávania bol prerušený',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Chyba overenia',
-        msgLoading: 'Nahrávanie súboru {index} z {files} &hellip;',
-        msgProgress: 'Nahrávanie súboru {index} z {files} - {name} - {percent}% dokončené.',
-        msgSelected: '{n} {files} vybraté',
-        msgFoldersNotAllowed: 'Tiahni a pusť iba súbory! Vynechané {n} pustené prečinok(y).',
-        msgImageWidthSmall: 'Šírka image súboru "{name}", musí byť minimálne {size} px.',
-        msgImageHeightSmall: 'Výška image súboru "{name}", musí byť minimálne {size} px.',
-        msgImageWidthLarge: 'Šírka image súboru "{name}" nemôže presiahnuť {size} px.',
-        msgImageHeightLarge: 'Výška súboru obrazu "{name}" nesmie presiahnuť {size} px.',
-        msgImageResizeError: 'Nemožno získať rozmery obrázku zmeniť veľkosť.',
-        msgImageResizeException: 'Chyba pri zmene veľkosti obrázka.<pre>{errors}</pre>',
-        dropZoneTitle: 'Tiahni a pusť súbory tu &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'odstrániť súbor',
-            uploadTitle: 'nahrať súbor',
-            zoomTitle: 'Zobraziť podrobnosti',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Ešte nenahral',
-            indicatorSuccessTitle: 'nahral',
-            indicatorErrorTitle: 'nahrať Chyba',
-            indicatorLoadingTitle: 'nahrávanie ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-/*!
- * FileInput Thai Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['th'] = {
-        fileSingle: 'ไฟล์',
-        filePlural: 'ไฟล์',
-        browseLabel: 'เลือกดู &hellip;',
-        removeLabel: 'ลบทิ้ง',
-        removeTitle: 'ลบไฟล์ที่เลือกทิ้ง',
-        cancelLabel: 'ยกเลิก',
-        cancelTitle: 'ยกเลิกการอัพโหลด',
-        uploadLabel: 'อัพโหลด',
-        uploadTitle: 'อัพโหลดไฟล์ที่เลือก',
-        msgNo: 'ไม่',
-        msgNoFilesSelected: '',
-        msgCancelled: 'ยกเลิก',
-        msgZoomModalHeading: 'ตัวอย่างละเอียด',
-        msgSizeTooLarge: 'ไฟล์ "{name}" (<b>{size} KB</b>) มีขนาดเกินที่ระบบอนุญาตที่ <b>{maxSize} KB</b>, กรุณาลองใหม่อีกครั้ง!',
-        msgFilesTooLess: 'คุณต้องเลือกไฟล์จำนวนอย่างน้อย <b>{n}</b> {files} เพื่ออัพโหลด, กรุณาลองใหม่อีกครั้ง!',
-        msgFilesTooMany: 'ไฟล์ที่คุณเลือกมีจำนวน <b>({n})</b> ซึ่งเกินกว่าที่ระบบอนุญาตที่ <b>{m}</b>, กรุณาลองใหม่อีกครั้ง!',
-        msgFileNotFound: 'ไม่พบไฟล์ "{name}" !',
-        msgFileSecured: 'ระบบความปลอดภัยไม่อนุญาตให้อ่านไฟล์ "{name}".',
-        msgFileNotReadable: 'ไม่สามารถอ่านไฟล์ "{name}" ได้',
-        msgFilePreviewAborted: 'ไฟล์ "{name}" ไม่อนุญาตให้ดูตัวอย่าง',
-        msgFilePreviewError: 'พบปัญหาในการดูตัวอย่างไฟล์ "{name}".',
-        msgInvalidFileType: 'ไฟล์ "{name}" เป็นประเภทไฟล์ที่ไม่ถูกต้อง, อนุญาตเฉพาะไฟล์ประเภท "{types}"',
-        msgInvalidFileExtension: 'ไฟล์ "{name}" เป็น extension ที่ไมถูกต้อง, อนุญาตเฉพาะไฟล์ extension "{extensions}"',
-        msgUploadAborted: 'อัปโหลดไฟล์ถูกยกเลิก',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'ข้อผิดพลาดในการตรวจสอบ',
-        msgLoading: 'กำลังโหลดไฟล์ {index} จาก {files} &hellip;',
-        msgProgress: 'กำลังโหลดไฟล์ {index} จาก {files} - {name} - {percent}%',
-        msgSelected: '{n} {files} ถูกเลือก',
-        msgFoldersNotAllowed: 'Drag & drop เฉพาะไฟล์เท่านั้น! ข้าม dropped folder จำนวน {n}',
-        msgImageWidthSmall: 'ความกว้างของภาพไฟล์ "{name}" ต้องมีอย่างน้อย {size} px.',
-        msgImageHeightSmall: 'ความสูงของภาพไฟล์ "{name}" ต้องมีอย่างน้อย {size} px.',
-        msgImageWidthLarge: 'ความกว้างของภาพไฟล์ "{name}" ไม่เกิน {size} พิกเซล.',
-        msgImageHeightLarge: 'ความสูงของไฟล์ภาพ "{name}" ไม่เกิน {size} พิกเซล.',
-        msgImageResizeError: 'ไม่สามารถรับขนาดภาพเพื่อปรับขนาด',
-        msgImageResizeException: 'ข้อผิดพลาดขณะปรับขนาดภาพ<pre>{errors}</pre>',
-        dropZoneTitle: 'Drag & drop ไฟล์ตรงนี้ &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'ลบไฟล์',
-            uploadTitle: 'อัปโหลดไฟล์',
-            zoomTitle: 'ดูรายละเอียด',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'ยังไม่ได้อัปโหลด',
-            indicatorSuccessTitle: 'อัพโหลด',
-            indicatorErrorTitle: 'อัปโหลดข้อผิดพลาด',
-            indicatorLoadingTitle: 'อัพโหลด ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-/*!
- * FileInput Turkish Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['tr'] = {
-        fileSingle: 'dosya',
-        filePlural: 'dosyalar',
-        browseLabel: 'Gözat &hellip;',
-        removeLabel: 'Sil',
-        removeTitle: 'Seçilen dosyaları sil',
-        cancelLabel: 'İptal',
-        cancelTitle: 'Devam eden yüklemeyi iptal et',
-        uploadLabel: 'Yükle',
-        uploadTitle: 'Seçilen dosyaları yükle',
-        msgNo: 'Hayır',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Iptal edildi',
-        msgZoomModalHeading: 'Detaylı Önizleme',
-        msgSizeTooLarge: '"{name}" dosyasının boyutu (<b>{size} KB</b>) izin verilen azami dosya boyutu olan <b>{maxSize} KB</b>\'tan büyük.',
-        msgFilesTooLess: 'Yüklemek için en az <b>{n}</b> {files} dosya seçmelisiniz.',
-        msgFilesTooMany: 'Yüklemek için seçtiğiniz dosya sayısı <b>({n})</b> azami limitin <b>({m})</b> altında olmalıdır.',
-        msgFileNotFound: '"{name}" dosyası bulunamadı!',
-        msgFileSecured: 'Güvenlik kısıtlamaları "{name}" dosyasının okunmasını engelliyor.',
-        msgFileNotReadable: '"{name}" dosyası okunabilir değil.',
-        msgFilePreviewAborted: '"{name}" dosyası için önizleme iptal edildi.',
-        msgFilePreviewError: '"{name}" dosyası okunurken bir hata oluştu.',
-        msgInvalidFileType: '"{name}" dosyasının türü geçerli değil. Yalnızca "{types}" türünde dosyalara izin veriliyor.',
-        msgInvalidFileExtension: '"{name}" dosyasının uzantısı geçersiz. Yalnızca "{extensions}" uzantılı dosyalara izin veriliyor.',
-        msgUploadAborted: 'Dosya yükleme iptal edildi',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Doğrulama Hatası',
-        msgLoading: 'Dosya yükleniyor {index} / {files} &hellip;',
-        msgProgress: 'Dosya yükleniyor {index} / {files} - {name} - %{percent} tamamlandı.',
-        msgSelected: '{n} {files} seçildi',
-        msgFoldersNotAllowed: 'Yalnızca dosyaları sürükleyip bırakabilirsiniz! {n} dizin(ler) göz ardı edildi.',
-        msgImageWidthSmall: '"{name}" adlı görüntü dosyasının genişliği en az {size} piksel olmalıdır.',
-        msgImageHeightSmall: '"{name}" adlı görüntü dosyasının yüksekliği en az {size} piksel olmalıdır.',
-        msgImageWidthLarge: '"{name}" adlı görüntü dosyasının genişliği {size} pikseli geçemez.',
-        msgImageHeightLarge: '"{name}" adlı görüntü dosyasının yüksekliği {size} pikseli geçemez.',
-        msgImageResizeError: 'Görüntü boyutlarını yeniden boyutlandırmak için alınamadı.',
-        msgImageResizeException: 'Görsel boyutlandırma sırasında hata.<pre>{errors}</pre>',
-        dropZoneTitle: 'Dosyaları buraya sürükleyip bırakın &hellip;',
-        dropZoneClickTitle: '<br>(ya da {files} seçmek için tıklayınız)',
-        fileActionSettings: {
-            removeTitle: 'Dosyayı kaldır',
-            uploadTitle: 'Dosyayı yükle',
-            zoomTitle: 'Ayrıntıları görüntüle',
-            dragTitle: 'Taşı / Yeniden düzenle',
-            indicatorNewTitle: 'Henüz yüklenemedi',
-            indicatorSuccessTitle: 'Yüklendi',
-            indicatorErrorTitle: 'Yükleme Hatası',
-            indicatorLoadingTitle: 'Yükleniyor ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'Önceki dosyayı görüntüle',
-            next: 'Sonraki dosyayı görüntüle',
-            toggleheader: 'Başlık geçiş',
-            fullscreen: 'Tam ekran geçiş',
-            borderless: 'Çerçevesiz moda geçiş',
-            close: 'Detaylı önizlemeyi kapat'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Ukrainian Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- * @author CyanoFresh <cyanofresh@gmail.com>
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['uk'] = {
-        fileSingle: 'файл',
-        filePlural: 'файли',
-        browseLabel: 'Вибрати &hellip;',
-        removeLabel: 'Видалити',
-        removeTitle: 'Видалити вибрані файли',
-        cancelLabel: 'Скасувати',
-        cancelTitle: 'Скасувати поточну загрузку',
-        uploadLabel: 'Загрузити',
-        uploadTitle: 'Загрузити вибрані файли',
-        msgNo: 'Немає',
-        msgNoFilesSelected: '',
-        msgCancelled: 'Cкасовано',
-        msgZoomModalHeading: 'Детальний превью',
-        msgSizeTooLarge: 'Файл "{name}" (<b>{size} KB</b>) перевищує максимальний розмір <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Ви повинні вибрати як мінімум <b>{n}</b> {files} для загрузки.',
-        msgFilesTooMany: 'Кількість вибраних файлів <b>({n})</b> перевищує максимально допустиму кількість <b>{m}</b>.',
-        msgFileNotFound: 'Файл "{name}" не знайдено!',
-        msgFileSecured: 'Обмеження безпеки перешкоджають читанню файла "{name}".',
-        msgFileNotReadable: 'Файл "{name}" неможливо прочитати.',
-        msgFilePreviewAborted: 'Перегляд скасований для файла "{name}".',
-        msgFilePreviewError: 'Сталася помилка під час читання файла "{name}".',
-        msgInvalidFileType: 'Заборонений тип файла для "{name}". Тільки "{types}" дозволені.',
-        msgInvalidFileExtension: 'Заборонене розширення для файла "{name}". Тільки "{extensions}" дозволені.',
-        msgUploadAborted: 'Вивантаження файлу перервана',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: 'Помилка перевірки',
-        msgLoading: 'Загрузка файла {index} із {files} &hellip;',
-        msgProgress: 'Загрузка файла {index} із {files} - {name} - {percent}% завершено.',
-        msgSelected: '{n} {files} вибрано',
-        msgFoldersNotAllowed: 'Дозволено перетягувати тільки файли! Пропущено {n} папок.',
-        msgImageWidthSmall: 'Ширина зображення "{name}" повинна бути не менше {size} px.',
-        msgImageHeightSmall: 'Висота зображення "{name}" повинна бути не менше {size} px.',
-        msgImageWidthLarge: 'Ширина зображення "{name}" не може перевищувати {size} px.',
-        msgImageHeightLarge: 'Висота зображення "{name}" не може перевищувати {size} px.',
-        msgImageResizeError: 'Не вдалося розміри зображення, щоб змінити розмір.',
-        msgImageResizeException: 'Помилка при зміні розміру зображення.<pre>{errors}</pre>',
-        dropZoneTitle: 'Перетягніть файли сюди &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: 'Видалити файл',
-            uploadTitle: 'Загрузити файл',
-            zoomTitle: 'Подивитися деталі',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: 'Ще не загружено',
-            indicatorSuccessTitle: 'Загружено',
-            indicatorErrorTitle: 'Помилка при загрузці',
-            indicatorLoadingTitle: 'Загрузка ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Vietnamese Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
- 
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['vi'] = {
-        fileSingle: 'tập tin',
-        filePlural: 'các tập tin',
-        browseLabel: 'Duyệt &hellip;',
-        removeLabel: 'Gỡ bỏ',
-        removeTitle: 'Bỏ tập tin đã chọn',
-        cancelLabel: 'Hủy',
-        cancelTitle: 'Hủy upload',
-        uploadLabel: 'Upload',
-        uploadTitle: 'Upload tập tin đã chọn',
-        msgNo: 'Không',
-        msgNoFilesSelected: 'Không tập tin nào được chọn',
-        msgCancelled: 'Đã hủy',
-        msgZoomModalHeading: 'Chi tiết xem trước',
-        msgSizeTooLarge: 'Tập tin "{name}" (<b>{size} KB</b>) vượt quá kích thước giới hạn cho phép <b>{maxSize} KB</b>.',
-        msgFilesTooLess: 'Bạn phải chọn ít nhất <b>{n}</b> {files} để upload.',
-        msgFilesTooMany: 'Số lượng tập tin upload <b>({n})</b> vượt quá giới hạn cho phép là <b>{m}</b>.',
-        msgFileNotFound: 'Không tìm thấy tập tin "{name}"!',
-        msgFileSecured: 'Các hạn chế về bảo mật không cho phép đọc tập tin "{name}".',
-        msgFileNotReadable: 'Không đọc được tập tin "{name}".',
-        msgFilePreviewAborted: 'Đã dừng xem trước tập tin "{name}".',
-        msgFilePreviewError: 'Đã xảy ra lỗi khi đọc tập tin "{name}".',
-        msgInvalidFileType: 'Tập tin "{name}" không hợp lệ. Chỉ hỗ trợ loại tập tin "{types}".',
-        msgInvalidFileExtension: 'Phần mở rộng của tập tin "{name}" không hợp lệ. Chỉ hỗ trợ phần mở rộng "{extensions}".',
-        msgUploadAborted: 'Đã dừng upload',
-        msgUploadThreshold: 'Đang xử lý...',
-        msgValidationError: 'Lỗi xác nhận',
-        msgLoading: 'Đang nạp {index} tập tin trong số {files} &hellip;',
-        msgProgress: 'Đang nạp {index} tập tin trong số {files} - {name} - {percent}% hoàn thành.',
-        msgSelected: '{n} {files} được chọn',
-        msgFoldersNotAllowed: 'Chỉ kéo thả tập tin! Đã bỏ qua {n} thư mục.',
-        msgImageWidthSmall: 'Chiều rộng của hình ảnh "{name}" phải tối thiểu là {size} px.',
-        msgImageHeightSmall: 'Chiều cao của hình ảnh "{name}" phải tối thiểu là {size} px.',
-        msgImageWidthLarge: 'Chiều rộng của hình ảnh "{name}" không được quá {size} px.',
-        msgImageHeightLarge: 'Chiều cao của hình ảnh "{name}" không được quá {size} px.',
-        msgImageResizeError: 'Không lấy được kích thước của hình ảnh để resize.',
-        msgImageResizeException: 'Resize hình ảnh bị lỗi.<pre>{errors}</pre>',
-        dropZoneTitle: 'Kéo thả tập tin vào đây &hellip;',
-        dropZoneClickTitle: '<br>(hoặc click để chọn {files})',
-        fileActionSettings: {
-            removeTitle: 'Gỡ bỏ',
-            uploadTitle: 'Upload tập tin',
-            zoomTitle: 'Phóng lớn',
-            dragTitle: 'Di chuyển / Sắp xếp lại',
-            indicatorNewTitle: 'Chưa được upload',
-            indicatorSuccessTitle: 'Đã upload',
-            indicatorErrorTitle: 'Upload bị lỗi',
-            indicatorLoadingTitle: 'Đang upload ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'Xem tập tin phía trước',
-            next: 'Xem tập tin tiếp theo',
-            toggleheader: 'Ẩn/hiện tiêu đề',
-            fullscreen: 'Bật/tắt toàn màn hình',
-            borderless: 'Bật/tắt chế độ không viền',
-            close: 'Đóng'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Chinese Traditional Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- * @author kangqf <kangqingfei@gmail.com>
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['zh-TW'] = {
-        fileSingle: '單一檔案',
-        filePlural: '複選檔案',
-        browseLabel: '瀏覽 &hellip;',
-        removeLabel: '移除',
-        removeTitle: '清除選取檔案',
-        cancelLabel: '取消',
-        cancelTitle: '取消上傳中檔案',
-        uploadLabel: '上傳',
-        uploadTitle: '上傳選取檔案',
-        msgNo: '沒有',
-        msgNoFilesSelected: '',
-        msgCancelled: '取消',
-        zoomTitle: '詳細資料',
-        msgZoomModalHeading: '內容預覽',
-        msgSizeTooLarge: '檔案 "{name}" (<b>{size} KB</b>) 大小超過上限 <b>{maxSize} KB</b>.',
-        msgFilesTooLess: '最少必須選擇 <b>{n}</b> {files} 來上傳. ',
-        msgFilesTooMany: '上傳的檔案數量 <b>({n})</b> 超過最大檔案上傳限制 <b>{m}</b>.',
-        msgFileNotFound: '檔案 "{name}" 未發現!',
-        msgFileSecured: '安全限制，禁止讀取檔案 "{name}".',
-        msgFileNotReadable: '文件 "{name}" 不可讀取.',
-        msgFilePreviewAborted: '檔案 "{name}" 預覽中止.',
-        msgFilePreviewError: '讀取 "{name}" 發生錯誤.',
-        msgInvalidFileType: '檔案類型錯誤 "{name}". 只能使用 "{types}" 類型的檔案.',
-        msgInvalidFileExtension: '附檔名錯誤 "{name}". 只能使用 "{extensions}" 的檔案.',
-        msgUploadAborted: '該文件上傳被中止',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: '驗證錯誤',
-        msgLoading: '載入第 {index} 個檔案，共 {files} &hellip;',
-        msgProgress: '載入第 {index} 個檔案，共 {files} - {name} - {percent}% 成功.',
-        msgSelected: '{n} {files} 選取',
-        msgFoldersNotAllowed: '只支援單檔拖曳! 無法使用 {n} 拖拽的資料夹.',
-        msgImageWidthSmall: '圖檔寬度"{name}"必須至少為{size}像素(px).',
-        msgImageHeightSmall: '圖檔高度"{name}"必須至少為{size}像素(px).',
-        msgImageWidthLarge: '圖檔寬度"{name}"不能超過{size}像素(px).',
-        msgImageHeightLarge: '圖檔高度"{name}"不能超過{size}像素(px).',
-        msgImageResizeError: '無法獲取的圖像尺寸調整。',
-        msgImageResizeException: '錯誤而調整圖像大小。<pre>{errors}</pre>',
-        dropZoneTitle: '拖曳檔案至此 &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: '刪除檔案',
-            uploadTitle: '上傳檔案',
-            zoomTitle: '詳細資料',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: '尚未上傳',
-            indicatorSuccessTitle: '上傳成功',
-            indicatorErrorTitle: '上傳失敗',
-            indicatorLoadingTitle: '上傳中 ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-
-/*!
- * FileInput Chinese Translations
- *
- * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
- * any HTML markup tags in the messages must not be converted or translated.
- *
- * @see http://github.com/kartik-v/bootstrap-fileinput
- * @author kangqf <kangqingfei@gmail.com>
- *
- * NOTE: this file must be saved in UTF-8 encoding.
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputLocales['zh'] = {
-        fileSingle: '文件',
-        filePlural: '多个文件',
-        browseLabel: '选择 &hellip;',
-        removeLabel: '移除',
-        removeTitle: '清除选中文件',
-        cancelLabel: '取消',
-        cancelTitle: '取消进行中的上传',
-        uploadLabel: '上传',
-        uploadTitle: '上传选中文件',
-        msgNo: '没有',
-        msgNoFilesSelected: '',
-        msgCancelled: '取消',
-        msgZoomModalHeading: '详细预览',
-        msgSizeTooLarge: '文件 "{name}" (<b>{size} KB</b>) 超过了允许大小 <b>{maxSize} KB</b>.',
-        msgFilesTooLess: '你必须选择最少 <b>{n}</b> {files} 来上传. ',
-        msgFilesTooMany: '选择的上传文件个数 <b>({n})</b> 超出最大文件的限制个数 <b>{m}</b>.',
-        msgFileNotFound: '文件 "{name}" 未找到!',
-        msgFileSecured: '安全限制，为了防止读取文件 "{name}".',
-        msgFileNotReadable: '文件 "{name}" 不可读.',
-        msgFilePreviewAborted: '取消 "{name}" 的预览.',
-        msgFilePreviewError: '读取 "{name}" 时出现了一个错误.',
-        msgInvalidFileType: '不正确的类型 "{name}". 只支持 "{types}" 类型的文件.',
-        msgInvalidFileExtension: '不正确的文件扩展名 "{name}". 只支持 "{extensions}" 的文件扩展名.',
-        msgUploadAborted: '该文件上传被中止',
-        msgUploadThreshold: 'Processing...',
-        msgValidationError: '验证错误',
-        msgLoading: '加载第 {index} 文件 共 {files} &hellip;',
-        msgProgress: '加载第 {index} 文件 共 {files} - {name} - {percent}% 完成.',
-        msgSelected: '{n} {files} 选中',
-        msgFoldersNotAllowed: '只支持拖拽文件! 跳过 {n} 拖拽的文件夹.',
-        msgImageWidthSmall: '宽度的图像文件的"{name}"的必须是至少{size}像素.',
-        msgImageHeightSmall: '图像文件的"{name}"的高度必须至少为{size}像素.',
-        msgImageWidthLarge: '宽度的图像文件"{name}"不能超过{size}像素.',
-        msgImageHeightLarge: '图像文件"{name}"的高度不能超过{size}像素.',
-        msgImageResizeError: '无法获取的图像尺寸调整。',
-        msgImageResizeException: '错误而调整图像大小。<pre>{errors}</pre>',
-        dropZoneTitle: '拖拽文件到这里 &hellip;',
-        dropZoneClickTitle: '<br>(or click to select {files})',
-        fileActionSettings: {
-            removeTitle: '删除文件',
-            uploadTitle: '上传文件',
-            zoomTitle: '查看详情',
-            dragTitle: 'Move / Rearrange',
-            indicatorNewTitle: '没有上传',
-            indicatorSuccessTitle: '上传',
-            indicatorErrorTitle: '上传错误',
-            indicatorLoadingTitle: '上传 ...'
-        },
-        previewZoomButtonTitles: {
-            prev: 'View previous file',
-            next: 'View next file',
-            toggleheader: 'Toggle header',
-            fullscreen: 'Toggle full screen',
-            borderless: 'Toggle borderless mode',
-            close: 'Close detailed preview'
-        }
-    };
-})(window.jQuery);
-/*!
- * bootstrap-fileinput v4.3.5
- * http://plugins.krajee.com/file-input
- *
- * Font Awesome icon theme configuration for bootstrap-fileinput. Requires font awesome assets to be loaded.
- *
- * Author: Kartik Visweswaran
- * Copyright: 2014 - 2016, Kartik Visweswaran, Krajee.com
- *
- * Licensed under the BSD 3-Clause
- * https://github.com/kartik-v/bootstrap-fileinput/blob/master/LICENSE.md
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputThemes.fa = {
-        fileActionSettings: {
-            removeIcon: '<i class="fa fa-trash text-danger"></i>',
-            uploadIcon: '<i class="fa fa-upload text-info"></i>',
-            zoomIcon: '<i class="fa fa-search-plus"></i>',
-            dragIcon: '<i class="fa fa-bars"></i>',
-            indicatorNew: '<i class="fa fa-hand-o-down text-warning"></i>',
-            indicatorSuccess: '<i class="fa fa-check-circle text-success"></i>',
-            indicatorError: '<i class="fa fa-exclamation-circle text-danger"></i>',
-            indicatorLoading: '<i class="fa fa-hand-o-up text-muted"></i>'
-        },
-        layoutTemplates: {
-            fileIcon: '<i class="fa fa-file kv-caption-icon"></i> '
-        },
-        previewZoomButtonIcons: {
-            prev: '<i class="fa fa-caret-left fa-lg"></i>',
-            next: '<i class="fa fa-caret-right fa-lg"></i>',
-            toggleheader: '<i class="fa fa-arrows-v"></i>',
-            fullscreen: '<i class="fa fa-arrows-alt"></i>',
-            borderless: '<i class="fa fa-external-link"></i>',
-            close: '<i class="fa fa-remove"></i>'
-        },
-        previewFileIcon: '<i class="fa fa-file"></i>',
-        browseIcon: '<i class="fa fa-folder-open"></i>',
-        removeIcon: '<i class="fa fa-trash"></i>',
-        cancelIcon: '<i class="fa fa-ban"></i>',
-        uploadIcon: '<i class="fa fa-upload"></i>',
-        msgValidationErrorIcon: '<i class="fa fa-exclamation-circle"></i> '
-    };
-})(window.jQuery);
-
-/*!
- * bootstrap-fileinput v4.3.5
- * http://plugins.krajee.com/file-input
- *
- * Glyphicon (default) theme configuration for bootstrap-fileinput.
- *
- * Author: Kartik Visweswaran
- * Copyright: 2014 - 2016, Kartik Visweswaran, Krajee.com
- *
- * Licensed under the BSD 3-Clause
- * https://github.com/kartik-v/bootstrap-fileinput/blob/master/LICENSE.md
- */
-(function ($) {
-    "use strict";
-
-    $.fn.fileinputThemes.gly = {
-        fileActionSettings: {
-            removeIcon: '<i class="glyphicon glyphicon-trash text-danger"></i>',
-            uploadIcon: '<i class="glyphicon glyphicon-upload text-info"></i>',
-            zoomIcon: '<i class="glyphicon glyphicon-zoom-in"></i>',
-            dragIcon: '<i class="glyphicon glyphicon-menu-hamburger"></i>',
-            indicatorNew: '<i class="glyphicon glyphicon-hand-down text-warning"></i>',
-            indicatorSuccess: '<i class="glyphicon glyphicon-ok-sign text-success"></i>',
-            indicatorError: '<i class="glyphicon glyphicon-exclamation-sign text-danger"></i>',
-            indicatorLoading: '<i class="glyphicon glyphicon-hand-up text-muted"></i>'
-        },
-        layoutTemplates: {
-            fileIcon: '<i class="glyphicon glyphicon-file kv-caption-icon"></i>'
-        },
-        previewZoomButtonIcons: {
-            prev: '<i class="glyphicon glyphicon-triangle-left"></i>',
-            next: '<i class="glyphicon glyphicon-triangle-right"></i>',
-            toggleheader: '<i class="glyphicon glyphicon-resize-vertical"></i>',
-            fullscreen: '<i class="glyphicon glyphicon-fullscreen"></i>',
-            borderless: '<i class="glyphicon glyphicon-resize-full"></i>',
-            close: '<i class="glyphicon glyphicon-remove"></i>'
-        },
-        previewFileIcon: '<i class="glyphicon glyphicon-file"></i>',
-        browseIcon: '<i class="glyphicon glyphicon-folder-open"></i>&nbsp;',
-        removeIcon: '<i class="glyphicon glyphicon-trash"></i>',
-        cancelIcon: '<i class="glyphicon glyphicon-ban-circle"></i>',
-        uploadIcon: '<i class="glyphicon glyphicon-upload"></i>',
-        msgValidationErrorIcon: '<i class="glyphicon glyphicon-exclamation-sign"></i> '
-    };
-})(window.jQuery);
-
 /*!
  * Sizzle CSS Selector Engine v2.3.3
  * https://sizzlejs.com/
@@ -74828,6 +74736,281 @@ jQuery.expr.pseudos.animated = function( elem ) {
 } );
 
 define( [
+	"../ajax"
+], function( jQuery ) {
+
+"use strict";
+
+jQuery._evalUrl = function( url ) {
+	return jQuery.ajax( {
+		url: url,
+
+		// Make this explicit, since user can override this through ajaxSetup (#11264)
+		type: "GET",
+		dataType: "script",
+		cache: true,
+		async: false,
+		global: false,
+		"throws": true
+	} );
+};
+
+return jQuery._evalUrl;
+
+} );
+
+define( [
+	"../core",
+	"./var/rtagName",
+	"./var/rscriptType",
+	"./wrapMap",
+	"./getAll",
+	"./setGlobalEval"
+], function( jQuery, rtagName, rscriptType, wrapMap, getAll, setGlobalEval ) {
+
+"use strict";
+
+var rhtml = /<|&#?\w+;/;
+
+function buildFragment( elems, context, scripts, selection, ignored ) {
+	var elem, tmp, tag, wrap, contains, j,
+		fragment = context.createDocumentFragment(),
+		nodes = [],
+		i = 0,
+		l = elems.length;
+
+	for ( ; i < l; i++ ) {
+		elem = elems[ i ];
+
+		if ( elem || elem === 0 ) {
+
+			// Add nodes directly
+			if ( jQuery.type( elem ) === "object" ) {
+
+				// Support: Android <=4.0 only, PhantomJS 1 only
+				// push.apply(_, arraylike) throws on ancient WebKit
+				jQuery.merge( nodes, elem.nodeType ? [ elem ] : elem );
+
+			// Convert non-html into a text node
+			} else if ( !rhtml.test( elem ) ) {
+				nodes.push( context.createTextNode( elem ) );
+
+			// Convert html into DOM nodes
+			} else {
+				tmp = tmp || fragment.appendChild( context.createElement( "div" ) );
+
+				// Deserialize a standard representation
+				tag = ( rtagName.exec( elem ) || [ "", "" ] )[ 1 ].toLowerCase();
+				wrap = wrapMap[ tag ] || wrapMap._default;
+				tmp.innerHTML = wrap[ 1 ] + jQuery.htmlPrefilter( elem ) + wrap[ 2 ];
+
+				// Descend through wrappers to the right content
+				j = wrap[ 0 ];
+				while ( j-- ) {
+					tmp = tmp.lastChild;
+				}
+
+				// Support: Android <=4.0 only, PhantomJS 1 only
+				// push.apply(_, arraylike) throws on ancient WebKit
+				jQuery.merge( nodes, tmp.childNodes );
+
+				// Remember the top-level container
+				tmp = fragment.firstChild;
+
+				// Ensure the created nodes are orphaned (#12392)
+				tmp.textContent = "";
+			}
+		}
+	}
+
+	// Remove wrapper from fragment
+	fragment.textContent = "";
+
+	i = 0;
+	while ( ( elem = nodes[ i++ ] ) ) {
+
+		// Skip elements already in the context collection (trac-4087)
+		if ( selection && jQuery.inArray( elem, selection ) > -1 ) {
+			if ( ignored ) {
+				ignored.push( elem );
+			}
+			continue;
+		}
+
+		contains = jQuery.contains( elem.ownerDocument, elem );
+
+		// Append to fragment
+		tmp = getAll( fragment.appendChild( elem ), "script" );
+
+		// Preserve script evaluation history
+		if ( contains ) {
+			setGlobalEval( tmp );
+		}
+
+		// Capture executables
+		if ( scripts ) {
+			j = 0;
+			while ( ( elem = tmp[ j++ ] ) ) {
+				if ( rscriptType.test( elem.type || "" ) ) {
+					scripts.push( elem );
+				}
+			}
+		}
+	}
+
+	return fragment;
+}
+
+return buildFragment;
+} );
+
+define( [
+	"../core"
+], function( jQuery ) {
+
+"use strict";
+
+function getAll( context, tag ) {
+
+	// Support: IE <=9 - 11 only
+	// Use typeof to avoid zero-argument method invocation on host objects (#15151)
+	var ret;
+
+	if ( typeof context.getElementsByTagName !== "undefined" ) {
+		ret = context.getElementsByTagName( tag || "*" );
+
+	} else if ( typeof context.querySelectorAll !== "undefined" ) {
+		ret = context.querySelectorAll( tag || "*" );
+
+	} else {
+		ret = [];
+	}
+
+	if ( tag === undefined || tag && jQuery.nodeName( context, tag ) ) {
+		return jQuery.merge( [ context ], ret );
+	}
+
+	return ret;
+}
+
+return getAll;
+} );
+
+define( [
+	"../data/var/dataPriv"
+], function( dataPriv ) {
+
+"use strict";
+
+// Mark scripts as having already been evaluated
+function setGlobalEval( elems, refElements ) {
+	var i = 0,
+		l = elems.length;
+
+	for ( ; i < l; i++ ) {
+		dataPriv.set(
+			elems[ i ],
+			"globalEval",
+			!refElements || dataPriv.get( refElements[ i ], "globalEval" )
+		);
+	}
+}
+
+return setGlobalEval;
+} );
+
+define( [
+	"../var/document",
+	"../var/support"
+], function( document, support ) {
+
+"use strict";
+
+( function() {
+	var fragment = document.createDocumentFragment(),
+		div = fragment.appendChild( document.createElement( "div" ) ),
+		input = document.createElement( "input" );
+
+	// Support: Android 4.0 - 4.3 only
+	// Check state lost if the name is set (#11217)
+	// Support: Windows Web Apps (WWA)
+	// `name` and `type` must use .setAttribute for WWA (#14901)
+	input.setAttribute( "type", "radio" );
+	input.setAttribute( "checked", "checked" );
+	input.setAttribute( "name", "t" );
+
+	div.appendChild( input );
+
+	// Support: Android <=4.1 only
+	// Older WebKit doesn't clone checked state correctly in fragments
+	support.checkClone = div.cloneNode( true ).cloneNode( true ).lastChild.checked;
+
+	// Support: IE <=11 only
+	// Make sure textarea (and checkbox) defaultValue is properly cloned
+	div.innerHTML = "<textarea>x</textarea>";
+	support.noCloneChecked = !!div.cloneNode( true ).lastChild.defaultValue;
+} )();
+
+return support;
+
+} );
+
+define( function() {
+
+"use strict";
+
+// We have to close these tags to support XHTML (#13200)
+var wrapMap = {
+
+	// Support: IE <=9 only
+	option: [ 1, "<select multiple='multiple'>", "</select>" ],
+
+	// XHTML parsers do not magically insert elements in the
+	// same way that tag soup parsers do. So we cannot shorten
+	// this by omitting <tbody> or other required elements.
+	thead: [ 1, "<table>", "</table>" ],
+	col: [ 2, "<table><colgroup>", "</colgroup></table>" ],
+	tr: [ 2, "<table><tbody>", "</tbody></table>" ],
+	td: [ 3, "<table><tbody><tr>", "</tr></tbody></table>" ],
+
+	_default: [ 0, "", "" ]
+};
+
+// Support: IE <=9 only
+wrapMap.optgroup = wrapMap.option;
+
+wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead;
+wrapMap.th = wrapMap.td;
+
+return wrapMap;
+} );
+
+define( [
+	"../core",
+	"../queue",
+	"../effects" // Delay is optional because of this dependency
+], function( jQuery ) {
+
+"use strict";
+
+// Based off of the plugin by Clint Helfers, with permission.
+// https://web.archive.org/web/20100324014747/http://blindsignals.com/index.php/2009/07/jquery-delay/
+jQuery.fn.delay = function( time, type ) {
+	time = jQuery.fx ? jQuery.fx.speeds[ time ] || time : time;
+	type = type || "fx";
+
+	return this.queue( type, function( next, hooks ) {
+		var timeout = window.setTimeout( next, time );
+		hooks.stop = function() {
+			window.clearTimeout( timeout );
+		};
+	} );
+};
+
+return jQuery.fn.delay;
+} );
+
+define( [
 	"../core",
 	"../event"
 ], function( jQuery ) {
@@ -75196,280 +75379,197 @@ if ( !noGlobal ) {
 
 } );
 
+define( function() {
+	"use strict";
+
+	return [ "Top", "Right", "Bottom", "Left" ];
+} );
+
+define( function() {
+	"use strict";
+
+	return function( elem ) {
+
+		// Support: IE <=11 only, Firefox <=30 (#15098, #14150)
+		// IE throws on elements created in popups
+		// FF meanwhile throws on frame elements through "defaultView.getComputedStyle"
+		var view = elem.ownerDocument.defaultView;
+
+		if ( !view || !view.opener ) {
+			view = window;
+		}
+
+		return view.getComputedStyle( elem );
+	};
+} );
+
 define( [
-	"../ajax"
+	"../../core",
+	"../../selector"
+
+	// css is assumed
 ], function( jQuery ) {
+	"use strict";
 
-"use strict";
+	// isHiddenWithinTree reports if an element has a non-"none" display style (inline and/or
+	// through the CSS cascade), which is useful in deciding whether or not to make it visible.
+	// It differs from the :hidden selector (jQuery.expr.pseudos.hidden) in two important ways:
+	// * A hidden ancestor does not force an element to be classified as hidden.
+	// * Being disconnected from the document does not force an element to be classified as hidden.
+	// These differences improve the behavior of .toggle() et al. when applied to elements that are
+	// detached or contained within hidden ancestors (gh-2404, gh-2863).
+	return function( elem, el ) {
 
-jQuery._evalUrl = function( url ) {
-	return jQuery.ajax( {
-		url: url,
+		// isHiddenWithinTree might be called from jQuery#filter function;
+		// in that case, element will be second argument
+		elem = el || elem;
 
-		// Make this explicit, since user can override this through ajaxSetup (#11264)
-		type: "GET",
-		dataType: "script",
-		cache: true,
-		async: false,
-		global: false,
-		"throws": true
-	} );
-};
+		// Inline style trumps all
+		return elem.style.display === "none" ||
+			elem.style.display === "" &&
 
-return jQuery._evalUrl;
+			// Otherwise, check computed style
+			// Support: Firefox <=43 - 45
+			// Disconnected elements can have computed display: none, so first confirm that elem is
+			// in the document.
+			jQuery.contains( elem.ownerDocument, elem ) &&
 
+			jQuery.css( elem, "display" ) === "none";
+	};
+} );
+
+define( function() {
+	"use strict";
+
+	return ( /^margin/ );
 } );
 
 define( [
-	"../core",
-	"./var/rtagName",
-	"./var/rscriptType",
-	"./wrapMap",
-	"./getAll",
-	"./setGlobalEval"
-], function( jQuery, rtagName, rscriptType, wrapMap, getAll, setGlobalEval ) {
+	"../../var/pnum"
+], function( pnum ) {
+	"use strict";
 
-"use strict";
-
-var rhtml = /<|&#?\w+;/;
-
-function buildFragment( elems, context, scripts, selection, ignored ) {
-	var elem, tmp, tag, wrap, contains, j,
-		fragment = context.createDocumentFragment(),
-		nodes = [],
-		i = 0,
-		l = elems.length;
-
-	for ( ; i < l; i++ ) {
-		elem = elems[ i ];
-
-		if ( elem || elem === 0 ) {
-
-			// Add nodes directly
-			if ( jQuery.type( elem ) === "object" ) {
-
-				// Support: Android <=4.0 only, PhantomJS 1 only
-				// push.apply(_, arraylike) throws on ancient WebKit
-				jQuery.merge( nodes, elem.nodeType ? [ elem ] : elem );
-
-			// Convert non-html into a text node
-			} else if ( !rhtml.test( elem ) ) {
-				nodes.push( context.createTextNode( elem ) );
-
-			// Convert html into DOM nodes
-			} else {
-				tmp = tmp || fragment.appendChild( context.createElement( "div" ) );
-
-				// Deserialize a standard representation
-				tag = ( rtagName.exec( elem ) || [ "", "" ] )[ 1 ].toLowerCase();
-				wrap = wrapMap[ tag ] || wrapMap._default;
-				tmp.innerHTML = wrap[ 1 ] + jQuery.htmlPrefilter( elem ) + wrap[ 2 ];
-
-				// Descend through wrappers to the right content
-				j = wrap[ 0 ];
-				while ( j-- ) {
-					tmp = tmp.lastChild;
-				}
-
-				// Support: Android <=4.0 only, PhantomJS 1 only
-				// push.apply(_, arraylike) throws on ancient WebKit
-				jQuery.merge( nodes, tmp.childNodes );
-
-				// Remember the top-level container
-				tmp = fragment.firstChild;
-
-				// Ensure the created nodes are orphaned (#12392)
-				tmp.textContent = "";
-			}
-		}
-	}
-
-	// Remove wrapper from fragment
-	fragment.textContent = "";
-
-	i = 0;
-	while ( ( elem = nodes[ i++ ] ) ) {
-
-		// Skip elements already in the context collection (trac-4087)
-		if ( selection && jQuery.inArray( elem, selection ) > -1 ) {
-			if ( ignored ) {
-				ignored.push( elem );
-			}
-			continue;
-		}
-
-		contains = jQuery.contains( elem.ownerDocument, elem );
-
-		// Append to fragment
-		tmp = getAll( fragment.appendChild( elem ), "script" );
-
-		// Preserve script evaluation history
-		if ( contains ) {
-			setGlobalEval( tmp );
-		}
-
-		// Capture executables
-		if ( scripts ) {
-			j = 0;
-			while ( ( elem = tmp[ j++ ] ) ) {
-				if ( rscriptType.test( elem.type || "" ) ) {
-					scripts.push( elem );
-				}
-			}
-		}
-	}
-
-	return fragment;
-}
-
-return buildFragment;
-} );
-
-define( [
-	"../core"
-], function( jQuery ) {
-
-"use strict";
-
-function getAll( context, tag ) {
-
-	// Support: IE <=9 - 11 only
-	// Use typeof to avoid zero-argument method invocation on host objects (#15151)
-	var ret;
-
-	if ( typeof context.getElementsByTagName !== "undefined" ) {
-		ret = context.getElementsByTagName( tag || "*" );
-
-	} else if ( typeof context.querySelectorAll !== "undefined" ) {
-		ret = context.querySelectorAll( tag || "*" );
-
-	} else {
-		ret = [];
-	}
-
-	if ( tag === undefined || tag && jQuery.nodeName( context, tag ) ) {
-		return jQuery.merge( [ context ], ret );
-	}
-
-	return ret;
-}
-
-return getAll;
-} );
-
-define( [
-	"../data/var/dataPriv"
-], function( dataPriv ) {
-
-"use strict";
-
-// Mark scripts as having already been evaluated
-function setGlobalEval( elems, refElements ) {
-	var i = 0,
-		l = elems.length;
-
-	for ( ; i < l; i++ ) {
-		dataPriv.set(
-			elems[ i ],
-			"globalEval",
-			!refElements || dataPriv.get( refElements[ i ], "globalEval" )
-		);
-	}
-}
-
-return setGlobalEval;
-} );
-
-define( [
-	"../var/document",
-	"../var/support"
-], function( document, support ) {
-
-"use strict";
-
-( function() {
-	var fragment = document.createDocumentFragment(),
-		div = fragment.appendChild( document.createElement( "div" ) ),
-		input = document.createElement( "input" );
-
-	// Support: Android 4.0 - 4.3 only
-	// Check state lost if the name is set (#11217)
-	// Support: Windows Web Apps (WWA)
-	// `name` and `type` must use .setAttribute for WWA (#14901)
-	input.setAttribute( "type", "radio" );
-	input.setAttribute( "checked", "checked" );
-	input.setAttribute( "name", "t" );
-
-	div.appendChild( input );
-
-	// Support: Android <=4.1 only
-	// Older WebKit doesn't clone checked state correctly in fragments
-	support.checkClone = div.cloneNode( true ).cloneNode( true ).lastChild.checked;
-
-	// Support: IE <=11 only
-	// Make sure textarea (and checkbox) defaultValue is properly cloned
-	div.innerHTML = "<textarea>x</textarea>";
-	support.noCloneChecked = !!div.cloneNode( true ).lastChild.defaultValue;
-} )();
-
-return support;
-
+	return new RegExp( "^(" + pnum + ")(?!px)[a-z%]+$", "i" );
 } );
 
 define( function() {
 
 "use strict";
 
-// We have to close these tags to support XHTML (#13200)
-var wrapMap = {
+// A method for quickly swapping in/out CSS properties to get correct calculations.
+return function( elem, options, callback, args ) {
+	var ret, name,
+		old = {};
 
-	// Support: IE <=9 only
-	option: [ 1, "<select multiple='multiple'>", "</select>" ],
+	// Remember the old values, and insert the new ones
+	for ( name in options ) {
+		old[ name ] = elem.style[ name ];
+		elem.style[ name ] = options[ name ];
+	}
 
-	// XHTML parsers do not magically insert elements in the
-	// same way that tag soup parsers do. So we cannot shorten
-	// this by omitting <tbody> or other required elements.
-	thead: [ 1, "<table>", "</table>" ],
-	col: [ 2, "<table><colgroup>", "</colgroup></table>" ],
-	tr: [ 2, "<table><tbody>", "</tbody></table>" ],
-	td: [ 3, "<table><tbody><tr>", "</tr></tbody></table>" ],
+	ret = callback.apply( elem, args || [] );
 
-	_default: [ 0, "", "" ]
+	// Revert the old values
+	for ( name in options ) {
+		elem.style[ name ] = old[ name ];
+	}
+
+	return ret;
 };
 
-// Support: IE <=9 only
-wrapMap.optgroup = wrapMap.option;
-
-wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead;
-wrapMap.th = wrapMap.td;
-
-return wrapMap;
 } );
 
-define( [
-	"../core",
-	"../queue",
-	"../effects" // Delay is optional because of this dependency
-], function( jQuery ) {
+/*!
+ * bootstrap-fileinput v4.3.5
+ * http://plugins.krajee.com/file-input
+ *
+ * Font Awesome icon theme configuration for bootstrap-fileinput. Requires font awesome assets to be loaded.
+ *
+ * Author: Kartik Visweswaran
+ * Copyright: 2014 - 2016, Kartik Visweswaran, Krajee.com
+ *
+ * Licensed under the BSD 3-Clause
+ * https://github.com/kartik-v/bootstrap-fileinput/blob/master/LICENSE.md
+ */
+(function ($) {
+    "use strict";
 
-"use strict";
+    $.fn.fileinputThemes.fa = {
+        fileActionSettings: {
+            removeIcon: '<i class="fa fa-trash text-danger"></i>',
+            uploadIcon: '<i class="fa fa-upload text-info"></i>',
+            zoomIcon: '<i class="fa fa-search-plus"></i>',
+            dragIcon: '<i class="fa fa-bars"></i>',
+            indicatorNew: '<i class="fa fa-hand-o-down text-warning"></i>',
+            indicatorSuccess: '<i class="fa fa-check-circle text-success"></i>',
+            indicatorError: '<i class="fa fa-exclamation-circle text-danger"></i>',
+            indicatorLoading: '<i class="fa fa-hand-o-up text-muted"></i>'
+        },
+        layoutTemplates: {
+            fileIcon: '<i class="fa fa-file kv-caption-icon"></i> '
+        },
+        previewZoomButtonIcons: {
+            prev: '<i class="fa fa-caret-left fa-lg"></i>',
+            next: '<i class="fa fa-caret-right fa-lg"></i>',
+            toggleheader: '<i class="fa fa-arrows-v"></i>',
+            fullscreen: '<i class="fa fa-arrows-alt"></i>',
+            borderless: '<i class="fa fa-external-link"></i>',
+            close: '<i class="fa fa-remove"></i>'
+        },
+        previewFileIcon: '<i class="fa fa-file"></i>',
+        browseIcon: '<i class="fa fa-folder-open"></i>',
+        removeIcon: '<i class="fa fa-trash"></i>',
+        cancelIcon: '<i class="fa fa-ban"></i>',
+        uploadIcon: '<i class="fa fa-upload"></i>',
+        msgValidationErrorIcon: '<i class="fa fa-exclamation-circle"></i> '
+    };
+})(window.jQuery);
 
-// Based off of the plugin by Clint Helfers, with permission.
-// https://web.archive.org/web/20100324014747/http://blindsignals.com/index.php/2009/07/jquery-delay/
-jQuery.fn.delay = function( time, type ) {
-	time = jQuery.fx ? jQuery.fx.speeds[ time ] || time : time;
-	type = type || "fx";
+/*!
+ * bootstrap-fileinput v4.3.5
+ * http://plugins.krajee.com/file-input
+ *
+ * Glyphicon (default) theme configuration for bootstrap-fileinput.
+ *
+ * Author: Kartik Visweswaran
+ * Copyright: 2014 - 2016, Kartik Visweswaran, Krajee.com
+ *
+ * Licensed under the BSD 3-Clause
+ * https://github.com/kartik-v/bootstrap-fileinput/blob/master/LICENSE.md
+ */
+(function ($) {
+    "use strict";
 
-	return this.queue( type, function( next, hooks ) {
-		var timeout = window.setTimeout( next, time );
-		hooks.stop = function() {
-			window.clearTimeout( timeout );
-		};
-	} );
-};
-
-return jQuery.fn.delay;
-} );
+    $.fn.fileinputThemes.gly = {
+        fileActionSettings: {
+            removeIcon: '<i class="glyphicon glyphicon-trash text-danger"></i>',
+            uploadIcon: '<i class="glyphicon glyphicon-upload text-info"></i>',
+            zoomIcon: '<i class="glyphicon glyphicon-zoom-in"></i>',
+            dragIcon: '<i class="glyphicon glyphicon-menu-hamburger"></i>',
+            indicatorNew: '<i class="glyphicon glyphicon-hand-down text-warning"></i>',
+            indicatorSuccess: '<i class="glyphicon glyphicon-ok-sign text-success"></i>',
+            indicatorError: '<i class="glyphicon glyphicon-exclamation-sign text-danger"></i>',
+            indicatorLoading: '<i class="glyphicon glyphicon-hand-up text-muted"></i>'
+        },
+        layoutTemplates: {
+            fileIcon: '<i class="glyphicon glyphicon-file kv-caption-icon"></i>'
+        },
+        previewZoomButtonIcons: {
+            prev: '<i class="glyphicon glyphicon-triangle-left"></i>',
+            next: '<i class="glyphicon glyphicon-triangle-right"></i>',
+            toggleheader: '<i class="glyphicon glyphicon-resize-vertical"></i>',
+            fullscreen: '<i class="glyphicon glyphicon-fullscreen"></i>',
+            borderless: '<i class="glyphicon glyphicon-resize-full"></i>',
+            close: '<i class="glyphicon glyphicon-remove"></i>'
+        },
+        previewFileIcon: '<i class="glyphicon glyphicon-file"></i>',
+        browseIcon: '<i class="glyphicon glyphicon-folder-open"></i>&nbsp;',
+        removeIcon: '<i class="glyphicon glyphicon-trash"></i>',
+        cancelIcon: '<i class="glyphicon glyphicon-ban-circle"></i>',
+        uploadIcon: '<i class="glyphicon glyphicon-upload"></i>',
+        msgValidationErrorIcon: '<i class="glyphicon glyphicon-exclamation-sign"></i> '
+    };
+})(window.jQuery);
 
 define( [
 	"../core",
@@ -75705,106 +75805,6 @@ define( [
 	"use strict";
 
 	return class2type.toString;
-} );
-
-define( function() {
-	"use strict";
-
-	return [ "Top", "Right", "Bottom", "Left" ];
-} );
-
-define( function() {
-	"use strict";
-
-	return function( elem ) {
-
-		// Support: IE <=11 only, Firefox <=30 (#15098, #14150)
-		// IE throws on elements created in popups
-		// FF meanwhile throws on frame elements through "defaultView.getComputedStyle"
-		var view = elem.ownerDocument.defaultView;
-
-		if ( !view || !view.opener ) {
-			view = window;
-		}
-
-		return view.getComputedStyle( elem );
-	};
-} );
-
-define( [
-	"../../core",
-	"../../selector"
-
-	// css is assumed
-], function( jQuery ) {
-	"use strict";
-
-	// isHiddenWithinTree reports if an element has a non-"none" display style (inline and/or
-	// through the CSS cascade), which is useful in deciding whether or not to make it visible.
-	// It differs from the :hidden selector (jQuery.expr.pseudos.hidden) in two important ways:
-	// * A hidden ancestor does not force an element to be classified as hidden.
-	// * Being disconnected from the document does not force an element to be classified as hidden.
-	// These differences improve the behavior of .toggle() et al. when applied to elements that are
-	// detached or contained within hidden ancestors (gh-2404, gh-2863).
-	return function( elem, el ) {
-
-		// isHiddenWithinTree might be called from jQuery#filter function;
-		// in that case, element will be second argument
-		elem = el || elem;
-
-		// Inline style trumps all
-		return elem.style.display === "none" ||
-			elem.style.display === "" &&
-
-			// Otherwise, check computed style
-			// Support: Firefox <=43 - 45
-			// Disconnected elements can have computed display: none, so first confirm that elem is
-			// in the document.
-			jQuery.contains( elem.ownerDocument, elem ) &&
-
-			jQuery.css( elem, "display" ) === "none";
-	};
-} );
-
-define( function() {
-	"use strict";
-
-	return ( /^margin/ );
-} );
-
-define( [
-	"../../var/pnum"
-], function( pnum ) {
-	"use strict";
-
-	return new RegExp( "^(" + pnum + ")(?!px)[a-z%]+$", "i" );
-} );
-
-define( function() {
-
-"use strict";
-
-// A method for quickly swapping in/out CSS properties to get correct calculations.
-return function( elem, options, callback, args ) {
-	var ret, name,
-		old = {};
-
-	// Remember the old values, and insert the new ones
-	for ( name in options ) {
-		old[ name ] = elem.style[ name ];
-		elem.style[ name ] = options[ name ];
-	}
-
-	ret = callback.apply( elem, args || [] );
-
-	// Revert the old values
-	for ( name in options ) {
-		elem.style[ name ] = old[ name ];
-	}
-
-	return ret;
-};
-
 } );
 
 define( function() {
