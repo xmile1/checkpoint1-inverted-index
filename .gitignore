@@ -27,4 +27,4 @@ build/Release
 node_modules
 
 #bower packages
-public/lib
+bower_lib

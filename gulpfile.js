@@ -1,34 +1,58 @@
-"use strict"
+"use strict";
 
 var gulp = require('gulp'),
   browserSync = require('browser-sync'),
   syncInstance1 = browserSync.create(),
   gulpSequence = require('run-sequence'),
-  syncInstance2 = browserSync.create();
+  syncInstance2 = browserSync.create(),
+  bundleFiles = require('gulp-concat-multi');
+
+
+// Define paths variables
+var dest_path = './public/lib';
+// grab libraries files from bower_components, minify and push in /public
+
+
 
 gulp.task('default', function() {
-  gulpSequence('reload-browser', 'reload-jasmine');
+  gulpSequence('bundlejs', 'load-test', 'load-app');
+  gulp.watch(['public/js/*.js', 'public/*.html']).on('change', syncInstance2.reload);
+  gulp.watch(['bower.json']).on('change', ['bundlejs']);
 });
 
-gulp.task('reload-jasmine', function() {
+gulp.task('bundlejs', function() {
+  bundleFiles({
+      'vendor.js': ['./bower_lib/**/*.js', './bower_lib/**/dist/*.js', './bower_lib/**/js/*.js', './bower_lib/**/dist/**/*.js'],
+      'vendor.css': ['./bower_lib/**/*.css', './bower_lib/**/dist/*.css', './bower_lib/**/css/*.css', './bower_lib/**/dist/**/*.css']
+    })
+    .pipe(gulp.dest('public/lib'));
+});
+
+
+
+
+gulp.task('load-test', function() {
   syncInstance1.init({
     server: {
-      baseDir: '.',
+      baseDir: './',
       index: 'jasmine/specRunner.html'
     },
-    port: 3000
+    port: 3300,
+    ui: {
+      port: 3900
+    }
 
   })
 });
-gulp.task('reload-browser', function() {
+gulp.task('load-app', function() {
   syncInstance2.init({
     server: {
       baseDir: './public',
       index: 'index.html'
     },
-    port: 3200
+    port: 3400,
+    ui: {
+      port: 3800
+    }
   })
-})
-gulp.watch('watch-changes', function() {
-  gulp.watch(['src/inverted-index.js']).on('change', syncInstance2.reload);
-})
+});

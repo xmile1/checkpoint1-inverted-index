@@ -128,26 +128,26 @@ class Index {
 
 }
 
-module.exports = Index;
+// module.exports = Index;
 
-var thisindex = new Index();
-var theJSON = [{
-    "title": "Alice in Wonderland",
-    "text": "Alice falls into a rabbit hole and enters a world full of imagination."
-  },
+// var thisindex = new Index();
+// var theJSON = [{
+//     "title": "Alice in Wonderland",
+//     "text": "Alice falls into a rabbit hole and enters a world full of imagination."
+//   },
 
-  {
-    "title": "The Lord of the Rings: The Fellowship of the Ring.",
-    "text": "An unusual alliance in of man, elf, dwarf, wizard and hobbit seek to destroy a powerful ring."
-  }
-];
+//   {
+//     "title": "The Lord of the Rings: The Fellowship of the Ring.",
+//     "text": "An unusual alliance in of man, elf, dwarf, wizard and hobbit seek to destroy a powerful ring."
+//   }
+// ];
 
-thisindex.saveUploads("books.json", theJSON);
-thisindex.saveUploads("books1.json", theJSON);
-// thisindex.createIndex("books.json")
-// thisindex.createIndex("books1.json")
-thisindex.searchIndex(["books.json"], "lord", ["alice", "in", "algeria", "wonderland"]);
-// startTime = performance.now();
-// index.searchIndex(["validJson"], "alice in");
-// endTime = performance.now();
-console.log(thisindex.searchResult);
+// thisindex.saveUploads("books.json", theJSON);
+// thisindex.saveUploads("books1.json", theJSON);
+// // thisindex.createIndex("books.json")
+// // thisindex.createIndex("books1.json")
+// thisindex.searchIndex(["books.json"], "lord", ["alice", "in", "algeria", "wonderland"]);
+// // startTime = performance.now();
+// // index.searchIndex(["validJson"], "alice in");
+// // endTime = performance.now();
+// console.log(thisindex.searchResult);

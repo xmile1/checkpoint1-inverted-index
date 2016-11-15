@@ -29,11 +29,24 @@
   "homepage": "https://github.com/xmile1/checkpoint1-inverted-index#readme",
   "dependencies": {
     "express": "^4.14.0",
-    "lodash": "^4.16.6"
+    "gulp-concat-multi": "^1.0.0",
+    "gulp-concat-vendor": "0.0.4",
+    "gulp-filter": "^4.0.0",
+    "gulp-flatten": "^0.3.1",
+    "gulp-jasmine-node": "^1.0.7",
+    "gulp-load-plugins": "^1.4.0",
+    "gulp-minify-css": "^1.2.4",
+    "gulp-rename": "^1.2.2",
+    "gulp-uglify": "^2.0.0",
+    "lodash": "^4.16.6",
+    "main-bower-files": "^2.13.1",
+    "run-sequence": "^1.2.2",
+    "uglify": "^0.1.5"
   },
   "devDependencies": {
     "browser-sync": "^2.16.0",
     "gulp": "^3.9.1",
-    "run-sequence": "^1.2.2"
+    "run-sequence": "^1.2.2",
+    "gulp-jasmine-node": "^1.0.7"
   }
 }
