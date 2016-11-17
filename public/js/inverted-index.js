@@ -2,12 +2,6 @@
 /**
  *Seach Index class 
  */
-
-
-var testit = function() {
-  alert("es6 problems");
-}
-
 class Index {
   /**
    *
@@ -24,10 +18,10 @@ class Index {
     //   return false;
     // }
 
-
-    /**Check if File Already Exists in jsonDataBase
-     * and if user gave permission to overwrite
-     */
+    jsonFile = JSON.parse(jsonFile)
+      /**Check if File Already Exists in jsonDataBase
+       * and if user gave permission to overwrite
+       */
     if (this.jsonDatabase[fileName] && !overwrite) {
       return ("File Already Exist in DataBase");
     }
@@ -133,8 +127,6 @@ class Index {
   }
 
 }
-module.exports = testit;
-
 
 
 // var thisindex = new Index();

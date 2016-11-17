@@ -37,7 +37,7 @@ gulp.task('bundle-custom-js', function() {
 
 
 
-gulp.task('load-test', ['bundlejs'], function() {
+gulp.task('load-test', function() {
   syncInstance1.init({
     server: {
       baseDir: './jasmine',
