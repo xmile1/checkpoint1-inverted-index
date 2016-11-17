@@ -22,7 +22,8 @@
     "jquery": "^3.1.1",
     "bootstrap-fileinput": "^4.3.5",
     "angular": "^1.5.8",
-    "font-awesome": "^4.7.0"
+    "font-awesome": "^4.7.0",
+    "file-input": "^2.0.0"
   },
   "homepage": "https://github.com/xmile1/checkpoint1-inverted-index",
   "moduleType": [],

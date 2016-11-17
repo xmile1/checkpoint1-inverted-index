@@ -2,7 +2,13 @@
 /**
  *Seach Index class 
  */
-class Index {
+
+
+var testit = function() {
+  alert("es6 problems");
+}
+
+var theIndex = class Index {
   /**
    *
    
@@ -127,8 +133,10 @@ class Index {
   }
 
 }
+module.exports = testit;
 
-// module.exports = Index;
+module.exports = theIndex;
+
 
 // var thisindex = new Index();
 // var theJSON = [{

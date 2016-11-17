@@ -1,10 +1,12 @@
-// var indexObject = require("../../src/inverted-index.js");
-// var index = new indexObject();
-
 $(document).ready(function() {
-
+  var theindex = new Index();
+  theindex.searchResult = 5;
+  alert(theindex.searchResult);
   $("#search").changes(function() {
-    $("#input-id").fileinput();
+    alert(index.searchResult);
   });
+
+
+  $("#input-id").fileinput();
 
 });

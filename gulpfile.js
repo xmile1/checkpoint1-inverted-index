@@ -1,11 +1,16 @@
-"use strict";
+'use strict';
 
 var gulp = require('gulp'),
   browserSync = require('browser-sync'),
   syncInstance1 = browserSync.create(),
   gulpSequence = require('run-sequence'),
   syncInstance2 = browserSync.create(),
-  bundleFiles = require('gulp-concat-multi');
+  bundleFiles = require('gulp-concat-multi'),
+  vinylfy = require('vinyl-source-stream'),
+  buffer = require('vinyl-buffer'),
+  bower = require('gulp-bower'),
+  babelify = require('babelify'),
+  browserify = require('browserify');
 
 
 // Define paths variables
@@ -15,27 +20,28 @@ var dest_path = './public/lib';
 
 
 gulp.task('default', function() {
-  gulpSequence('bundlejs', 'load-test', 'load-app');
+  gulpSequence('load-test', 'load-app');
+
+
   gulp.watch(['public/js/*.js', 'public/*.html']).on('change', syncInstance2.reload);
-  gulp.watch(['bower.json']).on('change', ['bundlejs']);
-});
-
-gulp.task('bundlejs', function() {
-  bundleFiles({
-      'vendor.js': ['./bower_lib/**/*.js', './bower_lib/**/dist/*.js', './bower_lib/**/js/*.js', './bower_lib/**/dist/**/*.js'],
-      'vendor.css': ['./bower_lib/**/*.css', './bower_lib/**/dist/*.css', './bower_lib/**/css/*.css', './bower_lib/**/dist/**/*.css']
-    })
-    .pipe(gulp.dest('public/lib'));
+  gulp.watch(['public/js/*.js', 'public/*.html']).on('change', syncInstance2.reload);
 });
 
 
+gulp.task('bundle-custom-js', function() {
+  let source = browserify({ entries: ['./frontend_bundle_config.js'], transform: [babelify] });
+  return source.bundle()
+    .pipe(vinylfy('custom-module.js'))
+    .pipe(gulp.dest('./public/js/'));
+});
 
 
-gulp.task('load-test', function() {
+
+gulp.task('load-test', ['bundlejs'], function() {
   syncInstance1.init({
     server: {
-      baseDir: './',
-      index: 'jasmine/specRunner.html'
+      baseDir: './jasmine',
+      index: 'specRunner.html'
     },
     port: 3300,
     ui: {
@@ -44,7 +50,8 @@ gulp.task('load-test', function() {
 
   })
 });
-gulp.task('load-app', function() {
+
+gulp.task('load-app', ['bundle-custom-js'], function() {
   syncInstance2.init({
     server: {
       baseDir: './public',
