@@ -1,13 +1,14 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var theindex = require("./src/inverted-index.js");
-
-},{"./src/inverted-index.js":2}],2:[function(require,module,exports){
 "use strict";
 /**
  *Seach Index class 
  */
 
-class Index {
+
+var testit = function() {
+  alert("es6 problems");
+}
+
+var theIndex = class Index {
   /**
    *
    
@@ -132,8 +133,9 @@ class Index {
   }
 
 }
+module.exports = testit;
 
-module.exports = Index;
+module.exports = theIndex;
 
 
 // var thisindex = new Index();
@@ -157,5 +159,3 @@ module.exports = Index;
 // // index.searchIndex(["validJson"], "alice in");
 // // endTime = performance.now();
 // console.log(thisindex.searchResult);
-
-},{}]},{},[1])

@@ -8,6 +8,7 @@
     <script type="text/javascript" src="lib/bootstrap-fileinput/js/fileinput.js"></script>
     <script type="text/javascript" src="js/custom-module.js"></script>
     <script type="text/javascript" src="js/inverted-index.js"></script>
+    <script type="text/javascript" src="lib/rsvp.js/rsvp.js"></script>
     <script type="text/javascript" src="js/script.js"></script>
     <link href="lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" type="text/css">
     <link href="lib/bootstrap-fileinput/css/fileinput.css" rel="stylesheet" type="text/css">
@@ -37,77 +38,81 @@
     </div>
     <div class="section color-grey">
         <div class="container padding-20">
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="search-term" aria-describedby="basic-addon3">
-                        <span class="input-group-addon" id="search">search</span>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="input-group">
-                        <input type="file" accept=".json" id="fileUpload">
-                        <button type="button" class="btn btn-default" id="submit">Default</button>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
     <div class="section">
         <div class="container">
             <div class="row">
                 <div class="col-md-8">
-                    <h3 id="test">alice:</h3>
-                    <p>book.json</p>
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h3 class="panel-title">Panel title</h3>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="search-term" aria-describedby="basic-addon3">
+                                <span class="input-group-addon" id="search">search</span>
+                            </div>
                         </div>
-                        <div class="panel-body">Panel content</div>
+                    </div>
+                    <div class='row'>
+                        <div class="col-md-12">
+                            <h3>Filter Search </h3>
+                            <div id="filter-filename" class="checkbox">
+                                <label>
+                                    <input class="filter-filename" type="checkbox" value="books.json">books.json
+                                </label>
+                                <label>
+                                    <input class="filter-filename" type="checkbox" value="book2.json">book2.json
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div id="result-pane" class="col-md-12">
+                            <h3 id="test">alice:</h3>
+                            <p>book.json</p>
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">Panel title</h3>
+                                </div>
+                                <div class="panel-body">Panel content</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-4 padding-20">
-                    <div class="panel-group" id="accordion">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h4 class="panel-title">
+                    <div class="input-group">
+                        <input type="file" class="file" accept=".json" id="fileUpload">
+                    </div>
+                    <div id="index-view">
+                        <div class="panel-group" id="accordion">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
                     <a data-toggle="collapse" data-parent="#accordion" href="#collapse1">
         book.json</a>
                   </h4>
-                            </div>
-                            <div id="collapse1" class="panel-collapse collapse in">
-                                <div class="panel-body">
-                                    <div class="table-responsive">
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th>#</th>
-                                                    <th>word</th>
-                                                    <th>Doc 1</th>
-                                                    <th>Doc 2</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td>1</td>
-                                                    <td>Mark</td>
-                                                    <td>Otto</td>
-                                                    <td>@mdo</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>2</td>
-                                                    <td>Jacob</td>
-                                                    <td>Thornton</td>
-                                                    <td>@fat</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>3</td>
-                                                    <td>Larry</td>
-                                                    <td>the Bird</td>
-                                                    <td>@twitter</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                </div>
+                                <div id="collapse1" class="panel-collapse collapse in">
+                                    <div class="panel-body">
+                                        <div class="table-responsive">
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>word</th>
+                                                        <th>Doc 1</th>
+                                                        <th>Doc 2</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>1</td>
+                                                        <td>Mark</td>
+                                                        <td>Otto</td>
+                                                        <td>@mdo</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
