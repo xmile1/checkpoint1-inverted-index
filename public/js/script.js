@@ -1,7 +1,8 @@
- let theindex = new Index();
+ let theIndex = new Index();
+ let latestRead = "";
  $(document).ready(function() {
 
-
+   $("#search-term").focus();
    $("#search").click(function() {
      var fileNames = [];
      var searchTerm = $("#search-term").val();
@@ -11,35 +12,41 @@
        }
      });
      $("#result-pane").empty();
-     $("#result-pane").append(theindex.searchIndex(fileNames, theindex.createResultHtml, searchTerm)[1]);
+     $("#result-pane").append(theIndex.searchIndex(fileNames, theIndex.createResultHtml, searchTerm)[1]);
 
    });
 
    $("#search-term").focus(function() {
-     var tag = [`<label><input class="filter-filename" type="checkbox" value="`, `">`, `</label>`];
+     $("#filter-filename").css("display", "block");
      $("#filter-filename").empty();
-     theindex.getFilenames().forEach(function(element) {
-       $("#filter-filename").append(tag[0] + element + tag[1] + element + tag[2]);
+     theIndex.getFilenames().forEach(function(element) {
+       $("#filter-filename").append(`<label><input class="filter-filename" type="checkbox" value="${element}">${element}</label>`);
      });
    });
 
 
-
-
-
    var fileInput = document.getElementById("fileUpload");
-   var submit = $("#submit");
    fileInput.addEventListener('change', function(e) {
-     var file = fileInput.files[0];
-     var reader = new FileReader();
-     reader.onload = function(e) {
-       $("#index-view").empty();
-       // theindex.createIndex(fileInput.files[0].name, theJSON, reader.result);
-       $("#index-view").append(theindex.createIndex(fileInput.files[0].name, theJSON, theindex.createIndexHtml)[1]);
-       // theindex.saveUploads(fileInput.files[0].name, reader.result);
+     // var option = confirm("Do you want to create index automatically after Upload");
+     var files = fileInput.files;
+     for (var i = 0; i < files.length; i++) {
+       var reader = new FileReader();
+       console.log(files[i]);
 
+       (function(fileIndex, reader) {
+         reader.addEventListener('load', function() {
+           if (theIndex.saveUploads(files[fileIndex].name, reader.result)) {
+             $("#index-view").append(theIndex.createIndexHeader(files[fileIndex].name));
+           } else {
+             $.toaster({ priority: 'warning', title: 'Upload Error', message: 'Invalid JSON file' });
+           }
+           // theIndex.saveUploads(fileInput.files[0].name, reader.result)
+
+         });
+       })(i, reader);
+
+       reader.readAsText(fileInput.files[i]);
      }
-     reader.readAsText(file);
    });
 
 
@@ -59,8 +66,14 @@
 
 
 
- function callCreateIndex(filename) {
-   createIndex(filePath, jsonFile, cb);
+ function callCreateIndex(fileName) {
+   let tableid = `#${fileName}-table`.replace(".", "");
+   let index = theIndex.createIndex(fileName, theIndex.createIndexHtml);
+   if (index == false) {
+     $.toaster({ priority: 'warning', title: 'Create Index', message: 'Index already Exists' });
+   } else {
+     $(tableid).append(index[1]);
+   }
  }
 
 
@@ -73,13 +86,16 @@
    if (deleteIndex) {
      var deleteAll = confirm("Do you want to Delete the JSON file? \n Note: This is Unrecoverable", "Delete JSON File");
      if (deleteAll) {
-       theindex.deleteIndex(filename, true);
+       theIndex.deleteIndex(filename, true);
+       $(`#${filename}-panel`);
+       $(`#${filename}`);
+       $.toaster({ priority: 'success', title: 'Delete', message: 'Index & File deleted Successfully' });
      } else {
-       theindex.deleteIndex(filename, false);
+       theIndex.deleteIndex(filename, false);
+       $(`#${filename}`).remove;
+       $.toaster({ priority: 'success', title: 'Delete Index', message: 'Index deleted Successfully' });
      }
-     $.toaster({ priority: 'success', title: 'Delete Index', message: 'Index deleted Successfully' });
-     $("#index-view").empty();
-     $("#index-view").append(theindex.createIndexHtml(theindex.indexFile, theindex.jsonDatabase));
+     console.log(theIndex.indexFile);
 
    }
 

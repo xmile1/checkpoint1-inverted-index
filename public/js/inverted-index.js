@@ -18,18 +18,18 @@ var Index = function () {
     value: function saveUploads(fileName, jsonFile) {
       // console.log(jsonFile);
       // console.log(JSON.parse(jsonFile));
-
-
-      // jsonFile = JSON.parse(JSON.stringify(jsonFile));
-      if (this.jsonDatabase[fileName]) {
-        return "File Already Exist in DataBase";
+      if (!this.isValid) {
+        return false;
       }
+      jsonFile = this.parseJSON(jsonFile);
       this.jsonDatabase[fileName] = [];
-
+      console.log(jsonFile);
       for (var docObject in jsonFile) {
+        console.log(docObject);
         this.jsonDatabase[fileName].push(jsonFile[docObject]);
       }
       // this.createIndex(fileName);
+      return true;
     }
   }, {
     key: "getjsonDatabase",
@@ -38,16 +38,18 @@ var Index = function () {
     }
   }, {
     key: "createIndex",
-    value: function createIndex(filePath, jsonFile, cb) {
+    value: function createIndex(filePath, cb) {
       var _this = this;
 
-      this.saveUploads(filePath, jsonFile);
       var indexFile = this.indexFile;
-      var jsonDatabase = this.jsonDatabase[filePath];
+      var jsonDoc = this.jsonDatabase[filePath];
       var concSentence = "";
       var wordArray = [];
+      if (indexFile[filePath]) {
+        return false;
+      }
       indexFile[filePath] = {};
-      jsonDatabase.forEach(function (element, index) {
+      jsonDoc.forEach(function (element, index) {
         concSentence = _this.cleanString(element.title + " " + element.text);
         wordArray = new Set(concSentence.split(" "));
         wordArray.forEach(function (word) {
@@ -56,18 +58,52 @@ var Index = function () {
         });
       });
       this.indexFile = indexFile;
-
-      return cb(indexFile, jsonDatabase);
+      return cb(filePath, indexFile, jsonDoc);
       // console.log(indexFile);
     }
+  }, {
+    key: "isValid",
+    value: function isValid() {
+      var parsedFile = this.parseJSON(jsonFile);
+      var isValidFileStructure = this.checkFileStructure(parsedFile);
+      if (parsedFile && parsedFile.length > 0 && isValidFileStructure) {
+        if (!this.jsonDatabase[fileName]) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }, {
+    key: "checkFileStructure",
+    value: function checkFileStructure(jsonFile) {
+      var isValidFile = true;
+      jsonFile.forEach(function (document, documentIndex) {
+        var isValidTitle = document.title !== undefined && document.title.length > 0 && typeof document.title === 'string';
+        var isValidText = document.text !== undefined && document.text.length > 0 && typeof document.text === 'string';
+        if (!(isValidText && isValidTitle)) {
+          isValidFile = false;
+          return false;
+        }
+      });
+      return isValidFile;
+    }
+  }, {
+    key: "parseJSON",
+    value: function parseJSON(jsonFile) {
+      try {
+        return JSON.parse(jsonFile);
+      } catch (err) {
+        return false;
+      }
+    }
+  }, {
+    key: "getIndex",
+
 
     /**
      * @param  {filename}
      * @return {indexFile}
      */
-
-  }, {
-    key: "getIndex",
     value: function getIndex(fileName) {
       return this.indexFile[fileName] || this.indexFile;
     }
@@ -92,6 +128,9 @@ var Index = function () {
     value: function searchIndex(fileNames, cb) {
       var _this2 = this;
 
+      if (fileNames.length < 1) {
+        fileNames = this.getFilenames();
+      }
       var searchResult = {};
 
       for (var _len = arguments.length, searchContent = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
@@ -142,82 +181,144 @@ var Index = function () {
       return [resultObject, resultView];
     }
 
-    // 
-    // // <thead>
-    //                                               <tr>
-    //                                                   <th>#</th>
-    //                                                   <th>word</th>
-    //                                                   <th>Doc 1</th>
-    //                                                   <th>Doc 2</th>
-    //                                               </tr>
-    //                                           </thead>
-    //                                           <tbody>
-    //                                               <tr>
-    //                                                   <td>1</td>
-    //                                                   <td>Mark</td>
-    //                                                   <td>Otto</td>
-    //                                                   <td>@mdo</td>
-    //                                               </tr>
-    //                                               </body>
-    //                                               
-    //                                               
-    // ({ 'books.json': { alice: [0], in : [0, 1], wonderland: [0], falls: [0], into: [0], a: [0, 1], rabbit: [0], hole: [0], and: [0, 1], enters: [0], world: [0], full: [0], of: [0, 1], 'imagination.': [0], the: [1], lord: [1], 'rings:': [1], fellowship: [1], 'ring.': [1], an: [1], unusual: [1], alliance: [1], 'man,': [1], 'elf,': [1], 'dwarf,': [1], wizard: [1], hobbit: [1], seek: [1], to: [1], destroy: [1], powerful: [1] } })
+    //Sample Structure of this.indexFile
+    //({ 'books.json': { alice: [0], in : [0, 1], wonderland: [0], falls: [0], into: [0], a: [0, 1], rabbit: [0], hole: [0], and: [0, 1], enters: [0], world: [0], full: [0], of: [0, 1], 'imagination.': [0], the: [1], lord: [1], 'rings:': [1], fellowship: [1], 'ring.': [1], an: [1], unusual: [1], alliance: [1], 'man,': [1], 'elf,': [1], 'dwarf,': [1], wizard: [1], hobbit: [1], seek: [1], to: [1], destroy: [1], powerful: [1] } })
 
+    //Sample Structure of this.jsonDatabase
     // ({ 'books.json': [{ title: "Alice in Wonderland", text: "Alice falls into a rabbit hole and enters a world full of imagination." }, { title: "The Lord of the Rings: The Fellowship of the Ring.", text: "An unusual alliance in of man, elf, dwarf, wizard and hobbit seek to destroy a powerful ring." }], 'book2.json': [{ title: "Alice in Wonderland", text: "Alice falls into a rabbit hole and enters a world full of imagination." }, { title: "The Lord of the Rings: The Fellowship of the Ring.", text: "An unusual alliance in of man, elf, dwarf, wizard and hobbit seek to destroy a powerful ring." }] })
 
+  }, {
+    key: "getFilenames",
+    value: function getFilenames() {
+      return Object.keys(this.jsonDatabase);
+    }
+  }, {
+    key: "deleteIndex",
+    value: function deleteIndex(fileName, option) {
+      delete this.indexFile[fileName];
+      if (option == true) {
+        delete this.jsonDatabase[fileName];
+      }
+    }
+  }, {
+    key: "createIndexHeader",
+    value: function createIndexHeader(FileName) {
+      var indexHeadView = "";
+      var cFileName = FileName.replace(/[^a-z0-9]+/gi, "");
+      var htmlTop = "<div id=\"" + cFileName + "-panel\" class=\"panel panel-default\">\n                            <div class=\"panel-heading\">\n                                <h4 class=\"panel-title\">\n                    <a data-toggle=\"collapse\" data-parent=\"#accordion\" href=\"#" + cFileName + "\">" + FileName + "</a></h4><span class=\"input-group-addon\" onclick=\"callCreateIndex('" + FileName + "')\" style=\"cursor:pointer\" id=\"create-index\">Create Index</span><span class=\"input-group-addon\" style=\"cursor:pointer\" onclick=\"callDeleteIndex('" + FileName + "')\" id=\"delete-index\">Delete Index</span></div><div id=\"" + cFileName + "\" class=\"panel-collapse collapse in\"><div class=\"panel-body\"><div class=\"table-responsive\"><table id=\"" + cFileName + "-table\" class=\"table\"></table></div></div></div></div>";
+      indexHeadView += htmlTop;
 
+      return indexHeadView;
+    }
   }, {
     key: "createIndexHtml",
-    value: function createIndexHtml(indexFile, jsonDatabase) {
+    value: function createIndexHtml(filePath, indexFile, jsonDoc) {
       var indexView = "";
-      var headContainer = ["<div class=\"panel-group\">\n                        <div class=\"panel panel-default\">\n                            <div class=\"panel-heading\">\n                                <h4 class=\"panel-title\">\n                    <a data-toggle=\"collapse\" data-parent=\"#accordion\" href=\"#collapse1\">", "</a>\n                  </h4>\n                            </div>"];
-      var bodyContainer = ["<div id=\"collapse1\" class=\"panel-collapse collapse in\">\n                                <div class=\"panel-body\">\n                                    <div class=\"table-responsive\">\n                                        <table class=\"table\">", "</table></div></div></div>"];
-      var headTag = ["<thead>", "</thead>"];
-      var rowTag = ["<tr>", "</tr>"];
-      var tdTag = ["<td>", "</td>"];
-      var headDataTag = ["<th>", "</th>"];
-      var bodyTag = ["<tbody>", "</tbody>"];
+      var indexPerPath = indexFile[filePath];
 
       var _loop2 = function _loop2(filename) {
-        console.log(indexFile[filename]);
-        indexView += headContainer[0] + filename + headContainer[1] + bodyContainer[0] + headTag[0];
-        indexView += headDataTag[0] + "#" + headDataTag[1];
+        var cFilename = filePath.replace(/[^a-z0-9]+/gi, "");
+        var headTag = ["<thead>", "</thead>"];
+        var rowTag = ["<tr>", "</tr>"];
+        var tdTag = ["<td>", "</td>"];
+        var headDataTag = ["<th>", "</th>"];
+        var bodyTag = ["<tbody>", "</tbody>"];
+
+        indexView += headTag[0] + headDataTag[0] + "#" + headDataTag[1];
         indexView += headDataTag[0] + "word" + headDataTag[1];
 
-        jsonDatabase.forEach(function (element, index) {
+        jsonDoc.forEach(function (element, index) {
           indexView += headDataTag[0] + "Doc " + index + headDataTag[1];
         });
         var count = 0;
+        indexView += bodyTag[0];
 
         var _loop3 = function _loop3(word) {
           indexView += rowTag[0] + tdTag[0] + count + tdTag[1];
           indexView += tdTag[0] + word + tdTag[1];
-          var counter = 0;
-          jsonDatabase.forEach(function (element, index) {
-            console.log(index);
-            if (indexFile[filename][word].indexOf(index) > -1) {
+          console.log(jsonDoc);
+          jsonDoc.forEach(function (element, index) {
+            if (indexPerPath[word].indexOf(index) > -1) {
               indexView += tdTag[0] + "gud" + tdTag[1];
             } else {
               indexView += tdTag[0] + "bad" + tdTag[1];
             }
-            // indexView += headDataTag[0] + index + headDataTag[1];
           });
 
           indexView += rowTag[1];
           count++;
         };
 
-        for (var word in indexFile[filename]) {
+        for (var word in indexPerPath) {
           _loop3(word);
         }
-        indexView += headContainer[1];
+        indexView += bodyTag[1];
       };
 
       for (var filename in indexFile) {
         _loop2(filename);
       }
-      return [indexFile, indexView];
+
+      return [indexPerPath, indexView];
     }
+
+    // createIndexHtml(indexFile, jsonDatabase) {
+    //     let indexView = "";
+    //     let headContainer = [`<div class="panel panel-default">
+    //                             <div class="panel-heading">
+    //                                 <h4 class="panel-title">
+    //                     <a data-toggle="collapse" data-parent="#accordion" href="#`, `">`, `</a>
+    //                   </h4>`,
+    //       `</div>`
+    //     ];
+    //     let createIndexButton = [`<span class="input-group-addon" onclick="callCreateIndex('`, `')" cursor="pointer" id="create-index">Create Index</span>`];
+    //     let deleteIndexButton = [`<span class="input-group-addon" cursor="pointer" onclick="callDeleteIndex('`, `')" id="delete-index">Delete Index</span>`];
+
+    //     let bodyContainer = [`<div id="`, `" class="panel-collapse collapse in">
+    //                                 <div class="panel-body">
+    //                                     <div class="table-responsive">
+    //                                         <table class="table">`, `</table></div></div></div>`]
+    //     let headTag = ["<thead>", "</thead>"];
+    //     let rowTag = ["<tr>", "</tr>"];
+    //     let tdTag = ["<td>", "</td>"];
+    //     let headDataTag = ["<th>", "</th>"];
+    //     let bodyTag = ["<tbody>", "</tbody>"];
+
+    //     for (let filename in indexFile) {
+    //       indexView += headContainer[0] + filename.replace(".", "") + headContainer[1] + filename + headContainer[2];
+    //       indexView += createIndexButton[0] + filename + createIndexButton[1];
+    //       indexView += deleteIndexButton[0] + filename + deleteIndexButton[1];
+    //       indexView += headContainer[3] + bodyContainer[0] + filename.replace(".", "") + bodyContainer[1] + headTag[0];
+    //       indexView += headDataTag[0] + "#" + headDataTag[1];
+    //       indexView += headDataTag[0] + "word" + headDataTag[1];
+
+    //       jsonDatabase.forEach(function(element, index) {
+    //         indexView += headDataTag[0] + "Doc " + index + headDataTag[1];
+    //       });
+    //       let count = 0;
+    //       for (let word in indexFile[filename]) {
+    //         indexView += rowTag[0] + tdTag[0] + count + tdTag[1];
+    //         indexView += tdTag[0] + word + tdTag[1];
+    //         jsonDatabase.forEach(function(element, index) {
+    //           console.log(index);
+    //           if (indexFile[filename][word].indexOf(index) > -1) {
+    //             indexView += tdTag[0] + "gud" + tdTag[1];
+    //           } else {
+    //             indexView += tdTag[0] + "bad" + tdTag[1];
+    //           }
+    //         });
+
+    //         indexView += rowTag[1]
+    //         count++;
+    //       }
+    //       indexView += bodyContainer[2] + headContainer[3];
+    //     }
+    //     console.log(indexView);
+    //     return [indexFile, indexView];
+
+    //   }
+
+
   }]);
 
   return Index;

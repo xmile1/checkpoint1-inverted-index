@@ -12,6 +12,7 @@
     <link href="lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" type="text/css">
     <link href="lib/bootstrap-fileinput/css/fileinput.css" rel="stylesheet" type="text/css">
     <link href="lib/font-awesome/css/font-awesome.css" rel="stylesheet" type="text/css">
+    <link href="lib/style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -51,9 +52,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class='row'>
+                    <div id="search-panel" style="display:none" class='row'>
                         <div class="col-md-12">
-                            <h3>Filter Search </h3>
+                            <h4>Filter Search </h4>
                             <div id="filter-filename" class="checkbox">
                             </div>
                         </div>
@@ -64,8 +65,8 @@
                     </div>
                 </div>
                 <div class="col-md-4 padding-20">
-                    <div class="input-group">
-                        <input type="file" class="file" accept=".json" id="fileUpload">
+                    <div class="input-group pad-bottom-20">
+                        <input type="file" multiple class="file" accept=".json" id="fileUpload">
                     </div>
                     <div>
                         <div id="index-view" class="panel-group" id="accordion">
