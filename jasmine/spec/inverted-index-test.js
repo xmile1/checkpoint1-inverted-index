@@ -11,45 +11,53 @@ const invalidStructure = 'spec/dummy-data/file5.json';
 function getFile(filename, cb) {
   let theResult = "";
   $.get(filename, function(result) {
-    theResult = result;
+
+    // theResult = escape(JSON.stringify(result));
+
+
+    // console.log(theResult);
+    console.log(typeof result);
+
     cb(result);
   })
 }
-
 
 describe("Read Book data", function() {
   let index = new Index();
   describe("When I upload a JSON file", function() {
     it("It should checks if its a valid JSON array", function(done) {
-      getFile(valid1, function(file) {
-        expect(index.createIndex(["invalidStructure.json"], file)).toBeFalsy();
-        done();
+      getFile(invalidStructure, function(file) {
+        expect(index.saveUploads("invalidStructure.json", file)).toBeFalsy();
       });
+      done();
 
     });
     it("It should check if the file is empty", function(done) {
       getFile(invalidContent, function(file) {
-        expect(index.createIndex(["empty.json"], file)).toBeFalsy();
+        expect(index.saveUploads("empty.json", file)).toBeFalsy();
         done();
       })
 
     });
     it("It should check if Its property values are strings", function(done) {
       getFile(nonString, function(file) {
-        expect(index.createIndex(["nonString.json"], file)).toBeFalsy();
+        expect(index.saveUploads("nonString.json", file)).toBeFalsy();
         done();
       })
     });
   });
 
 
-});
 
+});
 describe("Populate Index", function() {
   var index = new Index();
   getFile(valid1, function(file) {
-    index.createIndex(["valid1.json"], file);
-  })
+    // console.log(index.saveUploads("valid1.json", file))
+    index.saveUploads("valid1.json", file);
+    index.createIndex("valid1.json", index.createIndexHtml);
+    console.log(index.getIndex("valid1.json"));
+  });
 
   describe("When I Upload a File", function() {
     it("the index is created once the JSON file has been read", function(done) {
@@ -58,6 +66,7 @@ describe("Populate Index", function() {
     });
 
     it("the created index should be an accurate one", function(done) {
+      console.log(index.getIndex("valid1.json").alice[0]);
       expect(index.getIndex("valid1.json").alice[0]).toEqual(0);
       expect(index.getIndex("valid1.json").lord[0]).toEqual(1);
       expect(index.getIndex("valid1.json").a[1]).toEqual(1);
@@ -79,7 +88,7 @@ describe("Populate Index", function() {
     it("it should not overwrite the index", function(done) {
       var indexBefore = index.getIndex("valid1.json");
       getFile(valid1, function(file) {
-        var indexAfter = index.createIndex(["valid1.json"], file);
+        var indexAfter = index.createIndex(["valid1.json"], file)[0];
       })
       indexAfter = index.getIndex("valid1.json");
       expect(indexBefore).toEqual(indexAfter);
@@ -90,23 +99,23 @@ describe("Populate Index", function() {
 
 });
 
-
 describe("Search Index", function() {
   var index = new Index();
   getFile(valid1, function(file) {
-    index.createIndex(["valid1.json"], file);
-  })
+    // console.log(index.saveUploads("valid1.json", file))
+    index.saveUploads("valid1.json", file);
+    index.createIndex("valid1.json", index.createIndexHtml);
+    console.log(index.getIndex("valid1.json"));
+  });
 
   describe("should return the correct result when searched", function() {
     it("for single word argument", function(done) {
       var result = index.searchIndex(["valid1.json"], index.createResultHtml, "alice");
-      console.log(result[0]);
       expect(result[0]).toEqual({ alice: { "valid1.json": [0] } });
       done();
     });
     it("for single word argument with non-alphanumeric", function(done) {
       var result = index.searchIndex(["valid1.json"], index.createResultHtml, "+alice-=");
-      console.log(result[0]);
       expect(result[0]).toEqual({ alice: { "valid1.json": [0] } });
       done();
     });
@@ -152,7 +161,6 @@ describe("Search Index", function() {
 
   describe("Get Index", function() {
     it("should take the filename of the indexed JSON data", function() {
-      console.log(index.getIndex("valid1.json"));
       expect(typeof index.getIndex("valid1.json")).toEqual("object");
     });
   });
