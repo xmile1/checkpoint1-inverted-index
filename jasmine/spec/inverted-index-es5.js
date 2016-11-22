@@ -57,6 +57,7 @@ var Index = function () {
         });
       });
       this.indexFile = indexFile;
+      console.log(indexFile);
       return cb(filePath, indexFile, jsonDoc);
       // console.log(indexFile);
     }
@@ -183,13 +184,6 @@ var Index = function () {
       }
       return [resultObject, resultView];
     }
-
-    // Sample Structure of this.indexFile
-    // ({ 'books.json': { alice: [0], in : [0, 1], wonderland: [0], falls: [0], into: [0], a: [0, 1], rabbit: [0], hole: [0], and: [0, 1], enters: [0], world: [0], full: [0], of: [0, 1], 'imagination.': [0], the: [1], lord: [1], 'rings:': [1], fellowship: [1], 'ring.': [1], an: [1], unusual: [1], alliance: [1], 'man,': [1], 'elf,': [1], 'dwarf,': [1], wizard: [1], hobbit: [1], seek: [1], to: [1], destroy: [1], powerful: [1] } })
-
-    // Sample Structure of this.jsonDatabase
-    // ({ 'books.json': [{ title: "Alice in Wonderland", text: "Alice falls into a rabbit hole and enters a world full of imagination." }, { title: "The Lord of the Rings: The Fellowship of the Ring.", text: "An unusual alliance in of man, elf, dwarf, wizard and hobbit seek to destroy a powerful ring." }], 'book2.json': [{ title: "Alice in Wonderland", text: "Alice falls into a rabbit hole and enters a world full of imagination." }, { title: "The Lord of the Rings: The Fellowship of the Ring.", text: "An unusual alliance in of man, elf, dwarf, wizard and hobbit seek to destroy a powerful ring." }] })
-
   }, {
     key: 'getFilenames',
     value: function getFilenames() {
@@ -208,7 +202,7 @@ var Index = function () {
     value: function createIndexHeader(FileName) {
       var indexHeadView = '';
       var cFileName = FileName.replace(/[^a-z0-9]+/gi, '');
-      var htmlTop = '<div id="' + cFileName + '-panel" class="panel panel-default">\n                            <div class="panel-heading">\n                                <h4 class="panel-title">\n                    <a data-toggle="collapse" data-parent="#accordion" href="#' + cFileName + '">' + FileName + '</a></h4><span class="input-group-addon" onclick="callCreateIndex(\'' + FileName + '\')" style="cursor:pointer" id="create-index">Create Index</span><span class="input-group-addon" style="cursor:pointer" onclick="callDeleteIndex(\'' + FileName + '\')" id="delete-index">Delete Index</span></div><div id="' + cFileName + '" class="panel-collapse collapse in"><div class="panel-body"><div class="table-responsive"><table id="' + cFileName + '-table" class="table"></table></div></div></div></div>';
+      var htmlTop = '<div id="' + cFileName + '-panel" class="panel panel-default ">\n                            <div class="panel-heading index-header">\n                                <h4 class="panel-title">\n                    <a data-toggle="collapse" data-parent="#accordion" href="#' + cFileName + '">' + FileName + '</a></h4><span class="input-group-addon create-button" onclick="callCreateIndex(\'' + FileName + '\')" id="create-index">Create Index</span><span class="input-group-addon delete-button" onclick="callDeleteIndex(\'' + FileName + '\')" id="delete-index">Delete Index</span></div><div id="' + cFileName + '" class="panel-collapse collapse in index-body"><div class="panel-body"><div class="table-responsive"><table id="' + cFileName + '-table" class="table"></table></div></div></div></div>';
       indexHeadView += htmlTop;
 
       return indexHeadView;
@@ -218,8 +212,7 @@ var Index = function () {
     value: function createIndexHtml(filePath, indexFile, jsonDoc) {
       var indexView = '';
       var indexPerPath = indexFile[filePath];
-
-      var _loop2 = function _loop2(filename) {
+      for (var filename in indexFile) {
         var cFilename = filePath.replace(/[^a-z0-9]+/gi, '');
         var headTag = ['<thead>', '</thead>'];
         var rowTag = ['<tr>', '</tr>'];
@@ -227,100 +220,38 @@ var Index = function () {
         var headDataTag = ['<th>', '</th>'];
         var bodyTag = ['<tbody>', '</tbody>'];
 
-        indexView += headTag[0] + headDataTag[0] + '#' + headDataTag[1];
-        indexView += headDataTag[0] + 'word' + headDataTag[1];
+        indexView += '<thead> + <th>#</th>';
+        indexView += '<th>word</th>';
 
         jsonDoc.forEach(function (element, index) {
-          indexView += headDataTag[0] + 'Doc ' + index + headDataTag[1];
+          indexView += '<th>Doc </th>';
         });
-        var count = 0;
-        indexView += bodyTag[0];
+        var count = 1;
+        indexView += '<tbody>';
 
-        var _loop3 = function _loop3(word) {
-          indexView += rowTag[0] + tdTag[0] + count + tdTag[1];
-          indexView += tdTag[0] + word + tdTag[1];
+        var _loop2 = function _loop2(word) {
+          indexView += '<tr> + <td> + count + </td>';
+          indexView += '<td> + word + </td>';
           jsonDoc.forEach(function (element, index) {
             if (indexPerPath[word].indexOf(index) > -1) {
-              indexView += tdTag[0] + 'gud' + tdTag[1];
+              indexView += '<td>\u2714</td>';
             } else {
-              indexView += tdTag[0] + 'bad' + tdTag[1];
+              indexView += '<td class="neg-tick">\u2718</td>';
             }
           });
 
-          indexView += rowTag[1];
+          indexView += '</tr>';
           count++;
         };
 
         for (var word in indexPerPath) {
-          _loop3(word);
+          _loop2(word);
         }
-        indexView += bodyTag[1];
-      };
-
-      for (var filename in indexFile) {
-        _loop2(filename);
+        indexView += '</tbody>';
       }
 
       return [indexPerPath, indexView];
     }
-
-    // createIndexHtml(indexFile, jsonDatabase) {
-    //     let indexView = "";
-    //     let headContainer = [`<div class="panel panel-default">
-    //                             <div class="panel-heading">
-    //                                 <h4 class="panel-title">
-    //                     <a data-toggle="collapse" data-parent="#accordion" href="#`, `">`, `</a>
-    //                   </h4>`,
-    //       `</div>`
-    //     ];
-    //     let createIndexButton = [`<span class="input-group-addon" onclick="callCreateIndex('`, `')" cursor="pointer" id="create-index">Create Index</span>`];
-    //     let deleteIndexButton = [`<span class="input-group-addon" cursor="pointer" onclick="callDeleteIndex('`, `')" id="delete-index">Delete Index</span>`];
-
-    //     let bodyContainer = [`<div id="`, `" class="panel-collapse collapse in">
-    //                                 <div class="panel-body">
-    //                                     <div class="table-responsive">
-    //                                         <table class="table">`, `</table></div></div></div>`]
-    //     let headTag = ["<thead>", "</thead>"];
-    //     let rowTag = ["<tr>", "</tr>"];
-    //     let tdTag = ["<td>", "</td>"];
-    //     let headDataTag = ["<th>", "</th>"];
-    //     let bodyTag = ["<tbody>", "</tbody>"];
-
-    //     for (let filename in indexFile) {
-    //       indexView += headContainer[0] + filename.replace(".", "") + headContainer[1] + filename + headContainer[2];
-    //       indexView += createIndexButton[0] + filename + createIndexButton[1];
-    //       indexView += deleteIndexButton[0] + filename + deleteIndexButton[1];
-    //       indexView += headContainer[3] + bodyContainer[0] + filename.replace(".", "") + bodyContainer[1] + headTag[0];
-    //       indexView += headDataTag[0] + "#" + headDataTag[1];
-    //       indexView += headDataTag[0] + "word" + headDataTag[1];
-
-    //       jsonDatabase.forEach(function(element, index) {
-    //         indexView += headDataTag[0] + "Doc " + index + headDataTag[1];
-    //       });
-    //       let count = 0;
-    //       for (let word in indexFile[filename]) {
-    //         indexView += rowTag[0] + tdTag[0] + count + tdTag[1];
-    //         indexView += tdTag[0] + word + tdTag[1];
-    //         jsonDatabase.forEach(function(element, index) {
-    //           console.log(index);
-    //           if (indexFile[filename][word].indexOf(index) > -1) {
-    //             indexView += tdTag[0] + "gud" + tdTag[1];
-    //           } else {
-    //             indexView += tdTag[0] + "bad" + tdTag[1];
-    //           }
-    //         });
-
-    //         indexView += rowTag[1]
-    //         count++;
-    //       }
-    //       indexView += bodyContainer[2] + headContainer[3];
-    //     }
-    //     console.log(indexView);
-    //     return [indexFile, indexView];
-
-    //   }
-
-
   }]);
 
   return Index;
@@ -335,16 +266,8 @@ var theJSON = [{
   text: 'An unusual alliance in of man, elf, dwarf, wizard and hobbit seek to destroy a powerful ring.'
 }];
 
-// thisindex.saveUploads("books.json", theJSON);
+// Sample Structure of this.indexFile
+// ({ 'books.json': { alice: [0], in : [0, 1], wonderland: [0], falls: [0], into: [0], a: [0, 1], rabbit: [0], hole: [0], and: [0, 1], enters: [0], world: [0], full: [0], of: [0, 1], 'imagination.': [0], the: [1], lord: [1], 'rings:': [1], fellowship: [1], 'ring.': [1], an: [1], unusual: [1], alliance: [1], 'man,': [1], 'elf,': [1], 'dwarf,': [1], wizard: [1], hobbit: [1], seek: [1], to: [1], destroy: [1], powerful: [1] } })
 
-
-// thisindex.createIndex("books.json", theJSON);
-// // // thisindex.createIndex("books.json")
-// // // thisindex.createIndex("books1.json")
-// // thisindex.searchIndex(["books.json"], "lord", ["alice", "in", "algeria", "wonderland"]);
-// // // startTime = performance.now();
-
-// console.log(thisindex.searchIndex(["books.json"], thisindex.createResultHtml, "alice in"));
-// console.log(thisindex.searchResult);
-// // // endTime = performance.now();
-// console.log(thisindex.getIndex("books.json"));
+// Sample Structure of this.jsonDatabase
+// ({ 'books.json': [{ title: "Alice in Wonderland", text: "Alice falls into a rabbit hole and enters a world full of imagination." }, { title: "The Lord of the Rings: The Fellowship of the Ring.", text: "An unusual alliance in of man, elf, dwarf, wizard and hobbit seek to destroy a powerful ring." }], 'book2.json': [{ title: "Alice in Wonderland", text: "Alice falls into a rabbit hole and enters a world full of imagination." }, { title: "The Lord of the Rings: The Fellowship of the Ring.", text: "An unusual alliance in of man, elf, dwarf, wizard and hobbit seek to destroy a powerful ring." }] })
