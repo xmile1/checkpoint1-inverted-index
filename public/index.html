@@ -16,7 +16,7 @@
 </head>
 
 <body>
-    <div class="navbar navbar-default navbar-static-top">
+    <div class="navbar navbar-default navbar-static-top navbar-inverse">
         <div class="container">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-ex-collapse">
@@ -48,11 +48,11 @@
                         <div class="col-md-12">
                             <div class="input-group">
                                 <input type="text" class="form-control" id="search-term" aria-describedby="basic-addon3">
-                                <span class="input-group-addon" cursor="pointer" id="search">search</span>
+                                <span class="input-group-addon default" style="cursor:pointer" id="search">search</span>
                             </div>
                         </div>
                     </div>
-                    <div id="search-panel" style="display:none" class='row'>
+                    <div id="search-panel" class='row hide-div'>
                         <div class="col-md-12">
                             <h4>Filter Search </h4>
                             <div id="filter-filename" class="checkbox">
@@ -66,43 +66,10 @@
                 </div>
                 <div class="col-md-4 padding-20">
                     <div class="input-group pad-bottom-20">
-                        <input type="file" multiple class="file" accept=".json" id="fileUpload">
+                        <input type="file" multiple class="file" data-show-upload=false placeholder="AddFile" accept=".json" id="fileUpload">
                     </div>
                     <div>
                         <div id="index-view" class="panel-group" id="accordion">
-                            <div class="panel panel-default">
-                                <div class="panel-heading">
-                                    <h4 class="panel-title">
-                    <a data-toggle="collapse" data-parent="#accordion" href="#collapse1">
-        book.json</a>
-                  </h4><span class="input-group-addon" onclick="callCreateIndex('filename')" cursor="pointer" id="create-index">Create Index</span>
-                                    <span class="input-group-addon" cursor="pointer" onclick="callDeleteIndex('filename')" id="delete-index">Delete Index</span>
-                                </div>
-                                <div id="collapse1" class="panel-collapse collapse in">
-                                    <div class="panel-body">
-                                        <div class="table-responsive">
-                                            <table class="table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>#</th>
-                                                        <th>word</th>
-                                                        <th>Doc 1</th>
-                                                        <th>Doc 2</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td>1</td>
-                                                        <td>Mark</td>
-                                                        <td>Otto</td>
-                                                        <td>@mdo</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
