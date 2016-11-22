@@ -62,7 +62,8 @@ const invalidStructure = [{
 
 
 function getFile(filename, cb) {
-  let theResult = filename;
+  let
+ theResult = filename;
   cb(theResult);
 }
 
