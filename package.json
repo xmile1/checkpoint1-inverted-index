@@ -4,7 +4,7 @@
   "description": "A search app like elsaticsearch",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "karma start --single-run --browsers PhantomJS"
   },
   "keywords": [
     "search",
@@ -31,6 +31,7 @@
     "babel": "^6.5.2",
     "babelify": "^7.3.0",
     "express": "^4.14.0",
+    "fs": "0.0.1-security",
     "gulp-bower": "0.0.13",
     "gulp-browserify": "^0.5.1",
     "gulp-concat-multi": "^1.0.0",
@@ -48,11 +49,29 @@
     "uglify": "^0.1.5"
   },
   "devDependencies": {
+    "babel-cli": "^6.18.0",
     "babel-preset-es2015": "^6.18.0",
     "browser-sync": "^2.16.0",
+    "coveralls": "^2.11.15",
+    "eslint": "^3.10.2",
+    "eslint-config-airbnb-base": "^10.0.1",
+    "eslint-plugin-import": "^2.2.0",
+    "fs": "0.0.1-security",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
     "gulp-jasmine-node": "^1.0.7",
+    "gulp-rename": "^1.2.2",
+    "jasmine-core": "^2.5.2",
+    "jquery": "^3.1.1",
+    "karma": "^1.3.0",
+    "karma-chrome-launcher": "^2.0.0",
+    "karma-firefox-launcher": "^1.0.0",
+    "karma-jasmine": "^1.0.2",
+    "karma-jasmine-jquery": "^0.1.1",
+    "karma-phantomjs-launcher": "^1.0.2",
+    "karma-requirejs": "^1.1.0",
+    "karma-safari-launcher": "^1.0.0",
+    "nodemon": "^1.11.0",
     "run-sequence": "^1.2.2"
   }
 }
