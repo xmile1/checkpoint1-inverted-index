@@ -57,9 +57,8 @@ var Index = function () {
         });
       });
       this.indexFile = indexFile;
-      console.log(indexFile);
       return cb(filePath, indexFile, jsonDoc);
-      // console.log(indexFile);
+      console.log(indexFile);
     }
   }, {
     key: 'isValid',
@@ -163,7 +162,7 @@ var Index = function () {
       var termTag = ['<h3>', '</h3>'];
       var fileTag = ['<p>', '</p>'];
       var resultContainer = ["<div class='panel panel-default'>", '</div>'];
-      var titleTag = ["<div class='panel-heading'><h3 class='panel-title'> ", '</h3> </div>'];
+      var titleTag = ["<div class='panel-heading result-header'><h3 class='panel-title'> ", '</h3> </div>'];
       var textTag = ["<div class='panel-body'> ", '</div>'];
       for (var term in resultObject) {
         resultView += termTag[0] + term + termTag[1];
@@ -202,7 +201,7 @@ var Index = function () {
     value: function createIndexHeader(FileName) {
       var indexHeadView = '';
       var cFileName = FileName.replace(/[^a-z0-9]+/gi, '');
-      var htmlTop = '<div id="' + cFileName + '-panel" class="panel panel-default ">\n                            <div class="panel-heading index-header">\n                                <h4 class="panel-title">\n                    <a data-toggle="collapse" data-parent="#accordion" href="#' + cFileName + '">' + FileName + '</a></h4><span class="input-group-addon create-button" onclick="callCreateIndex(\'' + FileName + '\')" id="create-index">Create Index</span><span class="input-group-addon delete-button" onclick="callDeleteIndex(\'' + FileName + '\')" id="delete-index">Delete Index</span></div><div id="' + cFileName + '" class="panel-collapse collapse in index-body"><div class="panel-body"><div class="table-responsive"><table id="' + cFileName + '-table" class="table"></table></div></div></div></div>';
+      var htmlTop = '<div id="' + cFileName + '-panel" class="panel panel-default ">\n                            <div class="panel-heading index-header">\n                                <h4 class="panel-title">\n                    <a data-toggle="collapse" data-parent="#accordion" href="#' + cFileName + '">' + FileName + '</a></h4>\n                    <span class="input-group-addon create-button" onclick="callCreateIndex(\'' + FileName + '\')" id="create-index">Create Index</span>\n                    <span class="input-group-addon delete-button" onclick="callDeleteIndex(\'' + FileName + '\')" id="delete-index">Delete Index</span></div>\n                    <div id="' + cFileName + '" class="panel-collapse collapse in index-body">\n                    <div class="panel-body"><div class="table-responsive"><table id="' + cFileName + '-table" class="table"></table></div></div></div></div>';
       indexHeadView += htmlTop;
 
       return indexHeadView;
@@ -212,43 +211,43 @@ var Index = function () {
     value: function createIndexHtml(filePath, indexFile, jsonDoc) {
       var indexView = '';
       var indexPerPath = indexFile[filePath];
-      for (var filename in indexFile) {
-        var cFilename = filePath.replace(/[^a-z0-9]+/gi, '');
-        var headTag = ['<thead>', '</thead>'];
-        var rowTag = ['<tr>', '</tr>'];
-        var tdTag = ['<td>', '</td>'];
-        var headDataTag = ['<th>', '</th>'];
-        var bodyTag = ['<tbody>', '</tbody>'];
+      // for (const filename in indexFile) {
 
-        indexView += '<thead> + <th>#</th>';
-        indexView += '<th>word</th>';
+      var cFilename = filePath.replace(/[^a-z0-9]+/gi, '');
+      var headTag = ['<thead>', '</thead>'];
+      var rowTag = ['<tr>', '</tr>'];
+      var tdTag = ['<td>', '</td>'];
+      var headDataTag = ['<th>', '</th>'];
+      var bodyTag = ['<tbody>', '</tbody>'];
 
+      indexView += '<thead> <th>#</th>';
+      indexView += '<th>word</th>';
+
+      jsonDoc.forEach(function (element, index) {
+        indexView += '<th>Doc ' + (index + 1) + ' </th>';
+      });
+      var count = 1;
+      indexView += '<tbody>';
+
+      var _loop2 = function _loop2(word) {
+        indexView += '<tr> <td> ' + count + '</td>';
+        indexView += '<td> ' + word + ' </td>';
         jsonDoc.forEach(function (element, index) {
-          indexView += '<th>Doc </th>';
+          if (indexPerPath[word].indexOf(index) > -1) {
+            indexView += '<td>\u2714</td>';
+          } else {
+            indexView += '<td class="neg-tick">\u2718</td>';
+          }
         });
-        var count = 1;
-        indexView += '<tbody>';
 
-        var _loop2 = function _loop2(word) {
-          indexView += '<tr> + <td> + count + </td>';
-          indexView += '<td> + word + </td>';
-          jsonDoc.forEach(function (element, index) {
-            if (indexPerPath[word].indexOf(index) > -1) {
-              indexView += '<td>\u2714</td>';
-            } else {
-              indexView += '<td class="neg-tick">\u2718</td>';
-            }
-          });
+        indexView += '</tr>';
+        count++;
+      };
 
-          indexView += '</tr>';
-          count++;
-        };
-
-        for (var word in indexPerPath) {
-          _loop2(word);
-        }
-        indexView += '</tbody>';
+      for (var word in indexPerPath) {
+        _loop2(word);
       }
+      indexView += '</tbody>';
 
       return [indexPerPath, indexView];
     }

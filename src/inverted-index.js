@@ -44,9 +44,8 @@ class Index {
       });
     });
     this.indexFile = indexFile;
-    console.log(indexFile);
     return cb(filePath, indexFile, jsonDoc);
-    // console.log(indexFile);
+    console.log(indexFile);
   }
 
   isValid(fileName, jsonFile) {
@@ -135,7 +134,7 @@ class Index {
     const termTag = ['<h3>', '</h3>'];
     const fileTag = ['<p>', '</p>'];
     const resultContainer = ["<div class='panel panel-default'>", '</div>'];
-    const titleTag = ["<div class='panel-heading'><h3 class='panel-title'> ", '</h3> </div>'];
+    const titleTag = ["<div class='panel-heading result-header'><h3 class='panel-title'> ", '</h3> </div>'];
     const textTag = ["<div class='panel-body'> ", '</div>'];
     for (const term in resultObject) {
       resultView += termTag[0] + term + termTag[1];
@@ -169,7 +168,11 @@ class Index {
     const htmlTop = `<div id="${cFileName}-panel" class="panel panel-default ">
                             <div class="panel-heading index-header">
                                 <h4 class="panel-title">
-                    <a data-toggle="collapse" data-parent="#accordion" href="#${cFileName}">${FileName}</a></h4><span class="input-group-addon create-button" onclick="callCreateIndex('${FileName}')" id="create-index">Create Index</span><span class="input-group-addon delete-button" onclick="callDeleteIndex('${FileName}')" id="delete-index">Delete Index</span></div><div id="${cFileName}" class="panel-collapse collapse in index-body"><div class="panel-body"><div class="table-responsive"><table id="${cFileName}-table" class="table"></table></div></div></div></div>`;
+                    <a data-toggle="collapse" data-parent="#accordion" href="#${cFileName}">${FileName}</a></h4>
+                    <span class="input-group-addon create-button" onclick="callCreateIndex('${FileName}')" id="create-index">Create Index</span>
+                    <span class="input-group-addon delete-button" onclick="callDeleteIndex('${FileName}')" id="delete-index">Delete Index</span></div>
+                    <div id="${cFileName}" class="panel-collapse collapse in index-body">
+                    <div class="panel-body"><div class="table-responsive"><table id="${cFileName}-table" class="table"></table></div></div></div></div>`;
     indexHeadView += htmlTop;
 
     return indexHeadView;
@@ -178,38 +181,39 @@ class Index {
   createIndexHtml(filePath, indexFile, jsonDoc) {
     let indexView = '';
     const indexPerPath = indexFile[filePath];
-    for (const filename in indexFile) {
-      const cFilename = filePath.replace(/[^a-z0-9]+/gi, '');
-      const headTag = ['<thead>', '</thead>'];
-      const rowTag = ['<tr>', '</tr>'];
-      const tdTag = ['<td>', '</td>'];
-      const headDataTag = ['<th>', '</th>'];
-      const bodyTag = ['<tbody>', '</tbody>'];
+    // for (const filename in indexFile) {
 
-      indexView += `<thead> + <th>#</th>`;
-      indexView += `<th>word</th>`;
+    const cFilename = filePath.replace(/[^a-z0-9]+/gi, '');
+    const headTag = ['<thead>', '</thead>'];
+    const rowTag = ['<tr>', '</tr>'];
+    const tdTag = ['<td>', '</td>'];
+    const headDataTag = ['<th>', '</th>'];
+    const bodyTag = ['<tbody>', '</tbody>'];
 
+    indexView += `<thead> <th>#</th>`;
+    indexView += `<th>word</th>`;
+
+    jsonDoc.forEach((element, index) => {
+      indexView += `<th>Doc ${index+1} </th>`;
+    });
+    let count = 1;
+    indexView += `<tbody>`;
+    for (const word in indexPerPath) {
+      indexView += `<tr> <td> ${count}</td>`;
+      indexView += `<td> ${word} </td>`;
       jsonDoc.forEach((element, index) => {
-        indexView += `<th>Doc </th>`;
+        if (indexPerPath[word].indexOf(index) > -1) {
+          indexView += `<td>✔</td>`;
+        } else {
+          indexView += `<td class="neg-tick">✘</td>`;
+        }
       });
-      let count = 1;
-      indexView += `<tbody>`;
-      for (const word in indexPerPath) {
-        indexView += `<tr> + <td> + count + </td>`;
-        indexView += `<td> + word + </td>`;
-        jsonDoc.forEach((element, index) => {
-          if (indexPerPath[word].indexOf(index) > -1) {
-            indexView += `<td>✔</td>`;
-          } else {
-            indexView += `<td class="neg-tick">✘</td>`;
-          }
-        });
 
-        indexView += `</tr>`;
-        count++;
-      }
-      indexView += `</tbody>`;
+      indexView += `</tr>`;
+      count++;
     }
+    indexView += `</tbody>`;
+
 
     return [indexPerPath, indexView];
   }

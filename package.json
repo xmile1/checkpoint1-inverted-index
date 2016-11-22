@@ -4,8 +4,8 @@
   "description": "A search app like elsaticsearch",
   "main": "index.js",
   "scripts": {
-    "test": "karma start --single-run --browsers Chrome",
-    "coveralls": "istanbul cover jasmine-node --captureExceptions jasmine/spec/ && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
+    "test": "karma start --single-run --browsers PhantomJS",
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
   },
   "keywords": [
     "search",
