@@ -4,6 +4,7 @@
   "description": "A search app like elsaticsearch",
   "main": "index.js",
   "scripts": {
+    "start": "gulp",
     "test": "karma start --single-run --browsers Chrome",
     "coveralls": "cat './coverage/Chrome 52.0.2743 (Mac OS X 10.10.5)/lcov.info' | ./node_modules/coveralls/bin/coveralls.js"
   },
