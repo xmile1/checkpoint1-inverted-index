@@ -73,18 +73,17 @@ gulp.task('bundleAppSpec', () => gulp.src('./src/inverted-index.js')
   .pipe(gulp.dest('./jasmine/spec')));
 
 
-gulp.task('nodeJasmine-test', function() {
-  return gulp.src(['jasmine/spec/**/*spec.js']).pipe(nodeJasmine({
-    timeout: 10000
-  }));
-});
+// gulp.task('nodeJasmine-test', function() {
+      //   return gulp.src(['jasmine/spec/**/*spec.js']).pipe(nodeJasmine({
+      //     timeout: 10000
+      //   }));
+      // });
+
 
 
 gulp.task('watcher', () => {
   gulp.watch(['jasmine/spec/inverted-index-test.js', 'src/*.js', 'public/*.html', 'public/js/*'], ['transformTestEs5', 'transformAppEs5']);
-  // gulp.watch(['jasmine/spec/*', 'jasmine/*.html']).on('change', bSyncInstanceTest.reload);
 
-  // gulp.watch(['src/*.js', 'public/*.html', 'public/js/*']).on('change', bSyncInstanceApp.reload);
-
+  gulp.watch(['jasmine/spec/inverted-index-test.js', 'src/*.js', 'public/*.html', 'public/js/*'], ['transformTestEs5', 'transformAppEs5']);
 
 });

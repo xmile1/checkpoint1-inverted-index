@@ -62,17 +62,15 @@ const invalidStructure = [{
 
 
 function getFile(filename, cb) {
-  const
-    theResult = filename;
+  const theResult = filename;
   cb(theResult);
 }
 
-describe('Read Book data', () => {
+describe('Read Book data', function() {
   const index = new Index();
   describe('When I upload a JSON file', () => {
     it('It should checks if its a valid JSON array', (done) => {
       getFile(invalidStructure, (file) => {
-        console.log(file);
         expect(index.saveUploads('invalidStructure.json', file)).toBeFalsy();
       });
       done();
@@ -105,7 +103,6 @@ describe('Populate Index', () => {
     });
 
     it('the created index should be an accurate one', (done) => {
-      console.log(index.getIndex('valid1.json').alice[0]);
       expect(index.getIndex('valid1.json').alice[0]).toEqual(0);
       expect(index.getIndex('valid1.json').lord[0]).toEqual(1);
       expect(index.getIndex('valid1.json').a[1]).toEqual(1);
@@ -138,10 +135,8 @@ describe('Populate Index', () => {
 describe('Search Index', () => {
   const index = new Index();
   getFile(valid1, (file) => {
-    // console.log(index.saveUploads("valid1.json", file))
     index.saveUploads('valid1.json', file);
     index.createIndex('valid1.json', index.createIndexHtml);
-    console.log(index.getIndex('valid1.json'));
   });
 
   describe('should return the correct result when searched', () => {

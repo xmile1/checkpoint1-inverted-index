@@ -4,8 +4,8 @@
   "description": "A search app like elsaticsearch",
   "main": "index.js",
   "scripts": {
-    "test": "karma start --single-run --browsers PhantomJS",
-    "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
+    "test": "karma start --single-run --browsers Chrome",
+    "coveralls": "cat './coverage/Chrome 52.0.2743 (Mac OS X 10.10.5)/lcov.info' | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
   },
   "keywords": [
     "search",
