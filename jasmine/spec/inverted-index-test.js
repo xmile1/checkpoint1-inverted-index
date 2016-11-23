@@ -1,16 +1,5 @@
-// const invalid = 'spec/dummy-data/empty.json ';
-// const empty = 'spec/dummy-data/file0.json';
-// const valid1 = 'spec/dummy-data/file1.json';
-// const valid2 = 'spec/dummy-data/file2.json';
-// const nonString = 'spec/dummy-data/file3.json';
-// const invalidContent = 'spec/dummy-data/file4.json';
-// const invalidStructure = 'spec/dummy-data/file5.json';
-
-
 const invalid = '';
-
 const empty = {};
-
 const valid1 = [{
   title: 'Alice in Wonderland',
   text: 'Alice falls into a rabbit hole and enters a world full of imagination.'
@@ -18,7 +7,6 @@ const valid1 = [{
   title: 'The Lord of the Rings: The Fellowship of the Ring.',
   text: 'An unusual alliance of man, elf, dwarf, wizard and hobbit seek to destroy a powerful ring.'
 }];
-
 const valid2 = [{
   title: 'Alice in Wonderland',
   text: 'Alice falls into a rabbit hole and enters a world full of imagination.'
@@ -26,7 +14,6 @@ const valid2 = [{
   title: 'The Lord of the Rings: The Fellowship of the Ring.',
   text: 'An unusual alliance of man, elf, dwarf, wizard and hobbit seek to destroy a powerful ring.'
 }];
-
 const nonString = [{
   title: 'Black Panther',
   text: 2
@@ -84,6 +71,20 @@ describe('Read Book data', function() {
     it('It should check if Its property values are strings', (done) => {
       getFile(nonString, (file) => {
         expect(index.saveUploads('nonString.json', file)).toBeFalsy();
+        done();
+      });
+    });
+    it('get json database should return the saved content', (done) => {
+      getFile(valid1, (file) => {
+        index.saveUploads('valid1.json', file);
+        expect(Object.keys(index.getjsonDatabase()).length).toEqual(1);
+        done();
+      });
+    });
+    it('getfilename should return the filenames of the saved contents', (done) => {
+      getFile(valid1, (file) => {
+        index.saveUploads('valid1.json', file);
+        expect(index.getFilenames()).toEqual(['valid1.json']);
         done();
       });
     });
