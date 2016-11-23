@@ -1,5 +1,9 @@
  const theIndex = new Index();
  $(document).ready(() => {
+   const fileInput = document.getElementById('fileUpload');
+   /**
+    * [On click it calls the search index function and appends its result to the result pane in views]
+    */
    $('#search').click(() => {
      const fileNames = [];
      const searchTerm = $('#search-term').val();
@@ -13,12 +17,17 @@
      $('#result-pane').append(theIndex.searchIndex(fileNames, theIndex.createResultHtml, searchTerm)[1]);
    });
 
+   /**
+    * [shows the filter list ]
+    */
    $('#search-term').click(() => {
      $('#search-panel').delay(200).fadeIn(300);
-     // $("#search-panel").css("display", "block");
    });
 
 
+   /**
+    * [creates the html for filter search filter]
+    */
    function createFilterHtml() {
      $('#filter-filename').empty();
      theIndex.getFilenames().forEach((element) => {
@@ -26,14 +35,14 @@
      });
    }
 
-   const fileInput = document.getElementById('fileUpload');
+   /**
+    * [reads the file using a file input and prepends a create index pane to the view]
+    */
    fileInput.addEventListener('change', (e) => {
-     $('.file-preview').delay(200).fadeIn(300);
-     // var option = confirm("Do you want to create index automatically after Upload");
      const files = fileInput.files;
+     $('.file-preview').delay(200).fadeIn(300);
      for (let i = 0; i < files.length; i++) {
        const reader = new FileReader();
-
        (function(fileIndex, reader) {
          reader.addEventListener('load', () => {
            if (theIndex.saveUploads(files[fileIndex].name, reader.result)) {
@@ -51,6 +60,9 @@
    });
  });
 
+ /**
+  * [Calls the creare index function and create the index]
+  */
  function callCreateIndex(fileName) {
    $('.file-preview').css('display', 'none');
    const tableid = `#${fileName}-table`.replace('.', '');
@@ -65,7 +77,11 @@
  }
 
 
+ /**
+  * [Calls the delete index function based on prompt resonses]
+  */
  function callDeleteIndex(filename) {
+   let panelIdPrefix = `${filename}`.replace('.', '');
    const deleteIndex = confirm(`Delete ${filename} index?
     Are You sure you want to Delete this Index \n Note: This is Unrecoverable`);
 
@@ -74,12 +90,11 @@
      const deleteAll = confirm('Do you want to Delete the JSON file? \n Note: This is Unrecoverable', 'Delete JSON File');
      if (deleteAll) {
        theIndex.deleteIndex(filename, true);
-       $(`#${filename}-panel`);
-       $(`#${filename}`);
+       $(`#${panelIdPrefix}-panel`).remove();
        $.toaster({ priority: 'success', title: 'Delete', message: 'Index & File deleted Successfully' });
      } else {
        theIndex.deleteIndex(filename, false);
-       $(`#${filename}`).remove;
+       $(`#${panelIdPrefix}`).remove();
        $.toaster({ priority: 'success', title: 'Delete Index', message: 'Index deleted Successfully' });
      }
    }
