@@ -1,3 +1,4 @@
+/** @type {String} [description] -------------------------------------------------------------- */
 const invalid = '';
 const empty = {};
 const valid1 = [{
@@ -36,7 +37,6 @@ const invalidContent = [{
   text: 'A rookie BatMan, Fresh from the League of Assasins tries to find his way'
 }];
 
-
 const invalidStructure = [{
   'not-title': 'Black Panther'
 }, {
@@ -46,7 +46,9 @@ const invalidStructure = [{
   title: 'Batman: Year One',
   text: 'A rookie BatMan, Fresh from the League of Assasins tries to find his way'
 }];
-
+/**
+ * Dummy Data for Test End --------------------------------------------------------------
+ */
 
 function getFile(filename, cb) {
   const theResult = filename;
