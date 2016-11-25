@@ -1,4 +1,5 @@
 jasmine/lib
-jasmine/spec/*.*
+jasmine/spec
 !jasmine/spec/inverted-index-test.js
-public/**
+public
+!public/js/script.js
