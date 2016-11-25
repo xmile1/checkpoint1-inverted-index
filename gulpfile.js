@@ -27,6 +27,7 @@ gulp.task('load-app', ['transformAppEs5', 'bundleBower'], () => {
       index: 'index.html'
     },
     port: 3400,
+    open: false,
     ui: {
       port: 3800
     }
@@ -37,8 +38,9 @@ gulp.task('load-test', ['transformTestEs5', 'bundleAppSpec'], () => {
   bSyncInstanceTest.init({
     server: {
       baseDir: './jasmine',
-      index: 'specRunner.html'
+      index: 'specRunner.html',
     },
+    open: false,
     port: 3300,
     ui: {
       port: 3900
