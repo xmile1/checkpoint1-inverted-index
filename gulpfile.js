@@ -26,10 +26,10 @@ gulp.task('load-app', ['transformAppEs5', 'bundleBower'], () => {
       baseDir: './public',
       index: 'index.html'
     },
-    port: 3400,
+    port: process.env.PORT|| 3400,
     open: false,
     ui: {
-      port: 3800
+      port: process.env.PORT|| 3800
     }
   });
 });
@@ -41,9 +41,9 @@ gulp.task('load-test', ['transformTestEs5', 'bundleAppSpec'], () => {
       index: 'specRunner.html',
     },
     open: false,
-    port: 3300,
+    port: process.env.PORT|| 3300,
     ui: {
-      port: 3900
+      port: process.env.PORT|| 3900
     }
 
   });
