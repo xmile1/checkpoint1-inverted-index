@@ -31,3 +31,5 @@ bower_lib
 
 #public lib dependencies
 public/lib
+
+.DS_Store
