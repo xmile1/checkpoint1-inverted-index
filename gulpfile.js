@@ -9,7 +9,8 @@ const gulp = require('gulp'),
   babelify = require('babelify'),
   browserify = require('browserify'),
   nodeJasmine = require('gulp-jasmine-node'),
-  rename = require('gulp-rename');
+  rename = require('gulp-rename'),
+  bowerSrc = require('gulp-bower-src');
 
 let bSyncInstanceApp = browserSync.create(),
   bSyncInstanceTest = browserSync.create();
@@ -19,7 +20,7 @@ gulp.task('default', () => {
 
 });
 
-gulp.task('load-app', ['transformAppEs5'], () => {
+gulp.task('load-app', ['transformAppEs5', 'bundleBower'], () => {
   bSyncInstanceApp.init({
     server: {
       baseDir: './public',
@@ -80,7 +81,20 @@ gulp.task('bundleAppSpec', () => gulp.src('./src/inverted-index.js')
   .pipe(gulp.dest('./jasmine/spec'))
 );
 
+gulp.task('bundleBower', () => {
+  gulp.src(['bower_lib/**'])
+    .pipe(gulp.dest('public/lib'));
+});
+
+// gulp.task('serveprod', function() {
+//   connect.server({
+//     root: ["public"],
+//     port: process.env.PORT || 5000,
+//     livereload: false
+//   });
+// });
+
 gulp.task('watcher', () => {
   gulp.watch(['jasmine/spec/inverted-index-test.js', 'src/*.js', 'public/index.html', 'public/js/script.js'], ['reloadApp', 'reloadTest']);
-
+  gulp.watch(['bower.json'], ['bundleBower']);
 });

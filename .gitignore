@@ -28,3 +28,6 @@ node_modules
 
 #bower packages
 bower_lib
+
+#public lib dependencies
+public/lib

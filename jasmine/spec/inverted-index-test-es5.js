@@ -1,4 +1,5 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/** @type {String} [description] -------------------------------------------------------------- */
 const invalid = '';
 const empty = {};
 const valid1 = [{
@@ -37,7 +38,6 @@ const invalidContent = [{
   text: 'A rookie BatMan, Fresh from the League of Assasins tries to find his way'
 }];
 
-
 const invalidStructure = [{
   'not-title': 'Black Panther'
 }, {
@@ -47,7 +47,9 @@ const invalidStructure = [{
   title: 'Batman: Year One',
   text: 'A rookie BatMan, Fresh from the League of Assasins tries to find his way'
 }];
-
+/**
+ * Dummy Data for Test End --------------------------------------------------------------
+ */
 
 function getFile(filename, cb) {
   const theResult = filename;

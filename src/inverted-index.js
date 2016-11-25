@@ -15,7 +15,7 @@ class Index {
 
   /**
    * [saveUploads creates a key and value object item that stores the uploaded file(s)]
-   * @param  {[string]} fileName [filename]
+   * @param  {[string} fileName [filename]
    * @param  {[object]} jsonFile [content of uploaded json file]
    * @return {[boolean]}          [returns true on succesful addition of object to datatbase]
    */
