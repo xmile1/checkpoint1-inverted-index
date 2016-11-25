@@ -1,6 +1,7 @@
 # Inverted-index
 [![Coverage Status](https://coveralls.io/repos/github/xmile1/checkpoint1-inverted-index/badge.svg?branch=develop)](https://coveralls.io/github/xmile1/checkpoint1-inverted-index?branch=master)
 ![](https://travis-ci.org/xmile1/checkpoint1-inverted-index.svg?branch=develop)
+[![Code Climate](https://codeclimate.com/repos/5835bf25362f3962b1000523/badges/eac0c7f614cf105ca599/gpa.svg)](https://codeclimate.com/repos/5835bf25362f3962b1000523/feed)
 
 In computer science, an inverted index (also referred to as postings file or inverted file) is an index data structure storing a mapping from content, such as words or numbers, to its locations in a database file, or in a document or a set of documents.
 
