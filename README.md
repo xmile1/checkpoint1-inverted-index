@@ -33,3 +33,6 @@ Common Uses: Inverted indices have found use in the design of Search Engines, Se
 1. Upload valid json files you need to search from in the format below
 2. create index of the uploaded file
 2. enter your search term to search for a word
+
+#Limitations
+1. This app does not use a database hence uploads are lost per session.
