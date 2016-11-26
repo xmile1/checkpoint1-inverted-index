@@ -1,3 +1,4 @@
+/*global $:true*/
  const theIndex = new Index();
  $(document).ready(() => {
    const fileInput = document.getElementById('fileUpload');
@@ -43,7 +44,7 @@
      $('.file-preview').delay(200).fadeIn(300);
      for (let i = 0; i < files.length; i++) {
        const reader = new FileReader();
-       (function(fileIndex, reader) {
+       (function(fileIndex, theReader) {
          reader.addEventListener('load', () => {
            if (theIndex.saveUploads(files[fileIndex].name, reader.result)) {
              $('#index-view').prepend(theIndex.createIndexHeader(files[fileIndex].name));

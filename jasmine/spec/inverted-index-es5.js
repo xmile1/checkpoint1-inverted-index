@@ -4,9 +4,13 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var util = new require('./utils.js');
+
 /**
  * A class for Creating and searching an inverted index
  */
+console.log(util.parseJSON("yugjhg"));
+
 var Index = function () {
 
   /**
@@ -59,106 +63,42 @@ var Index = function () {
      */
 
   }, {
-    key: 'getjsonDatabase',
-    value: function getjsonDatabase() {
+    key: 'getJsonDatabase',
+    value: function getJsonDatabase() {
       return this.jsonDatabase;
     }
 
     /**
      * [createIndex Creates an index of the words in the received json file]
-     * @param  {string}   filePath [the key(filename) of the json value to index]
+     * @param  {string}   fileName [the key(filename) of the json value to index]
      * @param  {Function} cb  [call back to return the indexed file object/an html format index table]
      * @return {[array]} [an arrray of the indexed file result and the html Div of the index]
      */
 
   }, {
     key: 'createIndex',
-    value: function createIndex(filePath, cb) {
+    value: function createIndex(fileName, cb) {
       var _this2 = this;
 
       var indexFile = this.indexFile;
-      var jsonDoc = this.jsonDatabase[filePath];
-      var concSentence = '';
+      var jsonDoc = this.jsonDatabase[fileName];
+      var mergedContent = '';
       var wordArray = [];
-      if (indexFile[filePath]) {
+      if (indexFile[fileName]) {
         return false;
       }
-      indexFile[filePath] = {};
+      indexFile[fileName] = {};
 
       jsonDoc.forEach(function (element, index) {
-        concSentence = _this2.cleanString(element.title + ' ' + element.text);
-        wordArray = new Set(concSentence.split(' '));
+        mergedContent = _this2.cleanString(element.title + ' ' + element.text);
+        wordArray = new Set(mergedContent.split(' '));
         wordArray.forEach(function (word) {
-          indexFile[filePath][word] = indexFile[filePath][word] || [];
-          indexFile[filePath][word].push(index);
+          indexFile[fileName][word] = indexFile[fileName][word] || [];
+          indexFile[fileName][word].push(index);
         });
       });
       this.indexFile = indexFile;
-      return cb(filePath, indexFile, jsonDoc);
-    }
-
-    /**
-     * [isValid Check if a file is a valid json object based, calls method to check structure]
-     * @param  {string}  fileName [the filename to verfity if is the object in the database]
-     * @param  {object}  jsonFile [the json object to be tested]
-     * @return {Boolean}          [returns true if valid else false]
-     */
-
-  }, {
-    key: 'isValid',
-    value: function isValid(fileName, jsonFile) {
-      if (typeof jsonFile === 'string') {
-        jsonFile = JSON.parse(jsonFile);
-      }
-
-      if (jsonFile && jsonFile.length > 0) {
-        var isValidFileStructure = this.checkFileStructure(jsonFile);
-        if (isValidFileStructure) {
-          if (!this.jsonDatabase[fileName]) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-    /**
-     * [checkFileStructure Checks if object follows the structure as found in ./jasmine/books.json]
-     * @param  {[object]} jsonFile [json file to be tested]
-     * @return {[boolean]}          [true if valid and false if invalid]
-     */
-
-  }, {
-    key: 'checkFileStructure',
-    value: function checkFileStructure(jsonFile) {
-      var _this3 = this;
-
-      this.isValidFile = true;
-
-      jsonFile.forEach(function (document) {
-        var isValidTitle = document.title !== undefined && document.title.length > 0 && typeof document.title === 'string';
-        var isValidText = document.text !== undefined && document.text.length > 0 && typeof document.text === 'string';
-        if (!(isValidText && isValidTitle)) {
-          _this3.isValidFile = false;
-          return false;
-        }
-      });
-      return this.isValidFile;
-    }
-
-    /**
-     * [parseJSON converts sting to a Json object]
-     * @param  {string} jsonFile
-     * @return {object || boolean}  [the parsed file or false on error]
-     */
-
-  }, {
-    key: 'parseJSON',
-    value: function parseJSON(jsonFile) {
-      try {
-        return JSON.parse(jsonFile);
-      } catch (err) {
-        return true;
-      }
+      return cb(fileName, indexFile, jsonDoc);
     }
 
     /**
@@ -174,20 +114,6 @@ var Index = function () {
     }
 
     /**
-     * [cleanString This method takes in a string with whitespaces, non-alphanumric characters and
-     * Returns a clean version with all unecessary characters striped away]
-     * @param  {[string]} theString [the string to cleanup]
-     * @param  {[Regex]} theRegex  [the regex to use]
-     * @return {[String]}           [A string Strpped based on the regex]
-     */
-
-  }, {
-    key: 'cleanString',
-    value: function cleanString(theString, theRegex) {
-      return theString.replace(theRegex, '').toLowerCase() || theString.replace(/[^a-z0-9\s]+/gi, '').toLowerCase();
-    }
-
-    /**
      * [searchIndex It searches the already indexed files for particular words]
      * @param  {[string]}    fileNames     [description]
      * @param  {Function}  cb            [description]
@@ -200,7 +126,7 @@ var Index = function () {
   }, {
     key: 'searchIndex',
     value: function searchIndex(fileNames, cb) {
-      var _this4 = this;
+      var _this3 = this;
 
       var searchResult = {};
 
@@ -217,8 +143,8 @@ var Index = function () {
       searchTerms.forEach(function (searchTerm) {
         searchResult[searchTerm] = {};
         fileNames.forEach(function (fileName) {
-          if (_this4.indexFile[fileName][searchTerm]) {
-            searchResult[searchTerm][fileName] = _this4.indexFile[fileName][searchTerm];
+          if (_this3.indexFile[fileName][searchTerm]) {
+            searchResult[searchTerm][fileName] = _this3.indexFile[fileName][searchTerm];
           }
         });
       });
@@ -236,7 +162,7 @@ var Index = function () {
   }, {
     key: 'createResultHtml',
     value: function createResultHtml(resultObject, jsonDatabase) {
-      var _this5 = this;
+      var _this4 = this;
 
       this.resultView = '';
       var termTag = ['<h3>', '</h3>'];
@@ -246,14 +172,14 @@ var Index = function () {
       var textTag = ["<div class='panel-body'> ", '</div>'];
 
       Object.keys(resultObject).forEach(function (term) {
-        _this5.resultView += 'Search Term: ' + termTag[0] + term + termTag[1];
+        _this4.resultView += 'Search Term: ' + termTag[0] + term + termTag[1];
         Object.keys(resultObject[term]).forEach(function (file) {
-          _this5.resultView += fileTag[0] + file + fileTag[1];
+          _this4.resultView += fileTag[0] + file + fileTag[1];
           resultObject[term][file].forEach(function (element, index) {
-            _this5.resultView += resultContainer[0] + ' ' + titleTag[0] + ' Index: ' + index + ' ';
-            _this5.resultView += jsonDatabase[file][index].title + ' ' + titleTag[1];
-            _this5.resultView += textTag[0] + jsonDatabase[file][index].text + textTag[1];
-            _this5.resultView += resultContainer[1] + titleTag[1];
+            _this4.resultView += resultContainer[0] + ' ' + titleTag[0] + ' Index: ' + index + ' ';
+            _this4.resultView += jsonDatabase[file][index].title + ' ' + titleTag[1];
+            _this4.resultView += textTag[0] + jsonDatabase[file][index].text + textTag[1];
+            _this4.resultView += resultContainer[1] + titleTag[1];
           });
         });
       });
@@ -330,28 +256,28 @@ var Index = function () {
   }, {
     key: 'createIndexHtml',
     value: function createIndexHtml(filePath, indexFile, jsonDoc) {
-      var _this6 = this;
+      var _this5 = this;
 
       this.indexView = '';
       var indexPerPath = indexFile[filePath];
       this.indexView += '<thead> <th>#</th>';
       this.indexView += '<th>word</th>';
       jsonDoc.forEach(function (element, index) {
-        _this6.indexView += '<th>Doc ' + (index + 1) + ' </th>';
+        _this5.indexView += '<th>Doc ' + (index + 1) + ' </th>';
       });
       var count = 1;
       this.indexView += '<tbody>';
       Object.keys(indexPerPath).forEach(function (word) {
-        _this6.indexView += '<tr> <td> ' + count + '</td>';
-        _this6.indexView += '<td> ' + word + ' </td>';
+        _this5.indexView += '<tr> <td> ' + count + '</td>';
+        _this5.indexView += '<td> ' + word + ' </td>';
         jsonDoc.forEach(function (element, index) {
           if (indexPerPath[word].indexOf(index) > -1) {
-            _this6.indexView += '<td>✔</td>';
+            _this5.indexView += '<td>✔</td>';
           } else {
-            _this6.indexView += '<td class="neg-tick">✘</td>';
+            _this5.indexView += '<td class="neg-tick">✘</td>';
           }
         });
-        _this6.indexView += '</tr>';
+        _this5.indexView += '</tr>';
         count = +1;
       });
 

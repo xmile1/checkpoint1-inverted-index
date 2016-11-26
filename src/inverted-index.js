@@ -1,6 +1,10 @@
+let utils = require('./utils.js');
+let  utilsInstance = new utils();
+
 /**
  * A class for Creating and searching an inverted index
  */
+
 class Index {
 
   /**
@@ -23,7 +27,7 @@ class Index {
    * @return {[boolean]}          [returns true on succesful addition of object to datatbase]
    */
   saveUploads(fileName, jsonFile) {
-    if (!this.isValid(fileName, jsonFile)) {
+    if (!utilsInstance.isValid(fileName, jsonFile)) {
       return false;
     }
     if (typeof jsonFile === 'string') {
@@ -43,90 +47,42 @@ class Index {
      * [getjsonDatabase function to return the saved uploads]
      * @return {[object]} [the saved uploads]
      */
-  getjsonDatabase() {
+  getJsonDatabase() {
     return this.jsonDatabase;
   }
 
   /**
    * [createIndex Creates an index of the words in the received json file]
-   * @param  {string}   filePath [the key(filename) of the json value to index]
+   * @param  {string}   fileName [the key(filename) of the json value to index]
    * @param  {Function} cb  [call back to return the indexed file object/an html format index table]
    * @return {[array]} [an arrray of the indexed file result and the html Div of the index]
    */
-  createIndex(filePath, cb) {
+  createIndex(fileName, cb) {
     const indexFile = this.indexFile;
-    const jsonDoc = this.jsonDatabase[filePath];
-    let concSentence = '';
+    const jsonDoc = this.jsonDatabase[fileName];
+    let mergedContent = '';
     let wordArray = [];
-    if (indexFile[filePath]) {
+    if (indexFile[fileName]) {
       return false;
     }
-    indexFile[filePath] = {};
+    indexFile[fileName] = {};
 
     jsonDoc.forEach((element, index) => {
-      concSentence = this.cleanString((`${element.title} ${element.text}`));
-      wordArray = new Set(concSentence.split(' '));
+      mergedContent = utilsInstance.cleanString((`${element.title} ${element.text}`));
+      wordArray = new Set(mergedContent.split(' '));
       wordArray.forEach((word) => {
-        indexFile[filePath][word] = indexFile[filePath][word] || [];
-        indexFile[filePath][word].push(index);
+        indexFile[fileName][word] = indexFile[fileName][word] || [];
+        indexFile[fileName][word].push(index);
       });
     });
     this.indexFile = indexFile;
-    return cb(filePath, indexFile, jsonDoc);
+    return cb(fileName, indexFile, jsonDoc);
   }
 
-    /**
-     * [isValid Check if a file is a valid json object based, calls method to check structure]
-     * @param  {string}  fileName [the filename to verfity if is the object in the database]
-     * @param  {object}  jsonFile [the json object to be tested]
-     * @return {Boolean}          [returns true if valid else false]
-     */
-  isValid(fileName, jsonFile) {
-    if (typeof jsonFile === 'string') {
-      jsonFile = JSON.parse(jsonFile);
-    }
+  
+  
 
-    if (jsonFile && jsonFile.length > 0) {
-      const isValidFileStructure = this.checkFileStructure(jsonFile);
-      if (isValidFileStructure) {
-        if (!this.jsonDatabase[fileName]) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-    /**
-     * [checkFileStructure Checks if object follows the structure as found in ./jasmine/books.json]
-     * @param  {[object]} jsonFile [json file to be tested]
-     * @return {[boolean]}          [true if valid and false if invalid]
-     */
-  checkFileStructure(jsonFile) {
-    this.isValidFile = true;
 
-    jsonFile.forEach((document) => {
-      const isValidTitle = document.title !== undefined && document.title.length > 0 && typeof document.title === 'string';
-      const isValidText = document.text !== undefined && document.text.length > 0 && typeof document.text === 'string';
-      if (!(isValidText && isValidTitle)) {
-        this.isValidFile = false;
-        return false;
-      }
-    });
-    return this.isValidFile;
-  }
-
-/**
- * [parseJSON converts sting to a Json object]
- * @param  {string} jsonFile
- * @return {object || boolean}  [the parsed file or false on error]
- */
-  parseJSON(jsonFile) {
-    try {
-      return JSON.parse(jsonFile);
-    } catch (err) {
-      return true;
-    }
-  }
 
 
   /**
@@ -139,16 +95,6 @@ class Index {
   }
 
 
-  /**
-   * [cleanString This method takes in a string with whitespaces, non-alphanumric characters and
-   * Returns a clean version with all unecessary characters striped away]
-   * @param  {[string]} theString [the string to cleanup]
-   * @param  {[Regex]} theRegex  [the regex to use]
-   * @return {[String]}           [A string Strpped based on the regex]
-   */
-  cleanString(theString, theRegex) {
-    return theString.replace(theRegex, '').toLowerCase() || theString.replace(/[^a-z0-9\s]+/gi, '').toLowerCase();
-  }
 
   /**
    * [searchIndex It searches the already indexed files for particular words]
@@ -165,7 +111,7 @@ class Index {
     if (fileNames.length < 1) {
       fileNames = this.getFilenames();
     }
-    searchTerms = this.cleanString(searchTerms, /[^a-z0-9\s,]+/gi);
+    searchTerms = utilsInstance.cleanString(searchTerms, /[^a-z0-9\s,]+/gi);
     searchTerms = searchTerms.split(/[,\s]/);
     searchTerms.forEach((searchTerm) => {
       searchResult[searchTerm] = {};
@@ -296,19 +242,6 @@ class Index {
       count = +1;
     });
 
-    // for (const word in indexPerPath) {
-    //   this.indexView += `<tr> <td> ${count}</td>`;
-    //   this.indexView += `<td> ${word} </td>`;
-    //   jsonDoc.forEach((element, index) => {
-    //     if (indexPerPath[word].indexOf(index) > -1) {
-    //       this.indexView += '<td>✔</td>';
-    //     } else {
-    //       this.indexView += '<td class="neg-tick">✘</td>';
-    //     }
-    //   });
-    //   this.indexView += '</tr>';
-    //   count++;
-    // }
     this.indexView += '</tbody>';
     return [indexPerPath, this.indexView];
   }
