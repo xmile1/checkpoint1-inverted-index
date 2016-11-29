@@ -27,9 +27,9 @@
     if (jsonFile && jsonFile.length > 0) {
       const isValidFileStructure = this.checkFileStructure(jsonFile);
       if (isValidFileStructure) {
-        if (!this.jsonDatabase[fileName]) {
+        // if (!this.jsonDatabase[fileName]) {
           return true;
-        }
+        // }
       }
     }
     return false;
@@ -45,8 +45,8 @@
     this.isValidFile = true;
 
     jsonFile.forEach((document) => {
-      const isValidTitle = document.title !== undefined && document.title.length > 0 && typeof document.title === 'string';
-      const isValidText = document.text !== undefined && document.text.length > 0 && typeof document.text === 'string';
+      const isValidTitle = document.title && document.title.length > 0 && typeof document.title === 'string';
+      const isValidText = document.text && document.text.length > 0 && typeof document.text === 'string';
       if (!(isValidText && isValidTitle)) {
         this.isValidFile = false;
         return false;
@@ -58,7 +58,7 @@
     /**
    * [cleanString This method takes in a string with whitespaces, non-alphanumric characters and
    * Returns a clean version with all unecessary characters striped away]
-   * @param  {[string]} theString [the string to cleanup]
+   * @param  {string} theString [the string to cleanup]
    * @param  {[Regex]} theRegex  [the regex to use]
    * @return {[String]}           [A string Strpped based on the regex]
    */

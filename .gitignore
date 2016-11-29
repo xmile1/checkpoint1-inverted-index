@@ -35,3 +35,4 @@ public/lib
 .DS_Store
 
 .eslintrc
+.coverage.yml

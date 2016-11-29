@@ -10,6 +10,7 @@ const gulp = require('gulp'),
   browserify = require('browserify'),
   nodeJasmine = require('gulp-jasmine-node'),
   rename = require('gulp-rename'),
+webpack = require('webpack-stream'),
   bowerSrc = require('gulp-bower-src');
 
 let bSyncInstanceApp = browserSync.create(),
@@ -88,15 +89,23 @@ gulp.task('bundleBower', () => {
     .pipe(gulp.dest('public/lib'));
 });
 
-// gulp.task('serveprod', function() {
-//   connect.server({
-//     root: ["public"],
-//     port: process.env.PORT || 5000,
-//     livereload: false
-//   });
-// });
 
 gulp.task('watcher', () => {
   gulp.watch(['jasmine/spec/inverted-index-test.js', 'src/*.js', 'public/index.html', 'public/js/script.js'], ['reloadApp', 'reloadTest']);
   gulp.watch(['bower.json'], ['bundleBower']);
+});
+
+
+gulp.task('webpack', function() {
+  return gulp.src('webpack.js')
+    .pipe(webpack(require('./webpack.config.js')))
+    .pipe(gulp.dest('public/'));
+});
+
+
+gulp.task('bundle-app', function() {
+  return gulp.src('./src/inverted-index.js')
+    .pipe(webpack(require('./webpack.config.js')))
+    .pipe(rename({basename: "app"}))
+    .pipe(gulp.dest('./public/'));
 });

@@ -1,10 +1,11 @@
 let utils = require('./utils.js');
 let  utilsInstance = new utils();
+let view = require('./view.js');
+let  viewInstance = new view();
 
 /**
  * A class for Creating and searching an inverted index
  */
-
 class Index {
 
   /**
@@ -19,6 +20,9 @@ class Index {
     this.indexFile = {};
     this.searchResult = {};
   }
+
+
+
 
   /**
    * [saveUploads creates a key and value object item that stores the uploaded file(s)]
@@ -38,11 +42,9 @@ class Index {
     Object.keys(jsonFile).forEach((keys) => {
       this.jsonDatabase[fileName].push(jsonFile[keys]);
     });
-    // for (const docObject in jsonFile) {
-
-    // }
     return true;
   }
+
     /**
      * [getjsonDatabase function to return the saved uploads]
      * @return {[object]} [the saved uploads]
@@ -57,9 +59,9 @@ class Index {
    * @param  {Function} cb  [call back to return the indexed file object/an html format index table]
    * @return {[array]} [an arrray of the indexed file result and the html Div of the index]
    */
-  createIndex(fileName, cb) {
+  createIndex(fileName) {
     const indexFile = this.indexFile;
-    const jsonDoc = this.jsonDatabase[fileName];
+    const jsonDocument = this.jsonDatabase[fileName];
     let mergedContent = '';
     let wordArray = [];
     if (indexFile[fileName]) {
@@ -67,7 +69,7 @@ class Index {
     }
     indexFile[fileName] = {};
 
-    jsonDoc.forEach((element, index) => {
+    jsonDocument.forEach((element, index) => {
       mergedContent = utilsInstance.cleanString((`${element.title} ${element.text}`));
       wordArray = new Set(mergedContent.split(' '));
       wordArray.forEach((word) => {
@@ -76,7 +78,14 @@ class Index {
       });
     });
     this.indexFile = indexFile;
-    return cb(fileName, indexFile, jsonDoc);
+
+
+this.a = new Promise (function(resolve,reject){
+resolve(createIndex(fileName));
+});
+this.a.then(function(indexFile){
+console.log(viewInstance.createIndexHtml(fileName, indexFile, jsonDocument));
+});
   }
 
   
@@ -87,7 +96,7 @@ class Index {
 
   /**
    * [getIndex Gets the index object of the indexed json file]
-   * @param  {[string]} fileName [the filename(key) of the index needed]
+   * @param  {string} fileName [the filename(key) of the index needed]
    * @return {[object]}          [index of the object]
    */
   getIndex(fileName) {
@@ -98,7 +107,7 @@ class Index {
 
   /**
    * [searchIndex It searches the already indexed files for particular words]
-   * @param  {[string]}    fileNames     [description]
+   * @param  {string}    fileNames     [description]
    * @param  {Function}  cb            [description]
    * @param  {...[Array]} searchContent [the words to search for]
    * @return {[Array]}                  [an array of two elements, an
@@ -125,48 +134,7 @@ class Index {
     return cb(searchResult, this.jsonDatabase);
   }
 
-  /**
-   * [createResultHtml Creates an html view based the result of the index search]
-   * @param  {[object]} resultObject [the result of the index search]
-   * @param  {[object]} jsonDatabase [the json database containing the original Uploaded object]
-   * @return {[ogject]}              [returns the search result and the Html view]
-   */
-  createResultHtml(resultObject, jsonDatabase) {
-    this.resultView = '';
-    const termTag = ['<h3>', '</h3>'];
-    const fileTag = ['<p>', '</p>'];
-    const resultContainer = ["<div class='panel panel-default'>", '</div>'];
-    const titleTag = ["<div class='panel-heading result-header'><h3 class='panel-title'> ", '</h3> </div>'];
-    const textTag = ["<div class='panel-body'> ", '</div>'];
-
-    Object.keys(resultObject).forEach((term) => {
-      this.resultView += `Search Term: ${termTag[0]}${term}${termTag[1]}`;
-      Object.keys(resultObject[term]).forEach((file) => {
-        this.resultView += fileTag[0] + file + fileTag[1];
-        resultObject[term][file].forEach((element, index) => {
-          this.resultView += `${resultContainer[0]} ${titleTag[0]} Index: ${index} `;
-          this.resultView += `${jsonDatabase[file][index].title} ${titleTag[1]}`;
-          this.resultView += textTag[0] + jsonDatabase[file][index].text + textTag[1];
-          this.resultView += resultContainer[1] + titleTag[1];
-        });
-      });
-    });
-    return [resultObject, this.resultView];
-
-    // for (const term in resultObject) {
-    //   this.resultView += `Search Term: ${termTag[0]}${term}${termTag[1]}`;
-    //   for (const file in resultObject[term]) {
-    //     this.resultView += fileTag[0] + file + fileTag[1];
-    //     resultObject[term][file].forEach((element, index) => {
-    //       this.resultView += `${resultContainer[0]} ${titleTag[0]} Index: ${index} `;
-    //       this.resultView += `${jsonDatabase[file][index].title} ${titleTag[1]}`;
-    //       this.resultView += textTag[0] + jsonDatabase[file][index].text + textTag[1];
-    //       this.resultView += resultContainer[1] + titleTag[1];
-    //     });
-    //   }
-    // }
-    // return [resultObject, this.resultView];
-  }
+ 
 
   /**
    * [getFilenames returns the filenames of all files present in the object]
@@ -178,7 +146,7 @@ class Index {
 
   /**
    * [deleteIndex Deletes an index file from the index object]
-   * @param  {[string]} fileName [the filename(key) of the data to delete]
+   * @param  {string} fileName [the filename(key) of the data to delete]
    * @param  {[boolean]} option   [determines if to delete the index only or also the json file]
    * @return {[boolean]}  [true to delete indexFile and jsonDatabase/false to delete only the index]
    */
@@ -191,59 +159,19 @@ class Index {
     return false;
   }
 
-    /**
-     * [createIndexHeader Creates the HTML header of the index file based on the uploaded file]
-     * @param  {[string]} FileName [the name of the file(key) to create an index header for]
-     * @return {[string]}          [and HTML Panel header with buttons to create and delete index]
-     */
-  createIndexHeader(FileName) {
-    this.indexHeadView = '';
-    const cFileName = FileName.replace(/[^a-z0-9]+/gi, '');
-    const htmlTop = `<div id="${cFileName}-panel" class="panel panel-default ">
-                            <div class="panel-heading index-header">
-                                <h4 class="panel-title">
-                    <a data-toggle="collapse" data-parent="#accordion" href="#${cFileName}">${FileName}</a></h4>
-                    <span class="input-group-addon create-button" onclick="callCreateIndex('${FileName}')" id="create-index">Create Index</span>
-                    <span class="input-group-addon delete-button" onclick="callDeleteIndex('${FileName}')" id="delete-index">Delete Index</span></div>
-                    <div id="${cFileName}" class="panel-collapse collapse in index-body">
-                    <div class="panel-body"><div class="table-responsive"><table id="${cFileName}-table" class="table"></table></div></div></div></div>`;
-    this.indexHeadView += htmlTop;
-    return this.indexHeadView;
-  }
 
-    /**
-     * [createIndexHtml Creates an html file based on the index of the provided filepath]
-     * @param  {[string]} filePath  [the filename of the index]
-     * @param  {[object]} indexFile [the store of all created index objects]
-     * @param  {[object]} jsonDoc   [the object of the uploaded json file for the file requested]
-     * @return {[array]} returns the index and the html panel representation of the index]
-     */
-  createIndexHtml(filePath, indexFile, jsonDoc) {
-    this.indexView = '';
-    const indexPerPath = indexFile[filePath];
-    this.indexView += '<thead> <th>#</th>';
-    this.indexView += '<th>word</th>';
-    jsonDoc.forEach((element, index) => {
-      this.indexView += `<th>Doc ${index + 1} </th>`;
-    });
-    let count = 1;
-    this.indexView += '<tbody>';
-    Object.keys(indexPerPath).forEach((word) => {
-      this.indexView += `<tr> <td> ${count}</td>`;
-      this.indexView += `<td> ${word} </td>`;
-      jsonDoc.forEach((element, index) => {
-        if (indexPerPath[word].indexOf(index) > -1) {
-          this.indexView += '<td>✔</td>';
-        } else {
-          this.indexView += '<td class="neg-tick">✘</td>';
-        }
-      });
-      this.indexView += '</tr>';
-      count = +1;
-    });
-
-    this.indexView += '</tbody>';
-    return [indexPerPath, this.indexView];
-  }
 }
+module.exports = new Index();
 
+const valid1 = [{
+  title: 'Alice in Wonderland',
+  text: 'Alice falls into a rabbit hole and enters a world full of imagination.'
+}, {
+  title: 'The Lord of the Rings: The Fellowship of the Ring.',
+  text: 'An unusual alliance of man, elf, dwarf, wizard and hobbit seek to destroy a powerful ring.'
+}];
+
+
+var i = new Index();
+i.saveUploads("jade", valid1);
+i.createIndex("jade");
