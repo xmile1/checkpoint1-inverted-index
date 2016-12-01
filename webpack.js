@@ -1,1 +1,3 @@
-var theindex = require("./src/inverted-index.js");
+// require("./src/utils.js");
+// require("./src/view.js");
+require("./src/script");

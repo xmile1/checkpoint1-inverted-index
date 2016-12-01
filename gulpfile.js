@@ -21,7 +21,7 @@ gulp.task('default', () => {
 
 });
 
-gulp.task('load-app', ['transformAppEs5', 'bundleBower'], () => {
+gulp.task('load-app', ['transformAppEs5', 'bundleBower', 'webpack'], () => {
   bSyncInstanceApp.init({
     server: {
       baseDir: './public',
@@ -91,7 +91,7 @@ gulp.task('bundleBower', () => {
 
 
 gulp.task('watcher', () => {
-  gulp.watch(['jasmine/spec/inverted-index-test.js', 'src/*.js', 'public/index.html', 'public/js/script.js'], ['reloadApp', 'reloadTest']);
+  gulp.watch(['jasmine/spec/inverted-index-test.js', 'src/*.js', 'public/index.html', 'public/js/script.js'], ['webpack','reloadApp', 'reloadTest']);
   gulp.watch(['bower.json'], ['bundleBower']);
 });
 
@@ -99,6 +99,7 @@ gulp.task('watcher', () => {
 gulp.task('webpack', function() {
   return gulp.src('webpack.js')
     .pipe(webpack(require('./webpack.config.js')))
+    .pipe(rename({basename: "app"}))
     .pipe(gulp.dest('public/'));
 });
 

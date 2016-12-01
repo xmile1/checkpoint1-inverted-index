@@ -66,4 +66,4 @@
     return theString.replace(theRegex, '').toLowerCase() || theString.replace(/[^a-z0-9\s]+/gi, '').toLowerCase();
   }
 }
-module.exports = util;
+module.exports = new util();

@@ -2,17 +2,9 @@ var path = require('path');
 var Webpack = require('webpack');
 
 module.exports = {
-    
+
     module: {
-        loaders: [
-            {
-                loader: 'babel-loader',
-                test: /\.json$/, loader: 'json',
-                query: {
-                  presets: 'es2015',
-                },
-            }
-        ]
+    
     },
         plugins:[
   ],

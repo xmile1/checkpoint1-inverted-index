@@ -1,6 +1,3 @@
-var utils = require("./utils.js");
-var view = require("./view.js");
-
 /**
  * A class for Creating and searching an inverted index
  */
@@ -27,7 +24,7 @@ class Index {
    * @return {[boolean]}          [returns true on succesful addition of object to datatbase]
    */
   saveUploads(fileName, jsonFile) {
-    if (!utils.isValid(fileName, jsonFile)) {
+    if (!view.isValid(fileName, jsonFile)) {
       return false;
     }
     if (typeof jsonFile === 'string') {
@@ -73,7 +70,7 @@ class Index {
       });
     });
     this.indexFile = indexFile;
-    return indexFile[filePath];
+    return cb(filePath, indexFile, jsonDoc);
   }
 
   /**
@@ -138,5 +135,3 @@ class Index {
   }
 
 }
-
-module.exports = Index;

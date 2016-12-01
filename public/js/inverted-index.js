@@ -1,13 +1,11 @@
-'use strict';
+"use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var utils = require('./utils.js');
-var utilsInstance = new utils();
-var view = require('./view.js');
-var viewInstance = new view();
+var utils = require("./utils.js");
+var view = require("./view.js");
 
 /**
  * A class for Creating and searching an inverted index
@@ -28,6 +26,7 @@ var Index = function () {
     this.jsonDatabase = {};
     this.indexFile = {};
     this.searchResult = {};
+    this.indexView = '';
   }
 
   /**
@@ -39,17 +38,16 @@ var Index = function () {
 
 
   _createClass(Index, [{
-    key: 'saveUploads',
+    key: "saveUploads",
     value: function saveUploads(fileName, jsonFile) {
       var _this = this;
 
-      if (!utilsInstance.isValid(fileName, jsonFile)) {
+      if (!utils.isValid(fileName, jsonFile)) {
         return false;
       }
       if (typeof jsonFile === 'string') {
         jsonFile = JSON.parse(jsonFile);
       }
-
       this.jsonDatabase[fileName] = [];
       Object.keys(jsonFile).forEach(function (keys) {
         _this.jsonDatabase[fileName].push(jsonFile[keys]);
@@ -63,40 +61,40 @@ var Index = function () {
      */
 
   }, {
-    key: 'getJsonDatabase',
-    value: function getJsonDatabase() {
+    key: "getjsonDatabase",
+    value: function getjsonDatabase() {
       return this.jsonDatabase;
     }
 
     /**
      * [createIndex Creates an index of the words in the received json file]
-     * @param  {string}   fileName [the key(filename) of the json value to index]
+     * @param  {string}   filePath [the key(filename) of the json value to index]
      * @param  {Function} cb  [call back to return the indexed file object/an html format index table]
      * @return {[array]} [an arrray of the indexed file result and the html Div of the index]
      */
 
   }, {
-    key: 'createIndex',
-    value: function createIndex(fileName, cb) {
+    key: "createIndex",
+    value: function createIndex(filePath, cb) {
       var indexFile = this.indexFile;
-      var jsonDoc = this.jsonDatabase[fileName];
-      var mergedContent = '';
+      var jsonDoc = this.jsonDatabase[filePath];
+      var concSentence = '';
       var wordArray = [];
-      if (indexFile[fileName]) {
+      if (indexFile[filePath]) {
         return false;
       }
-      indexFile[fileName] = {};
+      indexFile[filePath] = {};
 
       jsonDoc.forEach(function (element, index) {
-        mergedContent = utilsInstance.cleanString(element.title + ' ' + element.text);
-        wordArray = new Set(mergedContent.split(' '));
+        concSentence = utils.cleanString(element.title + " " + element.text);
+        wordArray = new Set(concSentence.split(' '));
         wordArray.forEach(function (word) {
-          indexFile[fileName][word] = indexFile[fileName][word] || [];
-          indexFile[fileName][word].push(index);
+          indexFile[filePath][word] = indexFile[filePath][word] || [];
+          indexFile[filePath][word].push(index);
         });
       });
       this.indexFile = indexFile;
-      return cb(fileName, indexFile, jsonDoc);
+      return cb(filePath, indexFile, jsonDoc);
     }
 
     /**
@@ -106,7 +104,7 @@ var Index = function () {
      */
 
   }, {
-    key: 'getIndex',
+    key: "getIndex",
     value: function getIndex(fileName) {
       return this.indexFile[fileName] || this.indexFile;
     }
@@ -122,7 +120,7 @@ var Index = function () {
      */
 
   }, {
-    key: 'searchIndex',
+    key: "searchIndex",
     value: function searchIndex(fileNames, cb) {
       var _this2 = this;
 
@@ -136,7 +134,7 @@ var Index = function () {
       if (fileNames.length < 1) {
         fileNames = this.getFilenames();
       }
-      searchTerms = utilsInstance.cleanString(searchTerms, /[^a-z0-9\s,]+/gi);
+      searchTerms = utils.cleanString(searchTerms, /[^a-z0-9\s,]+/gi);
       searchTerms = searchTerms.split(/[,\s]/);
       searchTerms.forEach(function (searchTerm) {
         searchResult[searchTerm] = {};
@@ -156,7 +154,7 @@ var Index = function () {
      */
 
   }, {
-    key: 'getFilenames',
+    key: "getFilenames",
     value: function getFilenames() {
       return Object.keys(this.jsonDatabase);
     }
@@ -169,7 +167,7 @@ var Index = function () {
      */
 
   }, {
-    key: 'deleteIndex',
+    key: "deleteIndex",
     value: function deleteIndex(fileName, option) {
       delete this.indexFile[fileName];
       if (option === true) {
@@ -183,8 +181,4 @@ var Index = function () {
   return Index;
 }();
 
-module.exports = new Index();
-
-var i = new Index();
-
-console.log(i.viewInstance[a]);
+module.exports = Index;

@@ -1,4 +1,4 @@
-class view { 
+class view {
 
  /**
    * [createResultHtml Creates an html view based the result of the index search]
@@ -88,4 +88,4 @@ class view {
     return [indexPerPath, this.indexView];
   }
 }
-module.exports = view;
+module.exports = new view();

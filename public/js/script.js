@@ -1,5 +1,6 @@
 /*global $:true*/
 
+(function(){
  $(document).ready(() => {
    const theIndex = new Index();
    const fileInput = document.getElementById('fileUpload');
