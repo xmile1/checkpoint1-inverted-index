@@ -1,3 +1,3 @@
 // require("./src/utils.js");
 // require("./src/view.js");
-require("./src/script");
+require("./src/theLib");

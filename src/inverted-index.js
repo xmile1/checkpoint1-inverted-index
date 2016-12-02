@@ -1,5 +1,4 @@
 var utils = require("./utils.js");
-var view = require("./view.js");
 
 /**
  * A class for Creating and searching an inverted index
@@ -24,7 +23,7 @@ class Index {
    * [saveUploads creates a key and value object item that stores the uploaded file(s)]
    * @param  {[string} fileName [filename]
    * @param  {[object]} jsonFile [content of uploaded json file]
-   * @return {[boolean]}          [returns true on succesful addition of object to datatbase]
+   * @return {[boolean]} [returns true on succesful addition of object to datatbase]
    */
   saveUploads(fileName, jsonFile) {
     if (!utils.isValid(fileName, jsonFile)) {
@@ -40,10 +39,10 @@ class Index {
     return true;
   }
 
-    /**
-     * [getjsonDatabase function to return the saved uploads]
-     * @return {[object]} [the saved uploads]
-     */
+  /**
+   * [getjsonDatabase function to return the saved uploads]
+   * @return {[object]} [the saved uploads]
+   */
   getjsonDatabase() {
     return this.jsonDatabase;
   }
@@ -94,7 +93,7 @@ class Index {
    * object with the search term as key and their locations in the
    * array of the originally uploaded file, an html view of the result]
    */
-  searchIndex(fileNames, cb, ...searchContent) {
+  searchIndex(fileNames, ...searchContent) {
     const searchResult = {};
     let searchTerms = searchContent.join(' ');
     if (fileNames.length < 1) {
@@ -111,7 +110,8 @@ class Index {
       });
     });
     this.searchResult = searchResult;
-    return cb(searchResult, this.jsonDatabase);
+    return searchResult;
+  // return cb(searchResult, this.jsonDatabase);
   }
 
   /**

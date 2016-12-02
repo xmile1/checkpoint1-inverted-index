@@ -1,4 +1,14 @@
-/******/ (function(modules) { // webpackBootstrap
+(function webpackUniversalModuleDefinition(root, factory) {
+	if(typeof exports === 'object' && typeof module === 'object')
+		module.exports = factory();
+	else if(typeof define === 'function' && define.amd)
+		define("invertedIndex", [], factory);
+	else if(typeof exports === 'object')
+		exports["invertedIndex"] = factory();
+	else
+		root["invertedIndex"] = factory();
+})(this, function() {
+return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
 /******/
@@ -44,20 +54,12 @@
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// require("./src/utils.js");
-	// require("./src/view.js");
-	__webpack_require__(1);
-
-
-/***/ },
-/* 1 */
-/***/ function(module, exports, __webpack_require__) {
-
 	/*global $:true*/
-	var $ = __webpack_require__(2);
-	var Index = __webpack_require__(3);
-	 $(document).ready(() => {
-	   const theIndex = new Index();
+	var $ = __webpack_require__(1);
+	var Index = __webpack_require__(2);
+	const theIndex = new Index();
+	$(document).ready(() => {
+	
 	   const fileInput = document.getElementById('fileUpload');
 	
 	   /**
@@ -73,7 +75,11 @@
 	       }
 	     });
 	     $('#result-pane').empty();
-	     $('#result-pane').append(theIndex.searchIndex(fileNames, theIndex.utilsInstance.createResultHtml, searchTerm)[1]);
+	     var searchResult = theIndex.searchIndex(fileNames, searchTerm);
+	     console.log(searchResult);
+	     if (searchResult){
+	     $('#result-pane').append(invertedIndex.createResultHtml(searchResult));
+	   }
 	   });
 	
 	   /**
@@ -82,17 +88,6 @@
 	   $('#search-term').click(() => {
 	     $('#search-panel').delay(200).fadeIn(300);
 	   });
-	
-	
-	   /**
-	    * [creates the html for filter search filter]
-	    */
-	   function createFilterHtml() {
-	     $('#filter-filename').empty();
-	     theIndex.getFilenames().forEach((element) => {
-	       $('#filter-filename').append(`<label><input class="filter-filename" type="checkbox" value="${element}">${element}</label>`);
-	     });
-	   }
 	
 	   /**
 	    * [reads the file using a file input and prepends a create index pane to the view]
@@ -105,8 +100,8 @@
 	       (function(fileIndex, theReader) {
 	         reader.addEventListener('load', () => {
 	           if (theIndex.saveUploads(files[fileIndex].name, reader.result)) {
-	             $('#index-view').prepend(view.createIndexHeader(files[fileIndex].name));
-	             createFilterHtml();
+	             $('#index-view').prepend(invertedIndex.createIndexHeader(files[fileIndex].name));
+	             invertedIndex.createFilterHtml();
 	           } else {
 	             $.toaster({ priority: 'warning', title: 'Upload Error', message: 'Invalid JSON file' });
 	           }
@@ -118,27 +113,30 @@
 	   });
 	 });
 	
+	module.exports = {
 	 /**
 	  * [Calls the creare index function and create the index]
 	  */
-	 function callCreateIndex(fileName) {
+	callCreateIndex(fileName) {
 	   $('.file-preview').css('display', 'none');
 	   const tableid = `#${fileName}-table`.replace('.', '');
-	   const index = theIndex.createIndex(fileName, theIndex.createIndexHtml);
+	   const index = theIndex.createIndex(fileName);
 	   if (index == false) {
-	     $.toaster({ priority: 'warning', title: 'Create Index', message: 'Index already Exists' });
+	     $.toaster({ priority: 'warning',
+	     title: 'Create Index',
+	     message: 'Index already Exists' });
 	   } else {
 	     $(tableid).css('display', 'none');
-	     $(tableid).append(index[1]);
+	     $(tableid).append(invertedIndex.createIndexHtml(fileName));
 	     $(tableid).delay(200).fadeIn(300);
 	   }
-	 }
+	 },
 	
 	
 	 /**
 	  * [Calls the delete index function based on prompt resonses]
 	  */
-	 function callDeleteIndex(filename) {
+	callDeleteIndex(filename) {
 	   let panelIdPrefix = `${filename}`.replace('.', '');
 	   const deleteIndex = confirm(`Delete ${filename} index?
 	    Are You sure you want to Delete this Index \n Note: This is Unrecoverable`);
@@ -156,10 +154,20 @@
 	       $.toaster({ priority: 'success', title: 'Delete Index', message: 'Index deleted Successfully' });
 	     }
 	   }
-	 }
+	 },
 	
 	
-	var view = {
+	
+	  /**
+	   * [creates the html for filter search filter]
+	   */
+	  createFilterHtml() {
+	    $('#filter-filename').empty();
+	    theIndex.getFilenames().forEach((element) => {
+	      $('#filter-filename').append(`<label><input class="filter-filename"
+	      type="checkbox" value="${element}">${element}</label>`);
+	    });
+	  },
 	
 	  /**
 	    * [createResultHtml Creates an html view based the result of the index search]
@@ -167,8 +175,11 @@
 	    * @param  {[object]} jsonDatabase [the json database containing the original Uploaded object]
 	    * @return {[ogject]}              [returns the search result and the Html view]
 	    */
-	   createResultHtml(resultObject, jsonDatabase) {
+	   createResultHtml(resultObject) {
 	     this.resultView = '';
+	     jsonDatabase = theIndex.jsonDatabase;
+	
+	
 	     const termTag = ['<h3>', '</h3>'];
 	     const fileTag = ['<p>', '</p>'];
 	     const resultContainer = ["<div class='panel panel-default'>", '</div>'];
@@ -204,8 +215,8 @@
 	                             <div class="panel-heading index-header">
 	                                 <h4 class="panel-title">
 	                     <a data-toggle="collapse" data-parent="#accordion" href="#${cFileName}">${FileName}</a></h4>
-	                     <span class="input-group-addon create-button" onclick="callCreateIndex('${FileName}')" id="create-index">Create Index</span>
-	                     <span class="input-group-addon delete-button" onclick="callDeleteIndex('${FileName}')" id="delete-index">Delete Index</span></div>
+	                     <span class="input-group-addon create-button" onclick="invertedIndex.callCreateIndex('${FileName}')" id="create-index">Create Index</span>
+	                     <span class="input-group-addon delete-button" onclick="invertedIndex.callDeleteIndex('${FileName}')" id="delete-index">Delete Index</span></div>
 	                     <div id="${cFileName}" class="panel-collapse collapse in index-body">
 	                     <div class="panel-body"><div class="table-responsive"><table id="${cFileName}-table" class="table"></table></div></div></div></div>`;
 	     this.indexHeadView += htmlTop;
@@ -221,9 +232,10 @@
 	      * @param  {[object]} jsonDoc   [the object of the uploaded json file for the file requested]
 	      * @return {[array]} returns the index and the html panel representation of the index]
 	      */
-	   createIndexHtml(filePath, indexFile, jsonDoc) {
+	   createIndexHtml(filePath) {
 	     this.indexView = '';
-	     const indexPerPath = indexFile[filePath];
+	     var jsonDoc = theIndex.jsonDatabase[filePath];
+	     const indexPerPath = theIndex.indexFile[filePath];
 	     this.indexView += '<thead> <th>#</th>';
 	     this.indexView += '<th>word</th>';
 	     jsonDoc.forEach((element, index) => {
@@ -246,13 +258,13 @@
 	     });
 	
 	     this.indexView += '</tbody>';
-	     return [indexPerPath, this.indexView];
+	     return this.indexView;
 	   }
 	 }
 
 
 /***/ },
-/* 2 */
+/* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -10478,11 +10490,10 @@
 
 
 /***/ },
-/* 3 */
+/* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var utils = __webpack_require__(4);
-	var view = __webpack_require__(5);
+	var utils = __webpack_require__(3);
 	
 	/**
 	 * A class for Creating and searching an inverted index
@@ -10507,7 +10518,7 @@
 	   * [saveUploads creates a key and value object item that stores the uploaded file(s)]
 	   * @param  {[string} fileName [filename]
 	   * @param  {[object]} jsonFile [content of uploaded json file]
-	   * @return {[boolean]}          [returns true on succesful addition of object to datatbase]
+	   * @return {[boolean]} [returns true on succesful addition of object to datatbase]
 	   */
 	  saveUploads(fileName, jsonFile) {
 	    if (!utils.isValid(fileName, jsonFile)) {
@@ -10523,10 +10534,10 @@
 	    return true;
 	  }
 	
-	    /**
-	     * [getjsonDatabase function to return the saved uploads]
-	     * @return {[object]} [the saved uploads]
-	     */
+	  /**
+	   * [getjsonDatabase function to return the saved uploads]
+	   * @return {[object]} [the saved uploads]
+	   */
 	  getjsonDatabase() {
 	    return this.jsonDatabase;
 	  }
@@ -10556,7 +10567,7 @@
 	      });
 	    });
 	    this.indexFile = indexFile;
-	    return cb(filePath, indexFile, jsonDoc);
+	    return indexFile[filePath];
 	  }
 	
 	  /**
@@ -10577,7 +10588,7 @@
 	   * object with the search term as key and their locations in the
 	   * array of the originally uploaded file, an html view of the result]
 	   */
-	  searchIndex(fileNames, cb, ...searchContent) {
+	  searchIndex(fileNames, ...searchContent) {
 	    const searchResult = {};
 	    let searchTerms = searchContent.join(' ');
 	    if (fileNames.length < 1) {
@@ -10594,7 +10605,8 @@
 	      });
 	    });
 	    this.searchResult = searchResult;
-	    return cb(searchResult, this.jsonDatabase);
+	    return searchResult;
+	  // return cb(searchResult, this.jsonDatabase);
 	  }
 	
 	  /**
@@ -10626,16 +10638,17 @@
 
 
 /***/ },
-/* 4 */
+/* 3 */
 /***/ function(module, exports) {
 
-	/**
-	 * [parseJSON converts sting to a Json object]
-	 * @param  {string} jsonFile
-	 * @return {object || boolean}  [the parsed file or false on error]
-	 */
-	  class util{
 	
+	class util {
+	
+	  /**
+	     * [parseJSON converts sting to a Json object]
+	     * @param  {string} jsonFile
+	     * @return {object || boolean}  [the parsed file or false on error]
+	     */
 	  parseJSON(jsonFile) {
 	    try {
 	      return JSON.parse(jsonFile);
@@ -10659,7 +10672,7 @@
 	      const isValidFileStructure = this.checkFileStructure(jsonFile);
 	      if (isValidFileStructure) {
 	        // if (!this.jsonDatabase[fileName]) {
-	          return true;
+	        return true;
 	        // }
 	      }
 	    }
@@ -10667,7 +10680,7 @@
 	  }
 	
 	
-	    /**
+	  /**
 	     * [checkFileStructure Checks if object follows the structure as found in ./jasmine/books.json]
 	     * @param  {[object]} jsonFile [json file to be tested]
 	     * @return {[boolean]}          [true if valid and false if invalid]
@@ -10686,7 +10699,7 @@
 	    return this.isValidFile;
 	  }
 	
-	    /**
+	  /**
 	   * [cleanString This method takes in a string with whitespaces, non-alphanumric characters and
 	   * Returns a clean version with all unecessary characters striped away]
 	   * @param  {string} theString [the string to cleanup]
@@ -10700,103 +10713,8 @@
 	module.exports = new util();
 
 
-/***/ },
-/* 5 */
-/***/ function(module, exports) {
-
-	class view {
-	
-	 /**
-	   * [createResultHtml Creates an html view based the result of the index search]
-	   * @param  {[object]} resultObject [the result of the index search]
-	   * @param  {[object]} jsonDatabase [the json database containing the original Uploaded object]
-	   * @return {[ogject]}              [returns the search result and the Html view]
-	   */
-	  createResultHtml(resultObject, jsonDatabase) {
-	    this.resultView = '';
-	    const termTag = ['<h3>', '</h3>'];
-	    const fileTag = ['<p>', '</p>'];
-	    const resultContainer = ["<div class='panel panel-default'>", '</div>'];
-	    const titleTag = ["<div class='panel-heading result-header'><h3 class='panel-title'> ", '</h3> </div>'];
-	    const textTag = ["<div class='panel-body'> ", '</div>'];
-	
-	    Object.keys(resultObject).forEach((term) => {
-	      this.resultView += `Search Term: ${termTag[0]}${term}${termTag[1]}`;
-	      Object.keys(resultObject[term]).forEach((file) => {
-	        this.resultView += fileTag[0] + file + fileTag[1];
-	        resultObject[term][file].forEach((element, index) => {
-	          this.resultView += `${resultContainer[0]} ${titleTag[0]} Index: ${index} `;
-	          this.resultView += `${jsonDatabase[file][index].title} ${titleTag[1]}`;
-	          this.resultView += textTag[0] + jsonDatabase[file][index].text + textTag[1];
-	          this.resultView += resultContainer[1] + titleTag[1];
-	        });
-	      });
-	    });
-	    return [resultObject, this.resultView];
-	  }
-	
-	
-	
-	      /**
-	     * [createIndexHeader Creates the HTML header of the index file based on the uploaded file]
-	     * @param  {string} FileName [the name of the file(key) to create an index header for]
-	     * @return {string}          [and HTML Panel header with buttons to create and delete index]
-	     */
-	  createIndexHeader(FileName) {
-	    this.indexHeadView = '';
-	    const cFileName = FileName.replace(/[^a-z0-9]+/gi, '');
-	    const htmlTop = `<div id="${cFileName}-panel" class="panel panel-default ">
-	                            <div class="panel-heading index-header">
-	                                <h4 class="panel-title">
-	                    <a data-toggle="collapse" data-parent="#accordion" href="#${cFileName}">${FileName}</a></h4>
-	                    <span class="input-group-addon create-button" onclick="callCreateIndex('${FileName}')" id="create-index">Create Index</span>
-	                    <span class="input-group-addon delete-button" onclick="callDeleteIndex('${FileName}')" id="delete-index">Delete Index</span></div>
-	                    <div id="${cFileName}" class="panel-collapse collapse in index-body">
-	                    <div class="panel-body"><div class="table-responsive"><table id="${cFileName}-table" class="table"></table></div></div></div></div>`;
-	    this.indexHeadView += htmlTop;
-	    return this.indexHeadView;
-	  }
-	
-	
-	
-	    /**
-	     * [createIndexHtml Creates an html file based on the index of the provided filepath]
-	     * @param  {string} filePath  [the filename of the index]
-	     * @param  {[object]} indexFile [the store of all created index objects]
-	     * @param  {[object]} jsonDoc   [the object of the uploaded json file for the file requested]
-	     * @return {[array]} returns the index and the html panel representation of the index]
-	     */
-	  createIndexHtml(filePath, indexFile, jsonDoc) {
-	    this.indexView = '';
-	    const indexPerPath = indexFile[filePath];
-	    this.indexView += '<thead> <th>#</th>';
-	    this.indexView += '<th>word</th>';
-	    jsonDoc.forEach((element, index) => {
-	      this.indexView += `<th>Doc ${index + 1} </th>`;
-	    });
-	    let count = 1;
-	    this.indexView += '<tbody>';
-	    Object.keys(indexPerPath).forEach((word) => {
-	      this.indexView += `<tr> <td> ${count}</td>`;
-	      this.indexView += `<td> ${word} </td>`;
-	      jsonDoc.forEach((element, index) => {
-	        if (indexPerPath[word].indexOf(index) > -1) {
-	          this.indexView += '<td>✔</td>';
-	        } else {
-	          this.indexView += '<td class="neg-tick">✘</td>';
-	        }
-	      });
-	      this.indexView += '</tr>';
-	      count = +1;
-	    });
-	
-	    this.indexView += '</tbody>';
-	    return [indexPerPath, this.indexView];
-	  }
-	}
-	module.exports = new view();
-
-
 /***/ }
-/******/ ]);
-//# sourceMappingURL=1f367633d117f8dacf76.js.map
+/******/ ])
+});
+;
+//# sourceMappingURL=c04611f35c621fb1a68a.js.map

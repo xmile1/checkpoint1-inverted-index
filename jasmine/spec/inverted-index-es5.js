@@ -1,11 +1,10 @@
-"use strict";
+'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var utils = require("./utils.js");
-var view = require("./view.js");
 
 /**
  * A class for Creating and searching an inverted index
@@ -33,12 +32,12 @@ var Index = function () {
    * [saveUploads creates a key and value object item that stores the uploaded file(s)]
    * @param  {[string} fileName [filename]
    * @param  {[object]} jsonFile [content of uploaded json file]
-   * @return {[boolean]}          [returns true on succesful addition of object to datatbase]
+   * @return {[boolean]} [returns true on succesful addition of object to datatbase]
    */
 
 
   _createClass(Index, [{
-    key: "saveUploads",
+    key: 'saveUploads',
     value: function saveUploads(fileName, jsonFile) {
       var _this = this;
 
@@ -61,7 +60,7 @@ var Index = function () {
      */
 
   }, {
-    key: "getjsonDatabase",
+    key: 'getjsonDatabase',
     value: function getjsonDatabase() {
       return this.jsonDatabase;
     }
@@ -74,7 +73,7 @@ var Index = function () {
      */
 
   }, {
-    key: "createIndex",
+    key: 'createIndex',
     value: function createIndex(filePath, cb) {
       var indexFile = this.indexFile;
       var jsonDoc = this.jsonDatabase[filePath];
@@ -86,7 +85,7 @@ var Index = function () {
       indexFile[filePath] = {};
 
       jsonDoc.forEach(function (element, index) {
-        concSentence = utils.cleanString(element.title + " " + element.text);
+        concSentence = utils.cleanString(element.title + ' ' + element.text);
         wordArray = new Set(concSentence.split(' '));
         wordArray.forEach(function (word) {
           indexFile[filePath][word] = indexFile[filePath][word] || [];
@@ -94,7 +93,7 @@ var Index = function () {
         });
       });
       this.indexFile = indexFile;
-      return cb(filePath, indexFile, jsonDoc);
+      return indexFile[filePath];
     }
 
     /**
@@ -104,7 +103,7 @@ var Index = function () {
      */
 
   }, {
-    key: "getIndex",
+    key: 'getIndex',
     value: function getIndex(fileName) {
       return this.indexFile[fileName] || this.indexFile;
     }
@@ -120,14 +119,14 @@ var Index = function () {
      */
 
   }, {
-    key: "searchIndex",
-    value: function searchIndex(fileNames, cb) {
+    key: 'searchIndex',
+    value: function searchIndex(fileNames) {
       var _this2 = this;
 
       var searchResult = {};
 
-      for (var _len = arguments.length, searchContent = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-        searchContent[_key - 2] = arguments[_key];
+      for (var _len = arguments.length, searchContent = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        searchContent[_key - 1] = arguments[_key];
       }
 
       var searchTerms = searchContent.join(' ');
@@ -145,7 +144,8 @@ var Index = function () {
         });
       });
       this.searchResult = searchResult;
-      return cb(searchResult, this.jsonDatabase);
+      return searchResult;
+      // return cb(searchResult, this.jsonDatabase);
     }
 
     /**
@@ -154,7 +154,7 @@ var Index = function () {
      */
 
   }, {
-    key: "getFilenames",
+    key: 'getFilenames',
     value: function getFilenames() {
       return Object.keys(this.jsonDatabase);
     }
@@ -167,7 +167,7 @@ var Index = function () {
      */
 
   }, {
-    key: "deleteIndex",
+    key: 'deleteIndex',
     value: function deleteIndex(fileName, option) {
       delete this.indexFile[fileName];
       if (option === true) {

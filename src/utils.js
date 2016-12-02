@@ -1,10 +1,11 @@
-/**
- * [parseJSON converts sting to a Json object]
- * @param  {string} jsonFile
- * @return {object || boolean}  [the parsed file or false on error]
- */
-  class util{
 
+class util {
+
+  /**
+     * [parseJSON converts sting to a Json object]
+     * @param  {string} jsonFile
+     * @return {object || boolean}  [the parsed file or false on error]
+     */
   parseJSON(jsonFile) {
     try {
       return JSON.parse(jsonFile);
@@ -28,7 +29,7 @@
       const isValidFileStructure = this.checkFileStructure(jsonFile);
       if (isValidFileStructure) {
         // if (!this.jsonDatabase[fileName]) {
-          return true;
+        return true;
         // }
       }
     }
@@ -36,7 +37,7 @@
   }
 
 
-    /**
+  /**
      * [checkFileStructure Checks if object follows the structure as found in ./jasmine/books.json]
      * @param  {[object]} jsonFile [json file to be tested]
      * @return {[boolean]}          [true if valid and false if invalid]
@@ -55,7 +56,7 @@
     return this.isValidFile;
   }
 
-    /**
+  /**
    * [cleanString This method takes in a string with whitespaces, non-alphanumric characters and
    * Returns a clean version with all unecessary characters striped away]
    * @param  {string} theString [the string to cleanup]
