@@ -21,7 +21,7 @@ gulp.task('default', () => {
 
 });
 
-gulp.task('load-app', ['transformAppEs5', 'bundleBower'], () => {
+gulp.task('load-app', ['bundleBower'], () => {
   bSyncInstanceApp.init({
     server: {
       baseDir: './public',
@@ -35,7 +35,7 @@ gulp.task('load-app', ['transformAppEs5', 'bundleBower'], () => {
   });
 });
 
-gulp.task('load-test', ['transformTestEs5', 'bundleAppSpec'], () => {
+gulp.task('load-test', () => {
   bSyncInstanceTest.init({
     server: {
       baseDir: './jasmine',
@@ -95,8 +95,8 @@ gulp.task('watcher', () => {
 gulp.task('webpack', function() {
   return gulp.src('webpack.js')
     .pipe(webpack(require('./webpack.config.js')));
-  // .pipe(rename({basename: 'app'}))
-  // .pipe(gulp.dest('public/'));
+// .pipe(rename({basename: 'app'}))
+// .pipe(gulp.dest('public/'));
 });
 
 
