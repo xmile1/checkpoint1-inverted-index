@@ -21,7 +21,7 @@ gulp.task('default', () => {
 
 });
 
-gulp.task('load-app', ['bundleBower'], () => {
+gulp.task('load-app', () => {
   bSyncInstanceApp.init({
     server: {
       baseDir: './public',
