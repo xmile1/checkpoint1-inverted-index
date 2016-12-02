@@ -36,3 +36,4 @@ public/lib
 
 .eslintrc
 .coverage.yml
+.esformatter

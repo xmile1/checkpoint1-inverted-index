@@ -10555,7 +10555,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * @param  {Function} cb  [call back to return the indexed file object/an html format index table]
 	   * @return {[array]} [an arrray of the indexed file result and the html Div of the index]
 	   */
-	  createIndex(filePath, cb) {
+	  createIndex(filePath) {
 	    const indexFile = this.indexFile;
 	    const jsonDoc = this.jsonDatabase[filePath];
 	    let concSentence = '';
@@ -10656,6 +10656,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @return {object || boolean}  [the parsed file or false on error]
 	     */
 	  parseJSON(jsonFile) {
+	    if (typeof jsonFile === 'object') {
+	      return jsonFile;
+	    }
 	    try {
 	      return JSON.parse(jsonFile);
 	    } catch (err) {
@@ -10673,7 +10676,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (typeof jsonFile === 'string') {
 	      jsonFile = JSON.parse(jsonFile);
 	    }
-	
 	    if (jsonFile && jsonFile.length > 0) {
 	      const isValidFileStructure = this.checkFileStructure(jsonFile);
 	      if (isValidFileStructure) {
@@ -10693,7 +10695,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	  checkFileStructure(jsonFile) {
 	    this.isValidFile = true;
-	
 	    jsonFile.forEach((document) => {
 	      const isValidTitle = document.title && document.title.length > 0 && typeof document.title === 'string';
 	      const isValidText = document.text && document.text.length > 0 && typeof document.text === 'string';

@@ -7,6 +7,9 @@ class util {
      * @return {object || boolean}  [the parsed file or false on error]
      */
   parseJSON(jsonFile) {
+    if (typeof jsonFile === 'object') {
+      return jsonFile;
+    }
     try {
       return JSON.parse(jsonFile);
     } catch (err) {
@@ -24,7 +27,6 @@ class util {
     if (typeof jsonFile === 'string') {
       jsonFile = JSON.parse(jsonFile);
     }
-
     if (jsonFile && jsonFile.length > 0) {
       const isValidFileStructure = this.checkFileStructure(jsonFile);
       if (isValidFileStructure) {
@@ -44,7 +46,6 @@ class util {
      */
   checkFileStructure(jsonFile) {
     this.isValidFile = true;
-
     jsonFile.forEach((document) => {
       const isValidTitle = document.title && document.title.length > 0 && typeof document.title === 'string';
       const isValidText = document.text && document.text.length > 0 && typeof document.text === 'string';

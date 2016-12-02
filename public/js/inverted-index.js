@@ -4,7 +4,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var utils = require("./utils.js");
+var utils = require('./utils.js');
 
 /**
  * A class for Creating and searching an inverted index
@@ -74,7 +74,7 @@ var Index = function () {
 
   }, {
     key: 'createIndex',
-    value: function createIndex(filePath, cb) {
+    value: function createIndex(filePath) {
       var indexFile = this.indexFile;
       var jsonDoc = this.jsonDatabase[filePath];
       var concSentence = '';
@@ -83,7 +83,6 @@ var Index = function () {
         return false;
       }
       indexFile[filePath] = {};
-
       jsonDoc.forEach(function (element, index) {
         concSentence = utils.cleanString(element.title + ' ' + element.text);
         wordArray = new Set(concSentence.split(' '));

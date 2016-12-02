@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "gulp",
-    "test": "karma start --single-run --browsers Chrome UI",
+    "test": "karma start --single-run --browsers Chrome",
     "coveralls": "cat './coverage/Chrome 52.0.2743 (Mac OS X 10.10.5)/lcov.info' | ./node_modules/coveralls/bin/coveralls.js",
     "postinstall": "node_modules/.bin/bower install"
   },
@@ -87,6 +87,7 @@
     "gulp-bower-src": "^0.1.0",
     "gulp-jasmine-node": "^1.0.7",
     "gulp-rename": "^1.2.2",
+    "gulp-webpack": "^1.5.0",
     "jasmine-core": "^2.5.2",
     "jasmine-node": "^1.14.5",
     "jquery": "^3.1.1",

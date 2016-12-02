@@ -10,7 +10,7 @@ const babelify = require('babelify');
 const browserify = require('browserify');
 const nodeJasmine = require('gulp-jasmine-node');
 const rename = require('gulp-rename');
-const webpack = require('webpack-stream');
+const webpack = require('gulp-webpack');
 const bowerSrc = require('gulp-bower-src');
 
 let bSyncInstanceApp = browserSync.create();
@@ -94,9 +94,9 @@ gulp.task('watcher', () => {
 
 gulp.task('webpack', function() {
   return gulp.src('webpack.js')
-    .pipe(webpack(require('./webpack.config.js')))
-    .pipe(rename({basename: 'app'}))
-    .pipe(gulp.dest('public/'));
+    .pipe(webpack(require('./webpack.config.js')));
+  // .pipe(rename({basename: 'app'}))
+  // .pipe(gulp.dest('public/'));
 });
 
 

@@ -15,8 +15,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'src/inverted-index.js',
-      'jasmine/spec/inverted-index-test.js'
+      'jasmine/spec/test.js'
     ],
 
 
@@ -27,13 +26,13 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      "src/inverted-index.js": "coverage"
+      'jasmine/spec/test.js': 'coverage'
     },
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ["progress", "coverage", "coveralls"],
+    reporters: ['progress', 'coverage', 'coveralls'],
 
     // web server port
     port: 9876,
@@ -49,14 +48,14 @@ module.exports = function(config) {
 
     customLaunchers: {
       Chrome_travis_ci: {
-        base: "Chrome",
-        flags: ["--no-sandbox"]
+        base: 'Chrome',
+        flags: ['--no-sandbox']
       }
     },
 
     coverageReporter: {
-      type: "lcov",
-      dir: "coverage/"
+      type: 'lcov',
+      dir: 'coverage/'
     },
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: true,
@@ -66,7 +65,7 @@ module.exports = function(config) {
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: process.env.TRAVIS ? ["Chrome_travis_ci"] : ["Chrome"],
+    browsers: process.env.TRAVIS ? ['Chrome_travis_ci'] : ['Chrome'],
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
@@ -75,5 +74,5 @@ module.exports = function(config) {
     // Concurrency level
     // how many browser should be started simultaneous
     concurrency: Infinity
-  })
-}
+  });
+};

@@ -1,4 +1,4 @@
-var utils = require("./utils.js");
+var utils = require('./utils.js');
 
 /**
  * A class for Creating and searching an inverted index
@@ -53,7 +53,7 @@ class Index {
    * @param  {Function} cb  [call back to return the indexed file object/an html format index table]
    * @return {[array]} [an arrray of the indexed file result and the html Div of the index]
    */
-  createIndex(filePath, cb) {
+  createIndex(filePath) {
     const indexFile = this.indexFile;
     const jsonDoc = this.jsonDatabase[filePath];
     let concSentence = '';
@@ -62,7 +62,6 @@ class Index {
       return false;
     }
     indexFile[filePath] = {};
-
     jsonDoc.forEach((element, index) => {
       concSentence = utils.cleanString((`${element.title} ${element.text}`));
       wordArray = new Set(concSentence.split(' '));
@@ -111,7 +110,7 @@ class Index {
     });
     this.searchResult = searchResult;
     return searchResult;
-  // return cb(searchResult, this.jsonDatabase);
+    // return cb(searchResult, this.jsonDatabase);
   }
 
   /**
