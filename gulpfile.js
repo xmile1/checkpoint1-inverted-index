@@ -87,7 +87,7 @@ gulp.task('bundleBower', () => {
 
 
 gulp.task('watcher', () => {
-  gulp.watch(['jasmine/spec/inverted-index-test.js', 'src/*.js', 'public/index.html', 'public/js/script.js'], ['webpack', 'reloadApp', 'reloadTest']);
+  gulp.watch(['jasmine/spec/inverted-index-test.js', 'src/*.js', 'public/index.html', 'public/js/script.js'], ['reloadApp', 'reloadTest']);
   gulp.watch(['bower.json'], ['bundleBower']);
 });
 
