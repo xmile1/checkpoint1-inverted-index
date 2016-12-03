@@ -27,7 +27,7 @@ Common Uses: Inverted indices have found use in the design of Search Engines, Se
     - file-input (file Upload Preview)
 
 4.  Start the application by executing the command `npm start`
-5.  You can also click here(https://inverted-index-checkp1.herokuapp.com/) to use the app on Heroku
+5.  You can also click on the link https://inverted-index-checkp1.herokuapp.com/ to use the app on Heroku
 
 ## How to Run Test
 
