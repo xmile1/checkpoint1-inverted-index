@@ -1,10 +1,13 @@
-
+/* eslint class-methods-use-this: 0*/
+/**
+ * util - An helper class for inverted-index
+ */
 class util {
 
   /**
      * [parseJSON converts sting to a Json object]
      * @param  {string} jsonFile
-     * @return {object || boolean}  [the parsed file or false on error]
+     * @return {object}  [the parsed file or false on error]
      */
   parseJSON(jsonFile) {
     if (typeof jsonFile === 'object') {
@@ -32,7 +35,7 @@ class util {
       if (isValidFileStructure) {
         // if (!this.jsonDatabase[fileName]) {
         return true;
-        // }
+      // }
       }
     }
     return false;
