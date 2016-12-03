@@ -7,6 +7,10 @@ ratings:
    - "**.js"
 
 exclude_paths:
-  - "/"
+  - "jasmine/"
+  - "public/"
+  - "src/"
+  - "public/"
+
   - "!src/inverted-index.js"
   - "!src/utils.js"
