@@ -2,7 +2,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/xmile1/checkpoint1-inverted-index/badge.svg?branch=develop)](https://coveralls.io/github/xmile1/checkpoint1-inverted-index?branch=master)
 ![](https://travis-ci.org/xmile1/checkpoint1-inverted-index.svg?branch=develop)
 [![Code Climate](https://codeclimate.com/repos/5835bf25362f3962b1000523/badges/eac0c7f614cf105ca599/gpa.svg)](https://codeclimate.com/repos/5835bf25362f3962b1000523/feed)
-
+sss
 In computer science, an inverted index (also referred to as postings file or inverted file) is an index data structure storing a mapping from content, such as words or numbers, to its locations in a database file, or in a document or a set of documents.
 
 Common Uses: Inverted indices have found use in the design of Search Engines, Sequence Assembly of DNA and Library, Mainframe and Database management.
@@ -24,10 +24,14 @@ Common Uses: Inverted indices have found use in the design of Search Engines, Se
     - coveralls (test coverage reporting)
     - karma (test)
     - eslint (code style)
+    - file-input (file Upload Preview)
 
-4.  Start the application by executing the command below `npm start`
-5.  To run tests, you can run the command below `npm test`
+4.  Start the application by executing the command below `m start`s
+5.  You can also click here(https://inverted-index-checkp1.herokuapp.com/) to use the app on Heroku
 
+## How to Run Test
+
+   - To run tests, you can run the command below `npm test`
 
 ## How to Use
 1. Upload valid json files you need to search from in the format below
