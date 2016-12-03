@@ -24,10 +24,14 @@ Common Uses: Inverted indices have found use in the design of Search Engines, Se
     - coveralls (test coverage reporting)
     - karma (test)
     - eslint (code style)
+    - file-input (file Upload Preview)
 
-4.  Start the application by executing the command below `npm start`
-5.  To run tests, you can run the command below `npm test`
+4.  Start the application by executing the command `npm start`
+5.  You can also click on the link https://inverted-index-checkp1.herokuapp.com/ to use the app on Heroku
 
+## How to Run Test
+
+   - To run tests, you can run the command below `npm test`
 
 ## How to Use
 1. Upload valid json files you need to search from in the format below
