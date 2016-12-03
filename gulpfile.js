@@ -52,7 +52,7 @@ gulp.task('load-test', () => {
 
 gulp.task('transformAppEs5', () => {
   gulp.src('./src/inverted-index.js')
-    .pipe(babel({presets: ['es2015']}))
+    .pipe(babel({ presets: ['es2015']}))
     .pipe(gulp.dest('./public/js'));
 
 });
@@ -65,17 +65,17 @@ gulp.task('transformTestEs5', ['bundleAppSpec'], () => {
     .pipe(gulp.dest('./jasmine/spec'));
 });
 
-gulp.task('reloadTest', ['transformTestEs5', 'bundleAppSpec'], () => {
+gulp.task('reloadTest', () => {
   bSyncInstanceTest.reload();
 });
 
 
-gulp.task('reloadApp', ['transformAppEs5'], () => {
+gulp.task('reloadApp', () => {
   bSyncInstanceApp.reload();
 });
 
 gulp.task('bundleAppSpec', () => gulp.src('./src/inverted-index.js')
-  .pipe(babel({presets: ['es2015']}))
+  .pipe(babel({ presets: ['es2015']}))
   .pipe(rename('inverted-index-es5.js'))
   .pipe(gulp.dest('./jasmine/spec'))
 );
@@ -101,6 +101,6 @@ gulp.task('webpack', function() {
 gulp.task('bundle-app', function() {
   return gulp.src('./src/inverted-index.js')
     .pipe(webpack(require('./webpack.config.js')))
-    .pipe(rename({basename: 'app'}))
+    .pipe(rename({ basename: 'app'}))
     .pipe(gulp.dest('./public/'));
 });

@@ -17,7 +17,6 @@ var Index = function () {
    * 1. [jsonDatabase] Uploaded files
    * 2. [indexFile] the indexed filenames and their contents
    * 3. [searchResult] the search results
-   * @return {[type]} [description]
    */
   function Index() {
     _classCallCheck(this, Index);
@@ -30,8 +29,8 @@ var Index = function () {
 
   /**
    * [saveUploads creates a key and value object item that stores the uploaded file(s)]
-   * @param  {[string} fileName [filename]
-   * @param  {[object]} jsonFile [content of uploaded json file]
+   * @param  {string} fileName [filename]
+   * @param  {object} jsonFile [content of uploaded json file]
    * @return {boolean} [returns true on succesful addition of object to datatbase]
    */
 
@@ -56,7 +55,7 @@ var Index = function () {
 
     /**
      * [getjsonDatabase function to return the saved uploads]
-     * @return {[object]} [the saved uploads]
+     * @return {object} [the saved uploads]
      */
 
   }, {
@@ -98,7 +97,7 @@ var Index = function () {
     /**
      * [getIndex Gets the index object of the indexed json file]
      * @param  {string} fileName [the filename(key) of the index needed]
-     * @return {[object]}          [index of the object]
+     * @return {object}          [index of the object]
      */
 
   }, {
@@ -111,8 +110,8 @@ var Index = function () {
      * [searchIndex It searches the already indexed files for particular words]
      * @param  {string}    fileNames     [description]
      * @param  {Function}  cb            [description]
-     * @param  {...[Array]} searchContent [the words to search for]
-     * @return {[Array]}                  [an array of two elements, an
+     * @param  {...Array} searchContent [the words to search for]
+     * @return {Array}                  [an array of two elements, an
      * object with the search term as key and their locations in the
      * array of the originally uploaded file, an html view of the result]
      */
