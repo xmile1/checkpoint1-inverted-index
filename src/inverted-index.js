@@ -1,4 +1,4 @@
-var utils = require('./utils.js');
+const utils = require('./utils.js');
 
 /**
  * A class for Creating and searching an inverted index
@@ -10,7 +10,6 @@ class Index {
    * 1. [jsonDatabase] Uploaded files
    * 2. [indexFile] the indexed filenames and their contents
    * 3. [searchResult] the search results
-   * @return {[type]} [description]
    */
   constructor() {
     this.jsonDatabase = {};
@@ -21,9 +20,9 @@ class Index {
 
   /**
    * [saveUploads creates a key and value object item that stores the uploaded file(s)]
-   * @param  {[string} fileName [filename]
-   * @param  {[object]} jsonFile [content of uploaded json file]
-   * @return {[boolean]} [returns true on succesful addition of object to datatbase]
+   * @param  {string} fileName [filename]
+   * @param  {object} jsonFile [content of uploaded json file]
+   * @return {boolean} [returns true on succesful addition of object to datatbase]
    */
   saveUploads(fileName, jsonFile) {
     if (!utils.isValid(fileName, jsonFile)) {
@@ -41,7 +40,7 @@ class Index {
 
   /**
    * [getjsonDatabase function to return the saved uploads]
-   * @return {[object]} [the saved uploads]
+   * @return {object} [the saved uploads]
    */
   getjsonDatabase() {
     return this.jsonDatabase;
@@ -51,7 +50,7 @@ class Index {
    * [createIndex Creates an index of the words in the received json file]
    * @param  {string}   filePath [the key(filename) of the json value to index]
    * @param  {Function} cb  [call back to return the indexed file object/an html format index table]
-   * @return {[array]} [an arrray of the indexed file result and the html Div of the index]
+   * @return {array} [an arrray of the indexed file result and the html Div of the index]
    */
   createIndex(filePath) {
     const indexFile = this.indexFile;
@@ -76,8 +75,8 @@ class Index {
 
   /**
    * [getIndex Gets the index object of the indexed json file]
-   * @param  {[string]} fileName [the filename(key) of the index needed]
-   * @return {[object]}          [index of the object]
+   * @param  {string} fileName [the filename(key) of the index needed]
+   * @return {object}          [index of the object]
    */
   getIndex(fileName) {
     return this.indexFile[fileName] || this.indexFile;
@@ -85,10 +84,10 @@ class Index {
 
   /**
    * [searchIndex It searches the already indexed files for particular words]
-   * @param  {[string]}    fileNames     [description]
+   * @param  {string}    fileNames     [description]
    * @param  {Function}  cb            [description]
-   * @param  {...[Array]} searchContent [the words to search for]
-   * @return {[Array]}                  [an array of two elements, an
+   * @param  {...Array} searchContent [the words to search for]
+   * @return {Array}                  [an array of two elements, an
    * object with the search term as key and their locations in the
    * array of the originally uploaded file, an html view of the result]
    */
@@ -115,7 +114,7 @@ class Index {
 
   /**
    * [getFilenames returns the filenames of all files present in the object]
-   * @return {[array]} [an array of filenames]
+   * @return {array} [an array of filenames]
    */
   getFilenames() {
     return Object.keys(this.jsonDatabase);
@@ -123,9 +122,9 @@ class Index {
 
   /**
    * [deleteIndex Deletes an index file from the index object]
-   * @param  {[string]} fileName [the filename(key) of the data to delete]
-   * @param  {[boolean]} option   [determines if to delete the index only or also the json file]
-   * @return {[boolean]}  [true to delete indexFile and jsonDatabase/false to delete only the index]
+   * @param  {string} fileName [the filename(key) of the data to delete]
+   * @param  {boolean} option   [determines if to delete the index only or also the json file]
+   * @return {boolean}  [true to delete indexFile and jsonDatabase/false to delete only the index]
    */
   deleteIndex(fileName, option) {
     delete this.indexFile[fileName];

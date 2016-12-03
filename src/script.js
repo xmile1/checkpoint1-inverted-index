@@ -174,7 +174,7 @@ callDeleteIndex(filename) {
       * @param  {string} filePath  [the filename of the index]
       * @param  {[object]} indexFile [the store of all created index objects]
       * @param  {[object]} jsonDoc   [the object of the uploaded json file for the file requested]
-      * @return {[array]} returns the index and the html panel representation of the index]
+      * @return {array} returns the index and the html panel representation of the index]
       */
    createIndexHtml(filePath) {
      this.indexView = '';

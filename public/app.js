@@ -237,7 +237,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      * @param  {string} filePath  [the filename of the index]
 	      * @param  {[object]} indexFile [the store of all created index objects]
 	      * @param  {[object]} jsonDoc   [the object of the uploaded json file for the file requested]
-	      * @return {[array]} returns the index and the html panel representation of the index]
+	      * @return {array} returns the index and the html panel representation of the index]
 	      */
 	   createIndexHtml(filePath) {
 	     this.indexView = '';
@@ -10525,7 +10525,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * [saveUploads creates a key and value object item that stores the uploaded file(s)]
 	   * @param  {[string} fileName [filename]
 	   * @param  {[object]} jsonFile [content of uploaded json file]
-	   * @return {[boolean]} [returns true on succesful addition of object to datatbase]
+	   * @return {boolean} [returns true on succesful addition of object to datatbase]
 	   */
 	  saveUploads(fileName, jsonFile) {
 	    if (!utils.isValid(fileName, jsonFile)) {
@@ -10553,7 +10553,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * [createIndex Creates an index of the words in the received json file]
 	   * @param  {string}   filePath [the key(filename) of the json value to index]
 	   * @param  {Function} cb  [call back to return the indexed file object/an html format index table]
-	   * @return {[array]} [an arrray of the indexed file result and the html Div of the index]
+	   * @return {array} [an arrray of the indexed file result and the html Div of the index]
 	   */
 	  createIndex(filePath, cb) {
 	    const indexFile = this.indexFile;
@@ -10578,7 +10578,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  /**
 	   * [getIndex Gets the index object of the indexed json file]
-	   * @param  {[string]} fileName [the filename(key) of the index needed]
+	   * @param  {string} fileName [the filename(key) of the index needed]
 	   * @return {[object]}          [index of the object]
 	   */
 	  getIndex(fileName) {
@@ -10587,7 +10587,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  /**
 	   * [searchIndex It searches the already indexed files for particular words]
-	   * @param  {[string]}    fileNames     [description]
+	   * @param  {string}    fileNames     [description]
 	   * @param  {Function}  cb            [description]
 	   * @param  {...[Array]} searchContent [the words to search for]
 	   * @return {[Array]}                  [an array of two elements, an
@@ -10617,7 +10617,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  /**
 	   * [getFilenames returns the filenames of all files present in the object]
-	   * @return {[array]} [an array of filenames]
+	   * @return {array} [an array of filenames]
 	   */
 	  getFilenames() {
 	    return Object.keys(this.jsonDatabase);
@@ -10625,9 +10625,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  /**
 	   * [deleteIndex Deletes an index file from the index object]
-	   * @param  {[string]} fileName [the filename(key) of the data to delete]
-	   * @param  {[boolean]} option   [determines if to delete the index only or also the json file]
-	   * @return {[boolean]}  [true to delete indexFile and jsonDatabase/false to delete only the index]
+	   * @param  {string} fileName [the filename(key) of the data to delete]
+	   * @param  {boolean} option   [determines if to delete the index only or also the json file]
+	   * @return {boolean}  [true to delete indexFile and jsonDatabase/false to delete only the index]
 	   */
 	  deleteIndex(fileName, option) {
 	    delete this.indexFile[fileName];
@@ -10689,7 +10689,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	     * [checkFileStructure Checks if object follows the structure as found in ./jasmine/books.json]
 	     * @param  {[object]} jsonFile [json file to be tested]
-	     * @return {[boolean]}          [true if valid and false if invalid]
+	     * @return {boolean}          [true if valid and false if invalid]
 	     */
 	  checkFileStructure(jsonFile) {
 	    this.isValidFile = true;

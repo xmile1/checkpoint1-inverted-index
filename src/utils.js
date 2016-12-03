@@ -42,7 +42,7 @@ class util {
   /**
      * [checkFileStructure Checks if object follows the structure as found in ./jasmine/books.json]
      * @param  {[object]} jsonFile [json file to be tested]
-     * @return {[boolean]}          [true if valid and false if invalid]
+     * @return {boolean}          [true if valid and false if invalid]
      */
   checkFileStructure(jsonFile) {
     this.isValidFile = true;

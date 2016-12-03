@@ -32,7 +32,7 @@ var Index = function () {
    * [saveUploads creates a key and value object item that stores the uploaded file(s)]
    * @param  {[string} fileName [filename]
    * @param  {[object]} jsonFile [content of uploaded json file]
-   * @return {[boolean]} [returns true on succesful addition of object to datatbase]
+   * @return {boolean} [returns true on succesful addition of object to datatbase]
    */
 
 
@@ -69,7 +69,7 @@ var Index = function () {
      * [createIndex Creates an index of the words in the received json file]
      * @param  {string}   filePath [the key(filename) of the json value to index]
      * @param  {Function} cb  [call back to return the indexed file object/an html format index table]
-     * @return {[array]} [an arrray of the indexed file result and the html Div of the index]
+     * @return {array} [an arrray of the indexed file result and the html Div of the index]
      */
 
   }, {
@@ -97,7 +97,7 @@ var Index = function () {
 
     /**
      * [getIndex Gets the index object of the indexed json file]
-     * @param  {[string]} fileName [the filename(key) of the index needed]
+     * @param  {string} fileName [the filename(key) of the index needed]
      * @return {[object]}          [index of the object]
      */
 
@@ -109,7 +109,7 @@ var Index = function () {
 
     /**
      * [searchIndex It searches the already indexed files for particular words]
-     * @param  {[string]}    fileNames     [description]
+     * @param  {string}    fileNames     [description]
      * @param  {Function}  cb            [description]
      * @param  {...[Array]} searchContent [the words to search for]
      * @return {[Array]}                  [an array of two elements, an
@@ -149,7 +149,7 @@ var Index = function () {
 
     /**
      * [getFilenames returns the filenames of all files present in the object]
-     * @return {[array]} [an array of filenames]
+     * @return {array} [an array of filenames]
      */
 
   }, {
@@ -160,9 +160,9 @@ var Index = function () {
 
     /**
      * [deleteIndex Deletes an index file from the index object]
-     * @param  {[string]} fileName [the filename(key) of the data to delete]
-     * @param  {[boolean]} option   [determines if to delete the index only or also the json file]
-     * @return {[boolean]}  [true to delete indexFile and jsonDatabase/false to delete only the index]
+     * @param  {string} fileName [the filename(key) of the data to delete]
+     * @param  {boolean} option   [determines if to delete the index only or also the json file]
+     * @return {boolean}  [true to delete indexFile and jsonDatabase/false to delete only the index]
      */
 
   }, {
