@@ -1,11 +1,18 @@
+/* eslint class-methods-use-this: 0*/
 /**
- * [parseJSON converts sting to a Json object]
- * @param  {string} jsonFile
- * @return {object || boolean}  [the parsed file or false on error]
+ * util - An helper class for inverted-index
  */
-  class util{
+class util {
 
+  /**
+     * [parseJSON converts sting to a Json object]
+     * @param  {string} jsonFile
+     * @return {object}  [the parsed file or false on error]
+     */
   parseJSON(jsonFile) {
+    if (typeof jsonFile === 'object') {
+      return jsonFile;
+    }
     try {
       return JSON.parse(jsonFile);
     } catch (err) {
@@ -23,30 +30,28 @@
     if (typeof jsonFile === 'string') {
       jsonFile = JSON.parse(jsonFile);
     }
-
     if (jsonFile && jsonFile.length > 0) {
       const isValidFileStructure = this.checkFileStructure(jsonFile);
       if (isValidFileStructure) {
-        if (!this.jsonDatabase[fileName]) {
-          return true;
-        }
+        // if (!this.jsonDatabase[fileName]) {
+        return true;
+      // }
       }
     }
     return false;
   }
 
 
-    /**
+  /**
      * [checkFileStructure Checks if object follows the structure as found in ./jasmine/books.json]
      * @param  {[object]} jsonFile [json file to be tested]
-     * @return {[boolean]}          [true if valid and false if invalid]
+     * @return {boolean}          [true if valid and false if invalid]
      */
   checkFileStructure(jsonFile) {
     this.isValidFile = true;
-
     jsonFile.forEach((document) => {
-      const isValidTitle = document.title !== undefined && document.title.length > 0 && typeof document.title === 'string';
-      const isValidText = document.text !== undefined && document.text.length > 0 && typeof document.text === 'string';
+      const isValidTitle = document.title && document.title.length > 0 && typeof document.title === 'string';
+      const isValidText = document.text && document.text.length > 0 && typeof document.text === 'string';
       if (!(isValidText && isValidTitle)) {
         this.isValidFile = false;
         return false;
@@ -55,10 +60,10 @@
     return this.isValidFile;
   }
 
-    /**
+  /**
    * [cleanString This method takes in a string with whitespaces, non-alphanumric characters and
    * Returns a clean version with all unecessary characters striped away]
-   * @param  {[string]} theString [the string to cleanup]
+   * @param  {string} theString [the string to cleanup]
    * @param  {[Regex]} theRegex  [the regex to use]
    * @return {[String]}           [A string Strpped based on the regex]
    */
@@ -66,4 +71,4 @@
     return theString.replace(theRegex, '').toLowerCase() || theString.replace(/[^a-z0-9\s]+/gi, '').toLowerCase();
   }
 }
-module.exports = util;
+module.exports = new util();

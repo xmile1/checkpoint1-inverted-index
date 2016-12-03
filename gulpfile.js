@@ -1,49 +1,50 @@
-const gulp = require('gulp'),
-  browserSync = require('browser-sync'),
-  gulpSequence = require('run-sequence'),
-  bundleFiles = require('gulp-concat-multi'),
-  vinylfy = require('vinyl-source-stream'),
-  buffer = require('vinyl-buffer'),
-  bower = require('gulp-bower'),
-  babel = require('gulp-babel'),
-  babelify = require('babelify'),
-  browserify = require('browserify'),
-  nodeJasmine = require('gulp-jasmine-node'),
-  rename = require('gulp-rename'),
-  bowerSrc = require('gulp-bower-src');
+const gulp = require('gulp');
+const browserSync = require('browser-sync');
+const gulpSequence = require('run-sequence');
+const bundleFiles = require('gulp-concat-multi');
+const vinylfy = require('vinyl-source-stream');
+const buffer = require('vinyl-buffer');
+const bower = require('gulp-bower');
+const babel = require('gulp-babel');
+const babelify = require('babelify');
+const browserify = require('browserify');
+const nodeJasmine = require('gulp-jasmine-node');
+const rename = require('gulp-rename');
+const webpack = require('gulp-webpack');
+const bowerSrc = require('gulp-bower-src');
 
-let bSyncInstanceApp = browserSync.create(),
-  bSyncInstanceTest = browserSync.create();
+let bSyncInstanceApp = browserSync.create();
+let bSyncInstanceTest = browserSync.create();
 
 gulp.task('default', () => {
   gulpSequence('load-app', 'load-test', 'watcher');
 
 });
 
-gulp.task('load-app', ['transformAppEs5', 'bundleBower'], () => {
+gulp.task('load-app', () => {
   bSyncInstanceApp.init({
     server: {
       baseDir: './public',
       index: 'index.html'
     },
-    port: process.env.PORT|| 3400,
+    port: process.env.PORT || 3400,
     open: false,
     ui: {
-      port: process.env.PORT|| 3800
+      port: process.env.PORT || 3800
     }
   });
 });
 
-gulp.task('load-test', ['transformTestEs5', 'bundleAppSpec'], () => {
+gulp.task('load-test', () => {
   bSyncInstanceTest.init({
     server: {
       baseDir: './jasmine',
-      index: 'specRunner.html',
+      index: 'specRunner.html'
     },
     open: false,
-    port: process.env.PORT|| 3300,
+    port: process.env.PORT || 3300,
     ui: {
-      port: process.env.PORT|| 3900
+      port: process.env.PORT || 3900
     }
 
   });
@@ -51,9 +52,7 @@ gulp.task('load-test', ['transformTestEs5', 'bundleAppSpec'], () => {
 
 gulp.task('transformAppEs5', () => {
   gulp.src('./src/inverted-index.js')
-    .pipe(babel({
-      presets: ['es2015']
-    }))
+    .pipe(babel({ presets: ['es2015']}))
     .pipe(gulp.dest('./public/js'));
 
 });
@@ -66,20 +65,18 @@ gulp.task('transformTestEs5', ['bundleAppSpec'], () => {
     .pipe(gulp.dest('./jasmine/spec'));
 });
 
-gulp.task('reloadTest', ['transformTestEs5', 'bundleAppSpec'], () => {
+gulp.task('reloadTest', () => {
   bSyncInstanceTest.reload();
 });
 
 
-gulp.task('reloadApp', ['transformAppEs5'], () => {
+gulp.task('reloadApp', () => {
   bSyncInstanceApp.reload();
 });
 
 gulp.task('bundleAppSpec', () => gulp.src('./src/inverted-index.js')
-  .pipe(babel({
-    presets: ['es2015']
-  }))
-  .pipe(rename("inverted-index-es5.js"))
+  .pipe(babel({ presets: ['es2015']}))
+  .pipe(rename('inverted-index-es5.js'))
   .pipe(gulp.dest('./jasmine/spec'))
 );
 
@@ -88,15 +85,22 @@ gulp.task('bundleBower', () => {
     .pipe(gulp.dest('public/lib'));
 });
 
-// gulp.task('serveprod', function() {
-//   connect.server({
-//     root: ["public"],
-//     port: process.env.PORT || 5000,
-//     livereload: false
-//   });
-// });
 
 gulp.task('watcher', () => {
   gulp.watch(['jasmine/spec/inverted-index-test.js', 'src/*.js', 'public/index.html', 'public/js/script.js'], ['reloadApp', 'reloadTest']);
   gulp.watch(['bower.json'], ['bundleBower']);
+});
+
+
+gulp.task('webpack', function() {
+  return gulp.src('webpack.js')
+    .pipe(webpack(require('./webpack.config.js')));
+});
+
+
+gulp.task('bundle-app', function() {
+  return gulp.src('./src/inverted-index.js')
+    .pipe(webpack(require('./webpack.config.js')))
+    .pipe(rename({ basename: 'app'}))
+    .pipe(gulp.dest('./public/'));
 });

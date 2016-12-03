@@ -1,6 +1,8 @@
 /*global $:true*/
- const theIndex = new Index();
+
+(function(){
  $(document).ready(() => {
+   const theIndex = new Index();
    const fileInput = document.getElementById('fileUpload');
    /**
     * [On click it calls the search index function and appends its result to the result pane in views]
@@ -15,7 +17,7 @@
        }
      });
      $('#result-pane').empty();
-     $('#result-pane').append(theIndex.searchIndex(fileNames, theIndex.createResultHtml, searchTerm)[1]);
+     $('#result-pane').append(theIndex.searchIndex(fileNames, theIndex.utilsInstance.createResultHtml, searchTerm)[1]);
    });
 
    /**
