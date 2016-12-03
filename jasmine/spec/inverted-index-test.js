@@ -79,7 +79,7 @@ describe('Read Book data', function() {
     });
     it('get json database should return the saved content', (done) => {
       index.saveUploads('valid1.json', valid1);
-      expect(Object.keys(index.getjsonDatabase()).length).toEqual(1);
+      expect(Object.keys(index.getJsonDatabase()).length).toEqual(1);
       done();
     });
     it('getfilename should return the filenames of the saved contents', (done) => {

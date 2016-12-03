@@ -105,10 +105,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	
 	  /**
-	   * [getjsonDatabase function to return the saved uploads]
+	   * [getJsonDatabase function to return the saved uploads]
 	   * @return {[object]} [the saved uploads]
 	   */
-	  getjsonDatabase() {
+	  getJsonDatabase() {
 	    return this.jsonDatabase;
 	  }
 	
@@ -377,8 +377,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      getFile(valid1, (file) => {
 	        console.log(index.saveUploads('valid1.json', file));
 	        index.saveUploads('valid1.json', file);
-	        console.log(index.getjsonDatabase());
-	        expect(Object.keys(index.getjsonDatabase()).length).toEqual(1);
+	        console.log(index.getJsonDatabase());
+	        expect(Object.keys(index.getJsonDatabase()).length).toEqual(1);
 	        done();
 	      });
 	    });

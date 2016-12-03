@@ -105,10 +105,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	
 	  /**
-	   * [getjsonDatabase function to return the saved uploads]
+	   * [getJsonDatabase function to return the saved uploads]
 	   * @return {[object]} [the saved uploads]
 	   */
-	  getjsonDatabase() {
+	  getJsonDatabase() {
 	    return this.jsonDatabase;
 	  }
 	
@@ -368,7 +368,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 	    it('get json database should return the saved content', (done) => {
 	      index.saveUploads('valid1.json', valid1);
-	      expect(Object.keys(index.getjsonDatabase()).length).toEqual(1);
+	      expect(Object.keys(index.getJsonDatabase()).length).toEqual(1);
 	      done();
 	    });
 	    it('getfilename should return the filenames of the saved contents', (done) => {

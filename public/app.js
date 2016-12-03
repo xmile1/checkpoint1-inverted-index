@@ -10542,10 +10542,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	
 	  /**
-	   * [getjsonDatabase function to return the saved uploads]
+	   * [getJsonDatabase function to return the saved uploads]
 	   * @return {[object]} [the saved uploads]
 	   */
-	  getjsonDatabase() {
+	  getJsonDatabase() {
 	    return this.jsonDatabase;
 	  }
 	

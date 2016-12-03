@@ -54,13 +54,13 @@ var Index = function () {
     }
 
     /**
-     * [getJsonDatabase function to return the saved uploads]
+     * [getjsonDatabase function to return the saved uploads]
      * @return {object} [the saved uploads]
      */
 
   }, {
-    key: 'getJsonDatabase',
-    value: function getJsonDatabase() {
+    key: 'getjsonDatabase',
+    value: function getjsonDatabase() {
       return this.jsonDatabase;
     }
 

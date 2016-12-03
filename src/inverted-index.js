@@ -39,10 +39,10 @@ class Index {
   }
 
   /**
-   * [getjsonDatabase function to return the saved uploads]
+   * [getJsonDatabase function to return the saved uploads]
    * @return {object} [the saved uploads]
    */
-  getjsonDatabase() {
+  getJsonDatabase() {
     return this.jsonDatabase;
   }
 
@@ -109,7 +109,7 @@ class Index {
     });
     this.searchResult = searchResult;
     return searchResult;
-  // return cb(searchResult, this.jsonDatabase);
+    // return cb(searchResult, this.jsonDatabase);
   }
 
   /**
