@@ -1,5 +1,5 @@
 # Inverted-index
-[![Coverage Status](https://coveralls.io/repos/github/xmile1/checkpoint1-inverted-index/badge.svg?branch=develop)](https://coveralls.io/github/xmile1/checkpoint1-inverted-index?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/xmile1/checkpoint1-inverted-index/badge.svg?branch=develop)](https://coveralls.io/github/xmile1/checkpoint1-inverted-index?branch=develop)
 ![](https://travis-ci.org/xmile1/checkpoint1-inverted-index.svg?branch=develop)
 [![Code Climate](https://codeclimate.com/repos/5835bf25362f3962b1000523/badges/eac0c7f614cf105ca599/gpa.svg)](https://codeclimate.com/repos/5835bf25362f3962b1000523/feed)
 
