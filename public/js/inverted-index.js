@@ -76,15 +76,15 @@ var Index = function () {
     value: function createIndex(filePath) {
       var indexFile = this.indexFile;
       var jsonDoc = this.jsonDatabase[filePath];
-      var concSentence = '';
+      var joinedValues = '';
       var wordArray = [];
       if (indexFile[filePath]) {
         return false;
       }
       indexFile[filePath] = {};
       jsonDoc.forEach(function (element, index) {
-        concSentence = utils.cleanString(element.title + ' ' + element.text);
-        wordArray = new Set(concSentence.split(' '));
+        joinedValues = utils.cleanString(element.title + ' ' + element.text);
+        wordArray = new Set(joinedValues.split(' '));
         wordArray.forEach(function (word) {
           indexFile[filePath][word] = indexFile[filePath][word] || [];
           indexFile[filePath][word].push(index);

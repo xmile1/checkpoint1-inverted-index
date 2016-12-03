@@ -55,15 +55,15 @@ class Index {
   createIndex(filePath) {
     const indexFile = this.indexFile;
     const jsonDoc = this.jsonDatabase[filePath];
-    let concSentence = '';
+    let joinedValues = '';
     let wordArray = [];
     if (indexFile[filePath]) {
       return false;
     }
     indexFile[filePath] = {};
     jsonDoc.forEach((element, index) => {
-      concSentence = utils.cleanString((`${element.title} ${element.text}`));
-      wordArray = new Set(concSentence.split(' '));
+      joinedValues = utils.cleanString((`${element.title} ${element.text}`));
+      wordArray = new Set(joinedValues.split(' '));
       wordArray.forEach((word) => {
         indexFile[filePath][word] = indexFile[filePath][word] || [];
         indexFile[filePath][word].push(index);
