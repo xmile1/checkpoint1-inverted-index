@@ -95,8 +95,6 @@ gulp.task('watcher', () => {
 gulp.task('webpack', function() {
   return gulp.src('webpack.js')
     .pipe(webpack(require('./webpack.config.js')));
-// .pipe(rename({basename: 'app'}))
-// .pipe(gulp.dest('public/'));
 });
 
 

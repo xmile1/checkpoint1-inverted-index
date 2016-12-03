@@ -110,7 +110,7 @@ class Index {
     });
     this.searchResult = searchResult;
     return searchResult;
-    // return cb(searchResult, this.jsonDatabase);
+  // return cb(searchResult, this.jsonDatabase);
   }
 
   /**
