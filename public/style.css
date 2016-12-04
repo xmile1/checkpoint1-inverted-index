@@ -56,3 +56,8 @@ body {
     background-color: #225763!important;
     color: white!important;
 }
+
+#right-pane{
+    overflow-y: scroll;
+    height: 100%;
+}
