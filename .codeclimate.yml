@@ -1,6 +1,9 @@
 engines:
   eslint:
     enabled: true
+ratings:
+  paths:
+  - src/
 exclude_paths:
 - "jasmine"
 - "!jasmine/spec/inverted-index-test.js"
