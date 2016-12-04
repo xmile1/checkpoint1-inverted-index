@@ -11,6 +11,6 @@ exclude_paths:
   - "public/"
   - "src/"
   - "public/"
- - "public/js/inverted-index.js"
+  - "public/js/inverted-index.js"
   - "!src/inverted-index.js"
   - "!src/utils.js"

@@ -63,7 +63,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var utils = __webpack_require__(4);
+	const utils = __webpack_require__(4);
 	
 	/**
 	 * A class for Creating and searching an inverted index
@@ -75,7 +75,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * 1. [jsonDatabase] Uploaded files
 	   * 2. [indexFile] the indexed filenames and their contents
 	   * 3. [searchResult] the search results
-	   * @return {[type]} [description]
 	   */
 	  constructor() {
 	    this.jsonDatabase = {};
@@ -86,8 +85,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  /**
 	   * [saveUploads creates a key and value object item that stores the uploaded file(s)]
-	   * @param  {[string} fileName [filename]
-	   * @param  {[object]} jsonFile [content of uploaded json file]
+	   * @param  {string} fileName [filename]
+	   * @param  {object} jsonFile [content of uploaded json file]
 	   * @return {boolean} [returns true on succesful addition of object to datatbase]
 	   */
 	  saveUploads(fileName, jsonFile) {
@@ -106,7 +105,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  /**
 	   * [getJsonDatabase function to return the saved uploads]
-	   * @return {[object]} [the saved uploads]
+	   * @return {object} [the saved uploads]
 	   */
 	  getJsonDatabase() {
 	    return this.jsonDatabase;
@@ -121,15 +120,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  createIndex(filePath) {
 	    const indexFile = this.indexFile;
 	    const jsonDoc = this.jsonDatabase[filePath];
-	    let concSentence = '';
+	    let joinedValues = '';
 	    let wordArray = [];
 	    if (indexFile[filePath]) {
 	      return false;
 	    }
 	    indexFile[filePath] = {};
 	    jsonDoc.forEach((element, index) => {
-	      concSentence = utils.cleanString((`${element.title} ${element.text}`));
-	      wordArray = new Set(concSentence.split(' '));
+	      joinedValues = utils.cleanString((`${element.title} ${element.text}`));
+	      wordArray = new Set(joinedValues.split(' '));
 	      wordArray.forEach((word) => {
 	        indexFile[filePath][word] = indexFile[filePath][word] || [];
 	        indexFile[filePath][word].push(index);
@@ -142,7 +141,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	   * [getIndex Gets the index object of the indexed json file]
 	   * @param  {string} fileName [the filename(key) of the index needed]
-	   * @return {[object]}          [index of the object]
+	   * @return {object}          [index of the object]
 	   */
 	  getIndex(fileName) {
 	    return this.indexFile[fileName] || this.indexFile;
@@ -152,8 +151,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * [searchIndex It searches the already indexed files for particular words]
 	   * @param  {string}    fileNames     [description]
 	   * @param  {Function}  cb            [description]
-	   * @param  {...[Array]} searchContent [the words to search for]
-	   * @return {[Array]}                  [an array of two elements, an
+	   * @param  {...Array} searchContent [the words to search for]
+	   * @return {Array}                  [an array of two elements, an
 	   * object with the search term as key and their locations in the
 	   * array of the originally uploaded file, an html view of the result]
 	   */
@@ -210,13 +209,16 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 4 */
 /***/ function(module, exports) {
 
-	
+	/* eslint class-methods-use-this: 0*/
+	/**
+	 * util - An helper class for inverted-index
+	 */
 	class util {
 	
 	  /**
 	     * [parseJSON converts sting to a Json object]
 	     * @param  {string} jsonFile
-	     * @return {object || boolean}  [the parsed file or false on error]
+	     * @return {object}  [the parsed file or false on error]
 	     */
 	  parseJSON(jsonFile) {
 	    if (typeof jsonFile === 'object') {
@@ -244,7 +246,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (isValidFileStructure) {
 	        // if (!this.jsonDatabase[fileName]) {
 	        return true;
-	        // }
+	      // }
 	      }
 	    }
 	    return false;
@@ -294,58 +296,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	const invalidContent = __webpack_require__(9);
 	const nonString = __webpack_require__(10);
 	var Index = __webpack_require__(3);
-	
-	// /** @type {String} [description] -------------------------------------------------------------- */
-	// const invalid = '';
-	// const empty = {};
-	// const valid1 = [{
-	//   title: 'Alice in Wonderland',
-	//   text: 'Alice falls into a rabbit hole and enters a world full of imagination.'
-	// }, {
-	//   title: 'The Lord of the Rings: The Fellowship of the Ring.',
-	//   text: 'An unusual alliance of man, elf, dwarf, wizard and hobbit seek to destroy a powerful ring.'
-	// }];
-	// const valid2 = [{
-	//   title: 'Alice in Wonderland',
-	//   text: 'Alice falls into a rabbit hole and enters a world full of imagination.'
-	// }, {
-	//   title: 'The Lord of the Rings: The Fellowship of the Ring.',
-	//   text: 'An unusual alliance of man, elf, dwarf, wizard and hobbit seek to destroy a powerful ring.'
-	// }];
-	// const nonString = [{
-	//   title: 'Black Panther',
-	//   text: 2
-	// }, {
-	//   title: 'Constantine: HellBlazer',
-	//   text: 'One man stands between Heaven and Hell. He may be our last hope'
-	// }, {
-	//   title: 'Batman: Year One',
-	//   text: 'A rookie BatMan, Fresh from the League of Assasins tries to find his way'
-	// }];
-	//
-	// const invalidContent = [{
-	//   title: 'Black Panther',
-	//   text: ''
-	// }, {
-	//   title: 'Constantine: HellBlazer',
-	//   text: 'One man stands between Heaven and Hell. He may be our last hope'
-	// }, {
-	//   title: 'Batman: Year One',
-	//   text: 'A rookie BatMan, Fresh from the League of Assasins tries to find his way'
-	// }];
-	//
-	// const invalidStructure = [{
-	//   'not-title': 'Black Panther'
-	// }, {
-	//   title: 'Constantine: HellBlazer',
-	//   text: 'One man stands between Heaven and Hell. He may be our last hope'
-	// }, {
-	//   title: 'Batman: Year One',
-	//   text: 'A rookie BatMan, Fresh from the League of Assasins tries to find his way'
-	// }];
-	// /**
-	//  * Dummy Data for Test End --------------------------------------------------------------
-	//  */
 	
 	function getFile(filename, cb) {
 	  const theResult = [filename];
