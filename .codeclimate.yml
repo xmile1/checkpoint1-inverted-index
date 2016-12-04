@@ -5,10 +5,10 @@ languages:
   JavaScript: true
 exclude_paths:
 - "jasmine/lib/jasmine-2.3.4/jasmine.js"
-- "jasmine"
+- "jasmine/"
 - "!jasmine/spec/inverted-index-test.js"
-- "public"
-- "src"
-- "public"
+- "public/"
+- "src/"
+- "public/"
 - "!src/inverted-index.js"
 - "!src/utils.js"
