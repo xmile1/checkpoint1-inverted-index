@@ -1,16 +1,11 @@
 engines:
   eslint:
     enabled: true
-
-ratings:
-   paths:
-   - "**.js"
-
 exclude_paths:
-  - "jasmine/"
-  - "public/"
-  - "src/"
-  - "public/"
-  - "public/js/inverted-index.js"
-  - "!src/inverted-index.js"
-  - "!src/utils.js"
+- "jasmine"
+- "!jasmine/spec/inverted-index-test.js"
+- "public"
+- "src"
+- "public"
+- "!src/inverted-index.js"
+- "!src/utils.js"
