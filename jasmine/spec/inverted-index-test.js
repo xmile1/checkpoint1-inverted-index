@@ -87,8 +87,8 @@ describe('Search Index', () => {
   index.saveUploads('valid1.json', valid1);
   index.createIndex('valid1.json');
 
-  describe('should return the correct result when searched', () => {
-    it('for single word argument', (done) => {
+  describe('When i pass a single word argument', () => {
+    it('should return the correct index', (done) => {
       const result = index.searchIndex(['valid1.json'], 'alice');
       expect(result).toEqual({
         alice: {
@@ -97,7 +97,10 @@ describe('Search Index', () => {
       });
       done();
     });
-    it('for single word argument with non-alphanumeric', (done) => {
+  });
+
+  describe('When i pass a single word argument with non-alphanumeric', () => {
+    it('should return the correct index', (done) => {
       const result = index.searchIndex(['valid1.json'], '+alice-=');
       expect(result).toEqual({
         alice: {
@@ -106,8 +109,10 @@ describe('Search Index', () => {
       });
       done();
     });
+  });
 
-    it('It should return correct answer for multiple words in one argument', (done) => {
+  describe('When i pass multiple words in one argument', () => {
+    it('should return the correct index of each word', (done) => {
       const result = index.searchIndex(['valid1.json'], 'alice in');
       expect(result).toEqual({
         alice: {
@@ -121,53 +126,65 @@ describe('Search Index', () => {
     });
   });
 
-  it(' - The search should not take too long to execute', (done) => {
-    const startTime = performance.now();
-    index.searchIndex(['valid1.json'], 'alice');
-    const endTime = performance.now();
-    expect(endTime - startTime < 5000).toBeTruthy();
-    done();
-  });
-
-  it('should accept a varied number of argument', (done) => {
-    let result = index.searchIndex(['valid1.json'], 'alice in', 'lord town');
-    expect(typeof result).toEqual('object');
-    result = index.searchIndex(['valid1.json'], 'alice in', ['lord', 'town']);
-    expect(typeof result).toEqual('object');
-    result = index.searchIndex(['valid1.json'], 'alice', 'in');
-    expect(result).toEqual({
-      alice: {
-        'valid1.json': [0]
-      },
-      in: {
-        'valid1.json': [0, 1]
-      }
+  describe('When i pass an argument to search for a word', () => {
+    it('should not take too long to execute', (done) => {
+      const startTime = performance.now();
+      index.searchIndex(['valid1.json'], 'alice');
+      const endTime = performance.now();
+      expect(endTime - startTime < 5000).toBeTruthy();
+      done();
     });
-    done();
   });
 
-  it('It should accept an array of argument', (done) => {
-    const result = index.searchIndex(['valid1.json'], ['alice', 'in']);
-    expect(result).toEqual({
-      alice: {
-        'valid1.json': [0]
-      },
-      in: {
-        'valid1.json': [0, 1]
-      }
+  describe('When i pass in varied number of argument', () => {
+    it('should return an object with the correct index of each word', (done) => {
+      let result = index.searchIndex(['valid1.json'], 'alice in', 'lord town');
+      expect(typeof result).toEqual('object');
+      result = index.searchIndex(['valid1.json'], 'alice in', ['lord', 'town']);
+      expect(typeof result).toEqual('object');
+      result = index.searchIndex(['valid1.json'], 'alice', 'in');
+      expect(result).toEqual({
+        alice: {
+          'valid1.json': [0]
+        },
+        in: {
+          'valid1.json': [0, 1]
+        }
+      });
+      done();
     });
-    done();
   });
 
-
-  it('It should accept mix of array and words as argument', (done) => {
-    result = index.searchIndex(['valid1.json'], 'alice in', ['lord', 'town']);
-    expect(typeof result).toEqual('object');
-    done();
+  describe('When i pass in an array as argument', () => {
+    it('should return the correct index of each word', (done) => {
+      const result = index.searchIndex(['valid1.json'], ['alice', 'in']);
+      expect(result).toEqual({
+        alice: {
+          'valid1.json': [0]
+        },
+        in: {
+          'valid1.json': [0, 1]
+        }
+      });
+      done();
+    });
   });
 
-  describe('Get Index', () => {
-    it('should take the filename of the indexed JSON data', () => {
+  describe('When i pass in a mix of array and words as argument', () => {
+    it('should return the correct index of each word', (done) => {
+      result = index.searchIndex(['valid1.json'], 'alice in', ['lord', 'town']);
+      expect(typeof result).toEqual('object');
+      done();
+    });
+  });
+});
+
+describe('Get Index', () => {
+  const index = new Index();
+  index.saveUploads('valid1.json', valid1);
+  index.createIndex('valid1.json');
+  describe('When i pass a filename', () => {
+    it('should return an object', () => {
       expect(typeof index.getIndex('valid1.json')).toEqual('object');
     });
   });
