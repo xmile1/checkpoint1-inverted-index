@@ -21,12 +21,12 @@ class util {
   }
 
   /**
-     * [isValid Check if a file is a valid json object based, calls method to check structure]
+     * [isFileValid Check if a file is a valid json object based, calls method to check structure]
      * @param  {string}  fileName [the filename to verfity if is the object in the database]
      * @param  {object}  jsonFile [the json object to be tested]
      * @return {Boolean}          [returns true if valid else false]
      */
-  isValid(fileName, jsonFile) {
+  isFileValid(fileName, jsonFile) {
     if (typeof jsonFile === 'string') {
       jsonFile = JSON.parse(jsonFile);
     }
@@ -35,7 +35,7 @@ class util {
       if (isValidFileStructure) {
         // if (!this.jsonDatabase[fileName]) {
         return true;
-      // }
+        // }
       }
     }
     return false;

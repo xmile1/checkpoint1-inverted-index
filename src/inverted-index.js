@@ -25,7 +25,7 @@ class Index {
    * @return {boolean} [returns true on succesful addition of object to datatbase]
    */
   saveUploads(fileName, jsonFile) {
-    if (!utils.isValid(fileName, jsonFile)) {
+    if (!utils.isFileValid(fileName, jsonFile)) {
       return false;
     }
     if (typeof jsonFile === 'string') {
