@@ -6,3 +6,4 @@ jasmine/spec
 public
 webpack.js
 webpack.config.js
+public/**
