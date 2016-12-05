@@ -1,17 +1,11 @@
 const gulp = require('gulp');
 const browserSync = require('browser-sync');
 const gulpSequence = require('run-sequence');
-const bundleFiles = require('gulp-concat-multi');
 const vinylfy = require('vinyl-source-stream');
-const buffer = require('vinyl-buffer');
-const bower = require('gulp-bower');
 const babel = require('gulp-babel');
-const babelify = require('babelify');
 const browserify = require('browserify');
-const nodeJasmine = require('gulp-jasmine-node');
 const rename = require('gulp-rename');
 const webpack = require('gulp-webpack');
-const bowerSrc = require('gulp-bower-src');
 
 let bSyncInstanceApp = browserSync.create();
 let bSyncInstanceTest = browserSync.create();
@@ -52,7 +46,9 @@ gulp.task('load-test', () => {
 
 gulp.task('transformAppEs5', () => {
   gulp.src('./src/inverted-index.js')
-    .pipe(babel({ presets: ['es2015']}))
+    .pipe(babel({
+      presets: ['es2015']
+    }))
     .pipe(gulp.dest('./public/js'));
 
 });
@@ -75,7 +71,9 @@ gulp.task('reloadApp', () => {
 });
 
 gulp.task('bundleAppSpec', () => gulp.src('./src/inverted-index.js')
-  .pipe(babel({ presets: ['es2015']}))
+  .pipe(babel({
+    presets: ['es2015']
+  }))
   .pipe(rename('inverted-index-es5.js'))
   .pipe(gulp.dest('./jasmine/spec'))
 );
@@ -101,6 +99,8 @@ gulp.task('webpack', function() {
 gulp.task('bundle-app', function() {
   return gulp.src('./src/inverted-index.js')
     .pipe(webpack(require('./webpack.config.js')))
-    .pipe(rename({ basename: 'app'}))
+    .pipe(rename({
+      basename: 'app'
+    }))
     .pipe(gulp.dest('./public/'));
 });
