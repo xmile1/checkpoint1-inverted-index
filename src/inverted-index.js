@@ -15,7 +15,6 @@ class Index {
     this.jsonDatabase = {};
     this.indexFile = {};
     this.searchResult = {};
-    this.indexView = '';
   }
 
   /**
@@ -25,7 +24,7 @@ class Index {
    * @return {boolean} [returns true on succesful addition of object to datatbase]
    */
   saveUploads(fileName, jsonFile) {
-    if (!utils.isValid(fileName, jsonFile)) {
+    if (!utils.isFileValid(fileName, jsonFile)) {
       return false;
     }
     if (typeof jsonFile === 'string') {
@@ -53,7 +52,7 @@ class Index {
    * @return {array} [an arrray of the indexed file result and the html Div of the index]
    */
   createIndex(filePath) {
-    const indexFile = this.indexFile;
+    let indexFile = this.indexFile;
     const jsonDoc = this.jsonDatabase[filePath];
     let joinedValues = '';
     let wordArray = [];
@@ -92,10 +91,10 @@ class Index {
    * array of the originally uploaded file, an html view of the result]
    */
   searchIndex(fileNames, ...searchContent) {
-    const searchResult = {};
+    let searchResult = {};
     let searchTerms = searchContent.join(' ');
     if (fileNames.length < 1) {
-      fileNames = this.getFilenames();
+      fileNames = this.getFileNames();
     }
     searchTerms = utils.cleanString(searchTerms, /[^a-z0-9\s,]+/gi);
     searchTerms = searchTerms.split(/[,\s]/);
@@ -107,16 +106,15 @@ class Index {
         }
       });
     });
-    this.searchResult = searchResult;
     return searchResult;
     // return cb(searchResult, this.jsonDatabase);
   }
 
   /**
-   * [getFilenames returns the filenames of all files present in the object]
+   * [getFileNames returns the filenames of all files present in the object]
    * @return {array} [an array of filenames]
    */
-  getFilenames() {
+  getFileNames() {
     return Object.keys(this.jsonDatabase);
   }
 
