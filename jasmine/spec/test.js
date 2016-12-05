@@ -80,7 +80,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.jsonDatabase = {};
 	    this.indexFile = {};
 	    this.searchResult = {};
-	    this.indexView = '';
 	  }
 	
 	  /**
@@ -90,7 +89,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * @return {boolean} [returns true on succesful addition of object to datatbase]
 	   */
 	  saveUploads(fileName, jsonFile) {
-	    if (!utils.isValid(fileName, jsonFile)) {
+	    if (!utils.isFileValid(fileName, jsonFile)) {
 	      return false;
 	    }
 	    if (typeof jsonFile === 'string') {
@@ -118,7 +117,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * @return {array} [an arrray of the indexed file result and the html Div of the index]
 	   */
 	  createIndex(filePath) {
-	    const indexFile = this.indexFile;
+	    let indexFile = this.indexFile;
 	    const jsonDoc = this.jsonDatabase[filePath];
 	    let joinedValues = '';
 	    let wordArray = [];
@@ -157,10 +156,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * array of the originally uploaded file, an html view of the result]
 	   */
 	  searchIndex(fileNames, ...searchContent) {
-	    const searchResult = {};
+	    let searchResult = {};
 	    let searchTerms = searchContent.join(' ');
 	    if (fileNames.length < 1) {
-	      fileNames = this.getFilenames();
+	      fileNames = this.getFileNames();
 	    }
 	    searchTerms = utils.cleanString(searchTerms, /[^a-z0-9\s,]+/gi);
 	    searchTerms = searchTerms.split(/[,\s]/);
@@ -172,16 +171,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	      });
 	    });
-	    this.searchResult = searchResult;
 	    return searchResult;
 	    // return cb(searchResult, this.jsonDatabase);
 	  }
 	
 	  /**
-	   * [getFilenames returns the filenames of all files present in the object]
+	   * [getFileNames returns the filenames of all files present in the object]
 	   * @return {array} [an array of filenames]
 	   */
-	  getFilenames() {
+	  getFileNames() {
 	    return Object.keys(this.jsonDatabase);
 	  }
 	
@@ -232,12 +230,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	
 	  /**
-	     * [isValid Check if a file is a valid json object based, calls method to check structure]
+	     * [isFileValid Check if a file is a valid json object based, calls method to check structure]
 	     * @param  {string}  fileName [the filename to verfity if is the object in the database]
 	     * @param  {object}  jsonFile [the json object to be tested]
 	     * @return {Boolean}          [returns true if valid else false]
 	     */
-	  isValid(fileName, jsonFile) {
+	  isFileValid(fileName, jsonFile) {
 	    if (typeof jsonFile === 'string') {
 	      jsonFile = JSON.parse(jsonFile);
 	    }
@@ -246,7 +244,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (isValidFileStructure) {
 	        // if (!this.jsonDatabase[fileName]) {
 	        return true;
-	      // }
+	        // }
 	      }
 	    }
 	    return false;
@@ -323,7 +321,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 	    it('getfilename should return the filenames of the saved contents', (done) => {
 	      index.saveUploads('valid1.json', valid1);
-	      expect(index.getFilenames()).toEqual(['valid1.json']);
+	      expect(index.getFileNames()).toEqual(['valid1.json']);
 	      done();
 	    });
 	  });

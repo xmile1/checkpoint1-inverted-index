@@ -32,7 +32,7 @@ describe('Read Book data', function() {
     });
     it('getfilename should return the filenames of the saved contents', (done) => {
       index.saveUploads('valid1.json', valid1);
-      expect(index.getFilenames()).toEqual(['valid1.json']);
+      expect(index.getFileNames()).toEqual(['valid1.json']);
       done();
     });
   });

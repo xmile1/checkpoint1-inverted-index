@@ -94,7 +94,7 @@ class Index {
     let searchResult = {};
     let searchTerms = searchContent.join(' ');
     if (fileNames.length < 1) {
-      fileNames = this.getFilenames();
+      fileNames = this.getFileNames();
     }
     searchTerms = utils.cleanString(searchTerms, /[^a-z0-9\s,]+/gi);
     searchTerms = searchTerms.split(/[,\s]/);
@@ -111,10 +111,10 @@ class Index {
   }
 
   /**
-   * [getFilenames returns the filenames of all files present in the object]
+   * [getFileNames returns the filenames of all files present in the object]
    * @return {array} [an array of filenames]
    */
-  getFilenames() {
+  getFileNames() {
     return Object.keys(this.jsonDatabase);
   }
 

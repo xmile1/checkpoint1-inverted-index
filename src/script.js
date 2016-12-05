@@ -132,7 +132,7 @@ module.exports = {
    */
   createFilterHtml() {
     $('#filter-filename').empty();
-    theIndex.getFilenames().forEach((element) => {
+    theIndex.getFileNames().forEach((element) => {
       $('#filter-filename').append(`<label><input class="filter-filename"
       type="checkbox" value="${element}">${element}</label>`);
     });
