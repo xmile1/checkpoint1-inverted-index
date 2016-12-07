@@ -48,22 +48,21 @@ class Index {
   /**
    * [createIndex Creates an index of the words in the received json file]
    * @param  {string}   filePath [the key(filename) of the json value to index]
-   * @param  {Function} cb  [call back to return the indexed file object/an html format index table]
    * @return {array} [an arrray of the indexed file result and the html Div of the index]
    */
   createIndex(filePath) {
     let indexFile = this.indexFile;
     const jsonDoc = this.jsonDatabase[filePath];
     let joinedValues = '';
-    let wordArray = [];
+    let words = [];
     if (indexFile[filePath]) {
       return false;
     }
     indexFile[filePath] = {};
     jsonDoc.forEach((element, index) => {
       joinedValues = utils.cleanString((`${element.title} ${element.text}`));
-      wordArray = new Set(joinedValues.split(' '));
-      wordArray.forEach((word) => {
+      words = new Set(joinedValues.split(' '));
+      words.forEach((word) => {
         indexFile[filePath][word] = indexFile[filePath][word] || [];
         indexFile[filePath][word].push(index);
       });
@@ -84,7 +83,6 @@ class Index {
   /**
    * [searchIndex It searches the already indexed files for particular words]
    * @param  {string}    fileNames     [description]
-   * @param  {Function}  cb            [description]
    * @param  {...Array} searchContent [the words to search for]
    * @return {Array}                  [an array of two elements, an
    * object with the search term as key and their locations in the
@@ -107,7 +105,7 @@ class Index {
       });
     });
     return searchResult;
-    // return cb(searchResult, this.jsonDatabase);
+  // return cb(searchResult, this.jsonDatabase);
   }
 
   /**
