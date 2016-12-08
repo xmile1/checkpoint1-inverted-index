@@ -105,7 +105,6 @@ class Index {
       });
     });
     return searchResult;
-  // return cb(searchResult, this.jsonDatabase);
   }
 
   /**

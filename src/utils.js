@@ -33,9 +33,7 @@ class util {
     if (jsonFile && jsonFile.length > 0) {
       const isValidFileStructure = this.checkFileStructure(jsonFile);
       if (isValidFileStructure) {
-        // if (!this.jsonDatabase[fileName]) {
         return true;
-        // }
       }
     }
     return false;
