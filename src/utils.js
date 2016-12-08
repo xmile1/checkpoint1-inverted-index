@@ -43,7 +43,6 @@ class Util {
     return false;
   }
 
-
   /**
      * [checkFileStructure Checks if object follows the structure as found in ./jasmine/books.json]
      * @param  {[object]} jsonFile [json file to be tested]
