@@ -2,6 +2,7 @@
 /* eslint no-alert: 0*/
 const $ = require('jquery');
 const Index = require('./inverted-index');
+require('../public/jquery.toaster.js');
 
 const theIndex = new Index();
 $(document).ready(() => {
@@ -48,13 +49,14 @@ $(document).ready(() => {
             $('#index-view').prepend(invertedIndex.createIndexHeader(files[fileIndex].name));
             invertedIndex.createFilterHtml();
           } else {
+            alert("invalid JSON File");
             $.toaster({
               priority: 'warning',
               title: 'Upload Error',
               message: 'Invalid JSON file'
             });
           }
-          // theIndex.saveUploads(fileInput.files[0].name, reader.result)
+        // theIndex.saveUploads(fileInput.files[0].name, reader.result)
         });
       }(i, reader));
       reader.readAsText(fileInput.files[i]);
@@ -225,7 +227,7 @@ module.exports = {
         }
       });
       this.indexView += '</tr>';
-      count = +1;
+      count = count + 1;
     });
 
     this.indexView += '</tbody>';

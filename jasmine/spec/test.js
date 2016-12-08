@@ -54,7 +54,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(5);
+	module.exports = __webpack_require__(6);
 
 
 /***/ },
@@ -113,22 +113,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	   * [createIndex Creates an index of the words in the received json file]
 	   * @param  {string}   filePath [the key(filename) of the json value to index]
-	   * @param  {Function} cb  [call back to return the indexed file object/an html format index table]
 	   * @return {array} [an arrray of the indexed file result and the html Div of the index]
 	   */
 	  createIndex(filePath) {
 	    let indexFile = this.indexFile;
 	    const jsonDoc = this.jsonDatabase[filePath];
 	    let joinedValues = '';
-	    let wordArray = [];
+	    let words = [];
 	    if (indexFile[filePath]) {
 	      return false;
 	    }
 	    indexFile[filePath] = {};
 	    jsonDoc.forEach((element, index) => {
 	      joinedValues = utils.cleanString((`${element.title} ${element.text}`));
-	      wordArray = new Set(joinedValues.split(' '));
-	      wordArray.forEach((word) => {
+	      words = new Set(joinedValues.split(' '));
+	      words.forEach((word) => {
 	        indexFile[filePath][word] = indexFile[filePath][word] || [];
 	        indexFile[filePath][word].push(index);
 	      });
@@ -149,7 +148,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	   * [searchIndex It searches the already indexed files for particular words]
 	   * @param  {string}    fileNames     [description]
-	   * @param  {Function}  cb            [description]
 	   * @param  {...Array} searchContent [the words to search for]
 	   * @return {Array}                  [an array of two elements, an
 	   * object with the search term as key and their locations in the
@@ -172,7 +170,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 	    });
 	    return searchResult;
-	    // return cb(searchResult, this.jsonDatabase);
 	  }
 	
 	  /**
@@ -209,9 +206,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/* eslint class-methods-use-this: 0*/
 	/**
-	 * util - An helper class for inverted-index
+	 * Util - An helper class for inverted-index
 	 */
-	class util {
+	class Util {
 	
 	  /**
 	     * [parseJSON converts sting to a Json object]
@@ -237,14 +234,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	  isFileValid(fileName, jsonFile) {
 	    if (typeof jsonFile === 'string') {
-	      jsonFile = JSON.parse(jsonFile);
+	      try {
+	        jsonFile = JSON.parse(jsonFile);
+	      } catch (e) {
+	        return false;
+	      }
 	    }
 	    if (jsonFile && jsonFile.length > 0) {
 	      const isValidFileStructure = this.checkFileStructure(jsonFile);
 	      if (isValidFileStructure) {
-	        // if (!this.jsonDatabase[fileName]) {
 	        return true;
-	        // }
 	      }
 	    }
 	    return false;
@@ -280,19 +279,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return theString.replace(theRegex, '').toLowerCase() || theString.replace(/[^a-z0-9\s]+/gi, '').toLowerCase();
 	  }
 	}
-	module.exports = new util();
+	module.exports = new Util();
 
 
 /***/ },
-/* 5 */
+/* 5 */,
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	const valid2 = __webpack_require__(6);
-	const empty = __webpack_require__(7);
-	const valid1 = __webpack_require__(6);
-	const invalidStructure = __webpack_require__(8);
-	const invalidContent = __webpack_require__(9);
-	const nonString = __webpack_require__(10);
+	const valid2 = __webpack_require__(7);
+	const empty = __webpack_require__(8);
+	const valid1 = __webpack_require__(7);
+	const invalidStructure = __webpack_require__(9);
+	const invalidContent = __webpack_require__(10);
+	const nonString = __webpack_require__(11);
 	var Index = __webpack_require__(3);
 	
 	describe('Read Book data', function() {
@@ -481,7 +481,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports) {
 
 	var valid = [{
@@ -496,7 +496,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports) {
 
 	{
@@ -504,7 +504,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports) {
 
 	[{
@@ -521,7 +521,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports) {
 
 	[{
@@ -539,7 +539,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports) {
 
 	[{

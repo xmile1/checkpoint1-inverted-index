@@ -65,6 +65,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* eslint no-alert: 0*/
 	const $ = __webpack_require__(2);
 	const Index = __webpack_require__(3);
+	__webpack_require__(5);
 	
 	const theIndex = new Index();
 	$(document).ready(() => {
@@ -111,13 +112,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	            $('#index-view').prepend(invertedIndex.createIndexHeader(files[fileIndex].name));
 	            invertedIndex.createFilterHtml();
 	          } else {
+	            alert("invalid JSON File");
 	            $.toaster({
 	              priority: 'warning',
 	              title: 'Upload Error',
 	              message: 'Invalid JSON file'
 	            });
 	          }
-	          // theIndex.saveUploads(fileInput.files[0].name, reader.result)
+	        // theIndex.saveUploads(fileInput.files[0].name, reader.result)
 	        });
 	      }(i, reader));
 	      reader.readAsText(fileInput.files[i]);
@@ -288,7 +290,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	      });
 	      this.indexView += '</tr>';
-	      count = +1;
+	      count = count + 1;
 	    });
 	
 	    this.indexView += '</tbody>';
@@ -10577,22 +10579,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	   * [createIndex Creates an index of the words in the received json file]
 	   * @param  {string}   filePath [the key(filename) of the json value to index]
-	   * @param  {Function} cb  [call back to return the indexed file object/an html format index table]
 	   * @return {array} [an arrray of the indexed file result and the html Div of the index]
 	   */
 	  createIndex(filePath) {
 	    let indexFile = this.indexFile;
 	    const jsonDoc = this.jsonDatabase[filePath];
 	    let joinedValues = '';
-	    let wordArray = [];
+	    let words = [];
 	    if (indexFile[filePath]) {
 	      return false;
 	    }
 	    indexFile[filePath] = {};
 	    jsonDoc.forEach((element, index) => {
 	      joinedValues = utils.cleanString((`${element.title} ${element.text}`));
-	      wordArray = new Set(joinedValues.split(' '));
-	      wordArray.forEach((word) => {
+	      words = new Set(joinedValues.split(' '));
+	      words.forEach((word) => {
 	        indexFile[filePath][word] = indexFile[filePath][word] || [];
 	        indexFile[filePath][word].push(index);
 	      });
@@ -10613,7 +10614,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	   * [searchIndex It searches the already indexed files for particular words]
 	   * @param  {string}    fileNames     [description]
-	   * @param  {Function}  cb            [description]
 	   * @param  {...Array} searchContent [the words to search for]
 	   * @return {Array}                  [an array of two elements, an
 	   * object with the search term as key and their locations in the
@@ -10636,7 +10636,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 	    });
 	    return searchResult;
-	    // return cb(searchResult, this.jsonDatabase);
 	  }
 	
 	  /**
@@ -10673,9 +10672,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/* eslint class-methods-use-this: 0*/
 	/**
-	 * util - An helper class for inverted-index
+	 * Util - An helper class for inverted-index
 	 */
-	class util {
+	class Util {
 	
 	  /**
 	     * [parseJSON converts sting to a Json object]
@@ -10701,14 +10700,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	  isFileValid(fileName, jsonFile) {
 	    if (typeof jsonFile === 'string') {
-	      jsonFile = JSON.parse(jsonFile);
+	      try {
+	        jsonFile = JSON.parse(jsonFile);
+	      } catch (e) {
+	        return false;
+	      }
 	    }
 	    if (jsonFile && jsonFile.length > 0) {
 	      const isValidFileStructure = this.checkFileStructure(jsonFile);
 	      if (isValidFileStructure) {
-	        // if (!this.jsonDatabase[fileName]) {
 	        return true;
-	        // }
 	      }
 	    }
 	    return false;
@@ -10744,7 +10745,203 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return theString.replace(theRegex, '').toLowerCase() || theString.replace(/[^a-z0-9\s]+/gi, '').toLowerCase();
 	  }
 	}
-	module.exports = new util();
+	module.exports = new Util();
+
+
+/***/ },
+/* 5 */
+/***/ function(module, exports) {
+
+	/***********************************************************************************
+	* Add Array.indexOf                                                                *
+	***********************************************************************************/
+	(function ()
+	{
+		if (typeof Array.prototype.indexOf !== 'function')
+		{
+			Array.prototype.indexOf = function(searchElement, fromIndex)
+			{
+				for (var i = (fromIndex || 0), j = this.length; i < j; i += 1)
+				{
+					if ((searchElement === undefined) || (searchElement === null))
+					{
+						if (this[i] === searchElement)
+						{
+							return i;
+						}
+					}
+					else if (this[i] === searchElement)
+					{
+						return i;
+					}
+				}
+				return -1;
+			};
+		}
+	})();
+	/**********************************************************************************/
+	
+	(function ($,undefined)
+	{
+		var toasting =
+		{
+			gettoaster : function ()
+			{
+				var toaster = $('#' + settings.toaster.id);
+	
+				if(toaster.length < 1)
+				{
+					toaster = $(settings.toaster.template).attr('id', settings.toaster.id).css(settings.toaster.css).addClass(settings.toaster['class']);
+	
+					if ((settings.stylesheet) && (!$("link[href=" + settings.stylesheet + "]").length))
+					{
+						$('head').appendTo('<link rel="stylesheet" href="' + settings.stylesheet + '">');
+					}
+	
+					$(settings.toaster.container).append(toaster);
+				}
+	
+				return toaster;
+			},
+	
+			notify : function (title, message, priority)
+			{
+				var $toaster = this.gettoaster();
+				var $toast  = $(settings.toast.template.replace('%priority%', priority)).hide().css(settings.toast.css).addClass(settings.toast['class']);
+	
+				$('.title', $toast).css(settings.toast.csst).html(title);
+				$('.message', $toast).css(settings.toast.cssm).html(message);
+	
+				if ((settings.debug) && (window.console))
+				{
+					console.log(toast);
+				}
+	
+				$toaster.append(settings.toast.display($toast));
+	
+				if (settings.donotdismiss.indexOf(priority) === -1)
+				{
+					var timeout = (typeof settings.timeout === 'number') ? settings.timeout : ((typeof settings.timeout === 'object') && (priority in settings.timeout)) ? settings.timeout[priority] : 1500;
+					setTimeout(function()
+					{
+						settings.toast.remove($toast, function()
+						{
+							$toast.remove();
+						});
+					}, timeout);
+				}
+			}
+		};
+	
+		var defaults =
+		{
+			'toaster'         :
+			{
+				'id'        : 'toaster',
+				'container' : 'body',
+				'template'  : '<div></div>',
+				'class'     : 'toaster',
+				'css'       :
+				{
+					'position' : 'fixed',
+					'top'      : '10px',
+					'right'    : '10px',
+					'width'    : '300px',
+					'zIndex'   : 50000
+				}
+			},
+	
+			'toast'       :
+			{
+				'template' :
+				'<div class="alert alert-%priority% alert-dismissible" role="alert">' +
+					'<button type="button" class="close" data-dismiss="alert">' +
+						'<span aria-hidden="true">&times;</span>' +
+						'<span class="sr-only">Close</span>' +
+					'</button>' +
+					'<span class="title"></span>: <span class="message"></span>' +
+				'</div>',
+	
+				'defaults' :
+				{
+					'title'    : 'Notice',
+					'priority' : 'success'
+				},
+	
+				'css'      : {},
+				'cssm'     : {},
+				'csst'     : { 'fontWeight' : 'bold' },
+	
+				'fade'     : 'slow',
+	
+				'display'    : function ($toast)
+				{
+					return $toast.fadeIn(settings.toast.fade);
+				},
+	
+				'remove'     : function ($toast, callback)
+				{
+					return $toast.animate(
+						{
+							opacity : '0',
+							padding : '0px',
+							margin  : '0px',
+							height  : '0px'
+						},
+						{
+							duration : settings.toast.fade,
+							complete : callback
+						}
+					);
+				}
+			},
+	
+			'debug'        : false,
+			'timeout'      : 1500,
+			'stylesheet'   : null,
+			'donotdismiss' : []
+		};
+	
+		var settings = {};
+		$.extend(settings, defaults);
+	
+		$.toaster = function (options)
+		{
+			if (typeof options === 'object')
+			{
+				if ('settings' in options)
+				{
+					settings = $.extend(true, settings, options.settings);
+				}
+			}
+			else
+			{
+				var values = Array.prototype.slice.call(arguments, 0);
+				var labels = ['message', 'title', 'priority'];
+				options = {};
+	
+				for (var i = 0, l = values.length; i < l; i += 1)
+				{
+					options[labels[i]] = values[i];
+				}
+			}
+	
+			var title    = (('title' in options) && (typeof options.title === 'string')) ? options.title : settings.toast.defaults.title;
+			var message  = ('message' in options) ? options.message : null;
+			var priority = (('priority' in options) && (typeof options.priority === 'string')) ? options.priority : settings.toast.defaults.priority;
+	
+			if (message !== null)
+			{
+				toasting.notify(title, message, priority);
+			}
+		};
+	
+		$.toaster.reset = function ()
+		{
+			settings = {};
+			$.extend(settings, defaults);
+		};
+	})(jQuery);
 
 
 /***/ }

@@ -28,7 +28,11 @@ class Util {
      */
   isFileValid(fileName, jsonFile) {
     if (typeof jsonFile === 'string') {
-      jsonFile = JSON.parse(jsonFile);
+      try {
+        jsonFile = JSON.parse(jsonFile);
+      } catch (e) {
+        return false;
+      }
     }
     if (jsonFile && jsonFile.length > 0) {
       const isValidFileStructure = this.checkFileStructure(jsonFile);
@@ -69,4 +73,4 @@ class Util {
     return theString.replace(theRegex, '').toLowerCase() || theString.replace(/[^a-z0-9\s]+/gi, '').toLowerCase();
   }
 }
-module.exports = new util();
+module.exports = new Util();
