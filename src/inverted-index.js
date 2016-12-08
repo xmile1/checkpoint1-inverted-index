@@ -1,4 +1,4 @@
-const utils = require('./utils.js');
+const utils = require('./Utils.js');
 
 /**
  * A class for Creating and searching an inverted index

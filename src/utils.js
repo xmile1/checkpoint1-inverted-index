@@ -1,8 +1,8 @@
 /* eslint class-methods-use-this: 0*/
 /**
- * util - An helper class for inverted-index
+ * Util - An helper class for inverted-index
  */
-class util {
+class Util {
 
   /**
      * [parseJSON converts sting to a Json object]
