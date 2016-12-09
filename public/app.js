@@ -112,7 +112,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            $('#index-view').prepend(invertedIndex.createIndexHeader(files[fileIndex].name));
 	            invertedIndex.createFilterHtml();
 	          } else {
-	            alert("invalid JSON File");
+	            alert("invalid JSON File or File Already Exist");
 	            $.toaster({
 	              priority: 'warning',
 	              title: 'Upload Error',
