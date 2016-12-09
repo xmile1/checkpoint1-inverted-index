@@ -83,12 +83,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	
 	  /**
-	   * [saveUploads creates a key and value object item that stores the uploaded file(s)]
+	   * [saveUploads stores the uploaded file(s)]
 	   * @param  {string} fileName [filename]
 	   * @param  {object} jsonFile [content of uploaded json file]
-	   * @return {boolean} [returns true on succesful addition of object to datatbase]
+	   * @return {boolean} [returns true on addition of object to datatbase]
 	   */
 	  saveUploads(fileName, jsonFile) {
+	    if (utils.fileAlreadyExists(fileName, this.jsonDatabase)) {
+	      return false;
+	    }
 	    if (!utils.isFileValid(fileName, jsonFile)) {
 	      return false;
 	    }
@@ -113,7 +116,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	   * [createIndex Creates an index of the words in the received json file]
 	   * @param  {string}   filePath [the key(filename) of the json value to index]
-	   * @return {array} [an arrray of the indexed file result and the html Div of the index]
+	   * @return {array} [an arrray of the indexed file]
 	   */
 	  createIndex(filePath) {
 	    let indexFile = this.indexFile;
@@ -155,17 +158,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	   */
 	  searchIndex(fileNames, ...searchContent) {
 	    let searchResult = {};
-	    let searchTerms = searchContent.join(' ');
+	    let Terms = searchContent.join(' ');
 	    if (fileNames.length < 1) {
 	      fileNames = this.getFileNames();
 	    }
-	    searchTerms = utils.cleanString(searchTerms, /[^a-z0-9\s,]+/gi);
-	    searchTerms = searchTerms.split(/[,\s]/);
-	    searchTerms.forEach((searchTerm) => {
-	      searchResult[searchTerm] = {};
+	    Terms = utils.cleanString(Terms, /[^a-z0-9\s,]+/gi);
+	    Terms = Terms.split(/[,\s]/);
+	    Terms.forEach((Term) => {
+	      searchResult[Term] = {};
 	      fileNames.forEach((fileName) => {
-	        if (this.indexFile[fileName][searchTerm]) {
-	          searchResult[searchTerm][fileName] = this.indexFile[fileName][searchTerm];
+	        if (this.indexFile[fileName][Term]) {
+	          searchResult[Term][fileName] = this.indexFile[fileName][Term];
 	        }
 	      });
 	    });
@@ -183,8 +186,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	   * [deleteIndex Deletes an index file from the index object]
 	   * @param  {string} fileName [the filename(key) of the data to delete]
-	   * @param  {boolean} option   [determines if to delete the index only or also the json file]
-	   * @return {boolean}  [true to delete indexFile and jsonDatabase/false to delete only the index]
+	   * @param  {boolean} option   [determines the file to delete]
+	   * @return {boolean}  [delete indexFile and/or jsonDatabase]
 	   */
 	  deleteIndex(fileName, option) {
 	    delete this.indexFile[fileName];
@@ -211,10 +214,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	class Util {
 	
 	  /**
-	     * [parseJSON converts sting to a Json object]
-	     * @param  {string} jsonFile
-	     * @return {object}  [the parsed file or false on error]
-	     */
+	   * [parseJSON converts sting to a Json object]
+	   * @param  {string} jsonFile
+	   * @return {object}  [the parsed file or false on error]
+	   */
 	  parseJSON(jsonFile) {
 	    if (typeof jsonFile === 'object') {
 	      return jsonFile;
@@ -227,11 +230,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	
 	  /**
-	     * [isFileValid Check if a file is a valid json object based, calls method to check structure]
-	     * @param  {string}  fileName [the filename to verfity if is the object in the database]
-	     * @param  {object}  jsonFile [the json object to be tested]
-	     * @return {Boolean}          [returns true if valid else false]
-	     */
+	   * [isFileValid Check if a file is a valid json object based]
+	   * @param  {string}  fileName [the filename of the jsonFile]
+	   * @param  {object}  jsonFile [the json object to be tested]
+	   * @return {Boolean} [returns true if valid else false]
+	   */
 	  isFileValid(fileName, jsonFile) {
 	    if (typeof jsonFile === 'string') {
 	      try {
@@ -249,18 +252,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return false;
 	  }
 	
-	
 	  /**
-	     * [checkFileStructure Checks if object follows the structure as found in ./jasmine/books.json]
-	     * @param  {[object]} jsonFile [json file to be tested]
-	     * @return {boolean}          [true if valid and false if invalid]
-	     */
+	   * [checkFileStructure Checks if fileStructure is valid]
+	   * @param  {[object]} jsonFile [json file to be tested]
+	   * @return {boolean}          [true if valid and false if invalid]
+	   */
 	  checkFileStructure(jsonFile) {
 	    this.isValidFile = true;
 	    jsonFile.forEach((document) => {
-	      const isValidTitle = document.title && document.title.length > 0 && typeof document.title === 'string';
-	      const isValidText = document.text && document.text.length > 0 && typeof document.text === 'string';
-	      if (!(isValidText && isValidTitle)) {
+	      const validTitle = document.title && document.title.length > 0
+	      const validType = typeof document.title === 'string';
+	      const validText = document.text && document.text.length > 0
+	      const validTextType = typeof document.text === 'string';
+	
+	      if (!(validTitle && validType && validText && validTextType)) {
 	        this.isValidFile = false;
 	        return false;
 	      }
@@ -269,8 +274,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	
 	  /**
-	   * [cleanString This method takes in a string with whitespaces, non-alphanumric characters and
-	   * Returns a clean version with all unecessary characters striped away]
+	   * [cleanString This method returns a clean version of a string
+	   * with all unecessary characters striped away]
 	   * @param  {string} theString [the string to cleanup]
 	   * @param  {[Regex]} theRegex  [the regex to use]
 	   * @return {[String]}           [A string Strpped based on the regex]
@@ -278,7 +283,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	  cleanString(theString, theRegex) {
 	    return theString.replace(theRegex, '').toLowerCase() || theString.replace(/[^a-z0-9\s]+/gi, '').toLowerCase();
 	  }
+	
+	  /**
+	   * [Checks if file already exists]
+	   * @param  {string} fileName [the filename to search for]
+	   * @param  {Object} documentDatabase  [the database to check]
+	   * @return {Boolean} true if it exists
+	   */
+	  fileAlreadyExists(fileName, documentDatabase) {
+	    if (documentDatabase[fileName]) {
+	      return true;
+	    } else {
+	      return false
+	    }
+	  }
 	}
+	
 	module.exports = new Util();
 
 
