@@ -54,7 +54,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(5);
+	module.exports = __webpack_require__(6);
 
 
 /***/ },
@@ -83,12 +83,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	
 	  /**
-	   * [saveUploads creates a key and value object item that stores the uploaded file(s)]
+	   * [saveUploads stores the uploaded file(s)]
 	   * @param  {string} fileName [filename]
 	   * @param  {object} jsonFile [content of uploaded json file]
-	   * @return {boolean} [returns true on succesful addition of object to datatbase]
+	   * @return {boolean} [returns true on addition of object to datatbase]
 	   */
 	  saveUploads(fileName, jsonFile) {
+	    if (utils.fileAlreadyExists(fileName, this.jsonDatabase)) {
+	      return false;
+	    }
 	    if (!utils.isFileValid(fileName, jsonFile)) {
 	      return false;
 	    }
@@ -113,22 +116,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	   * [createIndex Creates an index of the words in the received json file]
 	   * @param  {string}   filePath [the key(filename) of the json value to index]
-	   * @param  {Function} cb  [call back to return the indexed file object/an html format index table]
-	   * @return {array} [an arrray of the indexed file result and the html Div of the index]
+	   * @return {array} [an arrray of the indexed file]
 	   */
 	  createIndex(filePath) {
 	    let indexFile = this.indexFile;
 	    const jsonDoc = this.jsonDatabase[filePath];
 	    let joinedValues = '';
-	    let wordArray = [];
+	    let words = [];
 	    if (indexFile[filePath]) {
 	      return false;
 	    }
 	    indexFile[filePath] = {};
 	    jsonDoc.forEach((element, index) => {
 	      joinedValues = utils.cleanString((`${element.title} ${element.text}`));
-	      wordArray = new Set(joinedValues.split(' '));
-	      wordArray.forEach((word) => {
+	      words = new Set(joinedValues.split(' '));
+	      words.forEach((word) => {
 	        indexFile[filePath][word] = indexFile[filePath][word] || [];
 	        indexFile[filePath][word].push(index);
 	      });
@@ -149,7 +151,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	   * [searchIndex It searches the already indexed files for particular words]
 	   * @param  {string}    fileNames     [description]
-	   * @param  {Function}  cb            [description]
 	   * @param  {...Array} searchContent [the words to search for]
 	   * @return {Array}                  [an array of two elements, an
 	   * object with the search term as key and their locations in the
@@ -157,22 +158,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	   */
 	  searchIndex(fileNames, ...searchContent) {
 	    let searchResult = {};
-	    let searchTerms = searchContent.join(' ');
+	    let Terms = searchContent.join(' ');
 	    if (fileNames.length < 1) {
 	      fileNames = this.getFileNames();
 	    }
-	    searchTerms = utils.cleanString(searchTerms, /[^a-z0-9\s,]+/gi);
-	    searchTerms = searchTerms.split(/[,\s]/);
-	    searchTerms.forEach((searchTerm) => {
-	      searchResult[searchTerm] = {};
+	    Terms = utils.cleanString(Terms, /[^a-z0-9\s,]+/gi);
+	    Terms = Terms.split(/[,\s]/);
+	    Terms.forEach((Term) => {
+	      searchResult[Term] = {};
 	      fileNames.forEach((fileName) => {
-	        if (this.indexFile[fileName][searchTerm]) {
-	          searchResult[searchTerm][fileName] = this.indexFile[fileName][searchTerm];
+	        if (this.indexFile[fileName][Term]) {
+	          searchResult[Term][fileName] = this.indexFile[fileName][Term];
 	        }
 	      });
 	    });
 	    return searchResult;
-	    // return cb(searchResult, this.jsonDatabase);
 	  }
 	
 	  /**
@@ -186,8 +186,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	   * [deleteIndex Deletes an index file from the index object]
 	   * @param  {string} fileName [the filename(key) of the data to delete]
-	   * @param  {boolean} option   [determines if to delete the index only or also the json file]
-	   * @return {boolean}  [true to delete indexFile and jsonDatabase/false to delete only the index]
+	   * @param  {boolean} option   [determines the file to delete]
+	   * @return {boolean}  [delete indexFile and/or jsonDatabase]
 	   */
 	  deleteIndex(fileName, option) {
 	    delete this.indexFile[fileName];
@@ -209,15 +209,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/* eslint class-methods-use-this: 0*/
 	/**
-	 * util - An helper class for inverted-index
+	 * Util - An helper class for inverted-index
 	 */
-	class util {
+	class Util {
 	
 	  /**
-	     * [parseJSON converts sting to a Json object]
-	     * @param  {string} jsonFile
-	     * @return {object}  [the parsed file or false on error]
-	     */
+	   * [parseJSON converts sting to a Json object]
+	   * @param  {string} jsonFile
+	   * @return {object}  [the parsed file or false on error]
+	   */
 	  parseJSON(jsonFile) {
 	    if (typeof jsonFile === 'object') {
 	      return jsonFile;
@@ -230,38 +230,42 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	
 	  /**
-	     * [isFileValid Check if a file is a valid json object based, calls method to check structure]
-	     * @param  {string}  fileName [the filename to verfity if is the object in the database]
-	     * @param  {object}  jsonFile [the json object to be tested]
-	     * @return {Boolean}          [returns true if valid else false]
-	     */
+	   * [isFileValid Check if a file is a valid json object based]
+	   * @param  {string}  fileName [the filename of the jsonFile]
+	   * @param  {object}  jsonFile [the json object to be tested]
+	   * @return {Boolean} [returns true if valid else false]
+	   */
 	  isFileValid(fileName, jsonFile) {
 	    if (typeof jsonFile === 'string') {
-	      jsonFile = JSON.parse(jsonFile);
+	      try {
+	        jsonFile = JSON.parse(jsonFile);
+	      } catch (e) {
+	        return false;
+	      }
 	    }
 	    if (jsonFile && jsonFile.length > 0) {
 	      const isValidFileStructure = this.checkFileStructure(jsonFile);
 	      if (isValidFileStructure) {
-	        // if (!this.jsonDatabase[fileName]) {
 	        return true;
-	        // }
 	      }
 	    }
 	    return false;
 	  }
 	
-	
 	  /**
-	     * [checkFileStructure Checks if object follows the structure as found in ./jasmine/books.json]
-	     * @param  {[object]} jsonFile [json file to be tested]
-	     * @return {boolean}          [true if valid and false if invalid]
-	     */
+	   * [checkFileStructure Checks if fileStructure is valid]
+	   * @param  {[object]} jsonFile [json file to be tested]
+	   * @return {boolean}          [true if valid and false if invalid]
+	   */
 	  checkFileStructure(jsonFile) {
 	    this.isValidFile = true;
 	    jsonFile.forEach((document) => {
-	      const isValidTitle = document.title && document.title.length > 0 && typeof document.title === 'string';
-	      const isValidText = document.text && document.text.length > 0 && typeof document.text === 'string';
-	      if (!(isValidText && isValidTitle)) {
+	      const validTitle = document.title && document.title.length > 0
+	      const validType = typeof document.title === 'string';
+	      const validText = document.text && document.text.length > 0
+	      const validTextType = typeof document.text === 'string';
+	
+	      if (!(validTitle && validType && validText && validTextType)) {
 	        this.isValidFile = false;
 	        return false;
 	      }
@@ -270,8 +274,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	
 	  /**
-	   * [cleanString This method takes in a string with whitespaces, non-alphanumric characters and
-	   * Returns a clean version with all unecessary characters striped away]
+	   * [cleanString This method returns a clean version of a string
+	   * with all unecessary characters striped away]
 	   * @param  {string} theString [the string to cleanup]
 	   * @param  {[Regex]} theRegex  [the regex to use]
 	   * @return {[String]}           [A string Strpped based on the regex]
@@ -279,20 +283,36 @@ return /******/ (function(modules) { // webpackBootstrap
 	  cleanString(theString, theRegex) {
 	    return theString.replace(theRegex, '').toLowerCase() || theString.replace(/[^a-z0-9\s]+/gi, '').toLowerCase();
 	  }
+	
+	  /**
+	   * [Checks if file already exists]
+	   * @param  {string} fileName [the filename to search for]
+	   * @param  {Object} documentDatabase  [the database to check]
+	   * @return {Boolean} true if it exists
+	   */
+	  fileAlreadyExists(fileName, documentDatabase) {
+	    if (documentDatabase[fileName]) {
+	      return true;
+	    } else {
+	      return false
+	    }
+	  }
 	}
-	module.exports = new util();
+	
+	module.exports = new Util();
 
 
 /***/ },
-/* 5 */
+/* 5 */,
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	const valid2 = __webpack_require__(6);
-	const empty = __webpack_require__(7);
-	const valid1 = __webpack_require__(6);
-	const invalidStructure = __webpack_require__(8);
-	const invalidContent = __webpack_require__(9);
-	const nonString = __webpack_require__(10);
+	const valid2 = __webpack_require__(7);
+	const empty = __webpack_require__(8);
+	const valid1 = __webpack_require__(7);
+	const invalidStructure = __webpack_require__(9);
+	const invalidContent = __webpack_require__(10);
+	const nonString = __webpack_require__(11);
 	var Index = __webpack_require__(3);
 	
 	describe('Read Book data', function() {
@@ -481,7 +501,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports) {
 
 	var valid = [{
@@ -496,7 +516,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports) {
 
 	{
@@ -504,7 +524,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports) {
 
 	[{
@@ -521,7 +541,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports) {
 
 	[{
@@ -539,7 +559,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports) {
 
 	[{

@@ -18,12 +18,15 @@ class Index {
   }
 
   /**
-   * [saveUploads creates a key and value object item that stores the uploaded file(s)]
+   * [saveUploads stores the uploaded file(s)]
    * @param  {string} fileName [filename]
    * @param  {object} jsonFile [content of uploaded json file]
-   * @return {boolean} [returns true on succesful addition of object to datatbase]
+   * @return {boolean} [returns true on addition of object to datatbase]
    */
   saveUploads(fileName, jsonFile) {
+    if (utils.fileAlreadyExists(fileName, this.jsonDatabase)) {
+      return false;
+    }
     if (!utils.isFileValid(fileName, jsonFile)) {
       return false;
     }
@@ -48,7 +51,7 @@ class Index {
   /**
    * [createIndex Creates an index of the words in the received json file]
    * @param  {string}   filePath [the key(filename) of the json value to index]
-   * @return {array} [an arrray of the indexed file result and the html Div of the index]
+   * @return {array} [an arrray of the indexed file]
    */
   createIndex(filePath) {
     let indexFile = this.indexFile;
@@ -90,22 +93,21 @@ class Index {
    */
   searchIndex(fileNames, ...searchContent) {
     let searchResult = {};
-    let searchTerms = searchContent.join(' ');
+    let Terms = searchContent.join(' ');
     if (fileNames.length < 1) {
       fileNames = this.getFileNames();
     }
-    searchTerms = utils.cleanString(searchTerms, /[^a-z0-9\s,]+/gi);
-    searchTerms = searchTerms.split(/[,\s]/);
-    searchTerms.forEach((searchTerm) => {
-      searchResult[searchTerm] = {};
+    Terms = utils.cleanString(Terms, /[^a-z0-9\s,]+/gi);
+    Terms = Terms.split(/[,\s]/);
+    Terms.forEach((Term) => {
+      searchResult[Term] = {};
       fileNames.forEach((fileName) => {
-        if (this.indexFile[fileName][searchTerm]) {
-          searchResult[searchTerm][fileName] = this.indexFile[fileName][searchTerm];
+        if (this.indexFile[fileName][Term]) {
+          searchResult[Term][fileName] = this.indexFile[fileName][Term];
         }
       });
     });
     return searchResult;
-  // return cb(searchResult, this.jsonDatabase);
   }
 
   /**
@@ -119,8 +121,8 @@ class Index {
   /**
    * [deleteIndex Deletes an index file from the index object]
    * @param  {string} fileName [the filename(key) of the data to delete]
-   * @param  {boolean} option   [determines if to delete the index only or also the json file]
-   * @return {boolean}  [true to delete indexFile and jsonDatabase/false to delete only the index]
+   * @param  {boolean} option   [determines the file to delete]
+   * @return {boolean}  [delete indexFile and/or jsonDatabase]
    */
   deleteIndex(fileName, option) {
     delete this.indexFile[fileName];
