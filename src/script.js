@@ -56,7 +56,6 @@ $(document).ready(() => {
               message: 'Invalid JSON file'
             });
           }
-        // theIndex.saveUploads(fileInput.files[0].name, reader.result)
         });
       }(i, reader));
       reader.readAsText(fileInput.files[i]);
