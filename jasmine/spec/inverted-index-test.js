@@ -142,12 +142,12 @@ describe('Search Index', () => {
       expect(typeof result).toEqual('object');
       result = index.searchIndex(['valid1.json'], 'alice in', ['lord', 'town']);
       expect(typeof result).toEqual('object');
-      result = index.searchIndex(['valid1.json'], 'alice', 'in');
+      result = index.searchIndex(['valid1.json'], 'enters', 'and');
       expect(result).toEqual({
-        alice: {
+        enters: {
           'valid1.json': [0]
         },
-        in: {
+        and: {
           'valid1.json': [0, 1]
         }
       });
@@ -157,13 +157,13 @@ describe('Search Index', () => {
 
   describe('When i pass in an array as argument', () => {
     it('should return the correct index of each word', (done) => {
-      const result = index.searchIndex(['valid1.json'], ['alice', 'in']);
+      const result = index.searchIndex(['valid1.json'], ['full', 'seek']);
       expect(result).toEqual({
-        alice: {
+        full: {
           'valid1.json': [0]
         },
-        in: {
-          'valid1.json': [0, 1]
+        seek: {
+          'valid1.json': [1]
         }
       });
       done();
