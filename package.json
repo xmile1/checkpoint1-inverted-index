@@ -55,7 +55,7 @@
     "gulp-rename": "^1.2.2",
     "gulp-uglify": "^2.0.0",
     "gulp-webpack": "^1.5.0",
-    "jasmine-core": "^2.5.2",
+    "jasmine-core": "^3.0.0",
     "jasmine-node": "^1.14.5",
     "jquery": "^3.1.1",
     "nodemon": "^1.11.0",
