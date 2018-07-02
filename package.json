@@ -7,7 +7,9 @@
     "start": "gulp load-app",
     "test": "karma start --single-run --browsers Chrome",
     "coveralls": "cat './coverage/Chrome 52.0.2743 (Mac OS X 10.10.5)/lcov.info' | ./node_modules/coveralls/bin/coveralls.js",
-    "postinstall": "node_modules/.bin/bower install"
+    "postinstall": "node_modules/.bin/bower install",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "keywords": [
     "search",
@@ -62,7 +64,8 @@
     "run-sequence": "^1.2.2",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
-    "webpack-stream": "^3.2.0"
+    "webpack-stream": "^3.2.0",
+    "snyk": "^1.88.0"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
@@ -108,5 +111,6 @@
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
     "webpack-stream": "^3.2.0"
-  }
+  },
+  "snyk": true
 }
