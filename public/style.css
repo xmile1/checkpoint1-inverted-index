@@ -1,0 +1,63 @@
+.pad-bottom-20 {
+    padding-bottom: 20px;
+}
+
+.hide-div {
+    display: none;
+}
+
+.float-right {
+    float: right;
+}
+
+.no-margin-bottom {
+    margin-bottom: 0px;
+}
+
+.padding-top-bottom {
+    padding-top: 30px;
+    padding-bottom: 30px
+}
+
+body {
+    background-color: aliceblue;
+}
+
+.result-header {
+    background-color: #254625;
+    color: white;
+}
+
+.index-header {
+    background-color: #3a8686!important;
+    color: white!important;
+}
+
+.create-button {
+    cursor: pointer;
+    background-color: white;
+}
+
+.delete-button {
+    background-color: #b34141;
+    color: white;
+    cursor: pointer;
+}
+
+.index-body {
+    background-color: #d0f9e6;
+}
+
+.neg-tick {
+    color: red;
+}
+
+.result-header {
+    background-color: #225763!important;
+    color: white!important;
+}
+
+#right-pane{
+    overflow-y: scroll;
+    height: 100%;
+}

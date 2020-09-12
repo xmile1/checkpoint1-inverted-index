@@ -1,0 +1,81 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="text/javascript" src="lib/jquery/dist/jquery.js"></script>
+    <script type="text/javascript" src="lib/bootstrap/dist/js/bootstrap.js"></script>
+    <script type="text/javascript" src="lib/bootstrap-fileinput/js/fileinput.js"></script>
+    <script type="text/javascript" src="jquery.toaster.js"></script>
+    <script type="text/javascript" src="app.js"></script>
+      <!-- <script type="text/javascript" src="ii.js"></script> -->
+    <!-- <script type="text/javascript" src="js/script.js"></script> -->
+    <link href="lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" type="text/css">
+    <link href="lib/bootstrap-fileinput/css/fileinput.css" rel="stylesheet" type="text/css">
+    <link href="lib/font-awesome/css/font-awesome.css" rel="stylesheet" type="text/css">
+    <link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+    <div class="navbar navbar-default navbar-static-top navbar-inverse">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-ex-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#"><span>Inverted Index 1.0</span></a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar-ex-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="#">About</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="section color-grey">
+        <div class="container padding-20">
+        </div>
+    </div>
+    <div class="section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="search-term" aria-describedby="basic-addon3">
+                                <span class="input-group-addon default" style="cursor:pointer" id="search">search</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="search-panel" class='row hide-div'>
+                        <div class="col-md-12">
+                            <h4>Filter Search </h4>
+                            <div id="filter-filename" class="checkbox">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div id="result-pane" class="col-md-12">
+                        </div>
+                    </div>
+                </div>
+                <div id="right-pane" class="col-md-4 padding-20">
+                    <div class="input-group pad-bottom-20">
+                        <input type="file" multiple class="file" data-show-upload=false placeholder="AddFile" accept=".json" id="fileUpload">
+                    </div>
+                    <div>
+                        <div id="index-view" class="panel-group" id="accordion">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

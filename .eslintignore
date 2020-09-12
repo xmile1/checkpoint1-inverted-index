@@ -1,0 +1,9 @@
+
+jasmine/*
+jasmine/**
+jasmine/lib
+jasmine/spec
+!jasmine/spec/inverted-index-test.js
+webpack.js
+webpack.config.js
+public/*
